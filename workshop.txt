@@ -1,0 +1,7 @@
+version=1
+id=3378285185
+title=Starlit Library
+description=Starlit Library is a dependency for other mods to use, it doesn't do anything on its own. As an end user, you don't have any reason to install this unless a mod you use requires it.
+description=[code]No permission is granted to redistribute the mod, in part or in whole, without the express written permission of the copyright holder (albion). That means no modpacks and no including the API as part of your mod.[/code]
+tags=Build 41;Framework;Misc
+visibility=public
