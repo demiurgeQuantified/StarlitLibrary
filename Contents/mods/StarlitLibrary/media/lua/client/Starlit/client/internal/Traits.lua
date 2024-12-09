@@ -1,6 +1,26 @@
 local Traits = require("Starlit/sandbox/Traits")
 local SandboxUtils = require("Starlit/sandbox/SandboxUtils")
 
+local log = require("Starlit/debug/Logger").getLogger("Starlit Library")
+
+local traitMetatable
+if Trait.class then
+    ---@type Trait
+    traitMetatable = __classmetatables[Trait.class].__index
+else
+    log("Another mod has corrupted the global environment (replaced global Trait).", "warn")
+    if instanceof(Trait, "TraitFactory$Trait") then
+        log("The mod that adds the trait %s is probably to blame.", "info", Trait:getType())
+        traitMetatable = getmetatable(Trait).__index
+        log("Workaround succeeded.", "info")
+    end
+end
+
+if not traitMetatable then
+    log("Unable to get trait metatable. Sandbox options affecting traits will not work. See previous messages for info.", "error")
+    return
+end
+
 -- TODO: it shows in the wrong list if you change the price and then go back to a preset difficulty (who cares, low prio)
 local updateTraits = function()
     local ccp = MainScreen.instance.charCreationProfession
@@ -52,9 +72,6 @@ SandboxOptionsScreen.setSandboxVars = function(...)
     old_setSandboxVars(...)
     updateTraits()
 end
-
----@type Trait
-local traitMetatable = __classmetatables[Trait.class].__index
 
 local old_getCost = traitMetatable.getCost
 traitMetatable.getCost = function(self)
