@@ -2,7 +2,7 @@ local File = {}
 
 ---Returns the full text of the file
 ---@param path string The path of the file to read
----@param mod string|nil The id of the mod containing the file. Defaults to searching the Zomboid/Lua/ folder instead
+---@param mod? string The id of the mod containing the file. Defaults to searching the Zomboid/Lua/ folder instead
 ---@return string?
 ---@nodiscard
 File.readFullFile = function(path, mod)
