@@ -33,7 +33,7 @@ Logger.__call = function(self, message, level, ...)
     level = level or "info"
     if logLevelMap[level] <= logLevelMap[self.minLevel] then
         local formattedMessage = string.format("[%s] [%s] %s", self._mod, titlecase(level), string.format(message, ...))
-        if level == logLevelMap.error then
+        if level == "error" then
             error(formattedMessage)
         else
             print(formattedMessage)
