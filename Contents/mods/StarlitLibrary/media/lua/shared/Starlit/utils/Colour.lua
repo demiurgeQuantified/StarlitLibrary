@@ -11,6 +11,14 @@ Colour.fromColorInfo = function(colorInfo)
     return table.newarray(colorInfo:getR(), colorInfo:getG(), colorInfo:getB())
 end
 
+---Creates a colour from a Color.
+---@param color Color The Color to copy from.
+---@return Starlit.Colour colour
+---@nodiscard
+Colour.fromColor = function(color)
+    return table.newarray(color:getR(), color:getG(), color:getB())
+end
+
 ---Linearly interpolates between two colours.
 ---@param a Starlit.Colour The first colour to interpolate between.
 ---@param b Starlit.Colour The second colour to interpolate between.
