@@ -1,7 +1,7 @@
 local Traits = require("Starlit/sandbox/Traits")
 local SandboxUtils = require("Starlit/sandbox/SandboxUtils")
 
-local log = require("Starlit/debug/Logger").getLogger("Starlit Library")
+local log = require("Starlit/debug/StarlitLog")
 
 local traitMetatable
 if Trait.class then
