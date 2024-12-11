@@ -2,6 +2,7 @@
 ---@field character IsoGameCharacter
 ---@field itemType string
 ---@field predicate ItemContainer_Predicate?
+---@field arg any
 local TransferItemTypeAction = ISBaseTimedAction:derive("StarlitTransferItemTypeAction")
 TransferItemTypeAction.__index = TransferItemTypeAction
 
@@ -10,7 +11,7 @@ TransferItemTypeAction.perform = function(self)
 
     local item
     if self.predicate then
-        item = inventory:getFirstTypeEvalRecurse(self.itemType, self.predicate)
+        item = inventory:getFirstTypeEvalArgRecurse(self.itemType, self.predicate, self.arg)
     else
         item = inventory:getFirstTypeRecurse(self.itemType)
     end
@@ -27,7 +28,7 @@ end
 TransferItemTypeAction.isValidStart = function(self)
     local inventory = self.character:getInventory()
     if self.predicate then
-        return inventory:containsTypeEvalRecurse(self.itemType, self.predicate)
+        return inventory:containsTypeEvalArgRecurse(self.itemType, self.predicate, self.arg)
     else
         return inventory:containsTypeRecurse(self.itemType)
     end
@@ -40,13 +41,15 @@ end
 ---@param character IsoGameCharacter
 ---@param type string
 ---@param predicate ItemContainer_Predicate?
+---@param arg any
 ---@return TransferItemTypeAction
-TransferItemTypeAction.new = function(character, type, predicate)
+TransferItemTypeAction.new = function(character, type, predicate, arg)
     local o = ISBaseTimedAction:new(character) --[[@as TransferItemTypeAction]]
     setmetatable(o, TransferItemTypeAction)
 
     o.itemType = type
     o.predicate = predicate
+    o.arg = arg
 
     o.maxTime = 0
 

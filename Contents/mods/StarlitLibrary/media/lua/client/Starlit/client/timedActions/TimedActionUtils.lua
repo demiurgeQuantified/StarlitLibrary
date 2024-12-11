@@ -23,10 +23,11 @@ end
 ---to fail even though there are still valid items in the player's inventory.
 ---@param character IsoGameCharacter The character.
 ---@param type string The item type to transfer.
----@param predicate ItemContainer_Predicate? Optional item evaluation function.
-TimedActionUtils.transferFirstType = function(character, type, predicate)
+---@param predicate? ItemContainer_Predicate Optional item evaluation function.
+---@param predicateArg? any Optional predicate argument.
+TimedActionUtils.transferFirstType = function(character, type, predicate, predicateArg)
     ISTimedActionQueue.add(
-        TransferItemTypeAction.new(character, type, predicate))
+        TransferItemTypeAction.new(character, type, predicate, predicateArg))
 end
 
 ---Queues actions to transfer an item to the character's inventory and equip it.
