@@ -95,9 +95,11 @@ DeviceDataSerialiser.deserialise = function(serialisedDeviceData)
     deviceData:setUseDelta(serialisedDeviceData.useDelta)
     deviceData:setHeadphoneType(serialisedDeviceData.headphoneType)
     deviceData:setMediaType(serialisedDeviceData.mediaType)
-    deviceData:addMediaItem(
-        InventoryItemFactory.CreateItem(serialisedDeviceData.mediaItem))
-    deviceData:setMediaIndex(serialisedDeviceData.mediaIndex)
+    if serialisedDeviceData.mediaItem then
+        local mediaItem = InventoryItemFactory.CreateItem(serialisedDeviceData.mediaItem)
+        mediaItem:setRecordedMediaIndexInteger(serialisedDeviceData.mediaIndex)
+        deviceData:addMediaItem(mediaItem)
+    end
     deviceData:setNoTransmit(serialisedDeviceData.noTransmit)
 
     if serialisedDeviceData.presets then
