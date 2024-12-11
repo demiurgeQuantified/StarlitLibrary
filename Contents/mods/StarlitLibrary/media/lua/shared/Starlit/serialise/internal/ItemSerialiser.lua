@@ -21,7 +21,7 @@ local log = require("Starlit/debug/StarlitLog")
 ---@field modData table
 ---@field activated boolean
 ---@field haveBeenRepaired integer
----@field name string
+---@field name string?
 ---@field extraItems string[]?
 ---@field customName boolean
 ---@field customWeight float?
@@ -141,7 +141,9 @@ ItemSerialiser.deserialise = function(serialised)
     item:copyModData(serialised.modData)
     item:setActivated(serialised.activated)
     item:setHaveBeenRepaired(serialised.haveBeenRepaired)
-    item:setName(serialised.name)
+    if serialised.name then
+        item:setName(serialised.name)
+    end
     item:setCustomName(serialised.customName)
     item:setKeyId(serialised.keyId)
     item:setTaintedWater(serialised.taintedWater)
@@ -159,7 +161,7 @@ ItemSerialiser.deserialise = function(serialised)
     item:setAttachedSlotType(serialised.attachedSlotType)
     item:setAttachedToModel(serialised.attachedToModel)
     item:setMaxCapacity(serialised.maxCapacity)
-    if serialised.recordedMediaIndex then
+    if serialised.recordedMediaIndex and serialised.recordedMediaIndex > 0 then
         item:setRecordedMediaIndexInteger(serialised.recordedMediaIndex)
     end
     -- item:setWorldZRotation(serialised.worldZRotation)
