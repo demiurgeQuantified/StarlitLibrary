@@ -139,4 +139,14 @@ TimedActionUtils.transferAndWearFirstEval = function(character, eval)
     return true
 end
 
+---Queues actions to unequip an item if it is equipped or worn. Does nothing if the item is not equipped or worn..
+---@param character IsoGameCharacter The character.
+---@param item InventoryItem The item to unequip.
+TimedActionUtils.unequip = function(character, item)
+    if not item:isEquipped() then return end
+    ISTimedActionQueue.add(
+        ISUnequipAction:new(
+            character, item, 50))
+end
+
 return TimedActionUtils
