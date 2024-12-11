@@ -1,5 +1,8 @@
 local ItemSerialiser = require("Starlit/serialise/internal/ItemSerialiser")
 
+---@class Moveable
+---@field customItem string?
+
 ---@class Starlit.SerialisedItemMoveable : Starlit.SerialisedItem
 ---@field saveType 10
 ---@field worldSprite string
@@ -44,6 +47,13 @@ ItemSerialiserMoveable.deserialise = function(serialised)
     end
 
     moveable:setWorldSprite(serialised.worldSprite)
+    moveable:ReadFromWorldSprite(serialised.worldSprite)
+    if not moveable.customItem
+            and serialised.worldSprite ~= ""
+            and moveable:getType() ~= serialised.worldSprite then
+        moveable:setType(serialised.worldSprite)
+    end
+
     moveable:setLight(serialised.isLight)
     if serialised.isLight then
         moveable:setLightUseBattery(serialised.lightUseBattery)
