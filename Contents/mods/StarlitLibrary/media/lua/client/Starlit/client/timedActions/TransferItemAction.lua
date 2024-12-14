@@ -31,10 +31,14 @@ end
 
 TransferItemAction.isValidStart = function(self)
     local inventory = self.character:getInventory()
-    if self.predicate then
-        return inventory:containsTypeEvalArgRecurse(self.itemType, self.predicate, self.arg)
+    if self.itemType then
+        if self.predicate then
+            return inventory:containsTypeEvalArgRecurse(self.itemType, self.predicate, self.arg)
+        else
+            return inventory:containsTypeRecurse(self.itemType)
+        end
     else
-        return inventory:containsTypeRecurse(self.itemType)
+        return inventory:containsEvalArgRecurse(self.predicate, self.arg)
     end
 end
 
