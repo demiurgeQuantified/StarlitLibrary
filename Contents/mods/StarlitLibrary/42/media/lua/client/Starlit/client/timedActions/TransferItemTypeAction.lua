@@ -1,4 +1,4 @@
 ---Replaced by TransferItemAction
 ---@deprecated
-local TransferItemTypeAction = require("Starlit/client/timedActions/TransferItemAction")
+local TransferItemTypeAction = require("Starlit/timedActions/TransferItemAction")
 return TransferItemTypeAction
