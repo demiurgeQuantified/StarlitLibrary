@@ -1,4 +1,4 @@
-local TransferItemAction = require "Starlit/client/timedActions/TransferItemAction"
+local TransferItemAction = require "Starlit/timedActions/TransferItemAction"
 
 ---Module for timed action helper functions
 local TimedActionUtils = {}
@@ -30,7 +30,7 @@ TimedActionUtils.transferFirstType = function(character, type, predicate, predic
     TimedActionUtils.transferFirstValid(character, type, predicate, predicateArg)
 end
 
----Queues an action to transfer the first item matching the criteria from the player's containers into their main inventory.
+---Queues an action to transfer the first item matching the criteria from the characters's containers into their main inventory.
 ---This differs from regular transfer as the item is picked at the start of the action.
 ---This prevents issues where multiple queued actions target the same item, causing later actions
 ---to fail even though there are still valid items in the player's inventory.
@@ -41,7 +41,24 @@ end
 TimedActionUtils.transferFirstValid = function(character, type, predicate, predicateArg)
     assert(type or predicate, "No item predicate or type passed to TimedActionUtils.transferFirstValid")
     ISTimedActionQueue.add(
-        TransferItemAction.new(character, type, predicate, predicateArg))
+        TransferItemAction.new(
+            character, type, predicate, predicateArg, 1))
+end
+
+---Queues an action to transfer items matching the criteria from the character's containers into their main inventory.
+---This differs from regular transfer as the item is picked at the start of the action.
+---This prevents issues where multiple queued actions target the same item, causing later actions
+---to fail even though there are still valid items in the player's inventory.
+---@param character IsoGameCharacter The character.
+---@param type? string The item type to transfer. If nil does not check item type.
+---@param predicate? ItemContainer_Predicate Optional item evaluation function.
+---@param predicateArg? any Optional predicate argument.
+---@param amount integer Amount of items to transfer.
+TimedActionUtils.transferSomeValid = function(character, type, predicate, predicateArg, amount)
+    assert(type or predicate, "No item predicate or type passed to TimedActionUtils.transferFirstValid")
+    ISTimedActionQueue.add(
+        TransferItemAction.new(
+            character, type, predicate, predicateArg, amount))
 end
 
 ---Queues actions to transfer an item to the character's inventory and equip it.
