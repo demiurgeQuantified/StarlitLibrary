@@ -13,7 +13,7 @@ BaseSquareCursor.select = function(self, square)
 end
 
 ---Called when determining if a square is valid. Invalid squares cannot be selected and render as red.
----@param square IsoGridSquare The square to check.
+---@param square IsoGridSquare? The square to check.
 ---@return boolean valid Whether the square is valid.
 BaseSquareCursor.isValid = function(self, square)
     return true
@@ -32,9 +32,17 @@ BaseSquareCursor.render = function(self, x, y, z, square)
 	ISBuildingObject:getFloorCursorSprite():RenderGhostTileColor(x, y, z, hc:getR(), hc:getG(), hc:getB(), 0.8)
 end
 
----Called when the player hits the key usually used to rotate building objects.
-BaseSquareCursor.rotateKey = function(self)
+---Called when the player hits a key while the cursor is active.
+---Override keyPressed instead if you don't want your api to have dumb names
+---@param key integer
+BaseSquareCursor.rotateKey = function(self, key)
+    self:keyPressed(key)
+end
 
+---Called when the player hits a key while the cursor is active.
+---@param key integer The key that was pressed.
+BaseSquareCursor.keyPressed = function(self, key)
+    
 end
 
 ---Creates a new BaseSquareCursor. After creation the cursor can be made active using IsoCell.setDrag().
