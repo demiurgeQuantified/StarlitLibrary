@@ -1,14 +1,18 @@
 local IsoObjectUtils = {}
 
+---@type IsoCell
+local cell
+Events.OnPostMapLoad.Add(function (_cell, x, y)
+    cell = _cell
+end)
+
 ---Adds and connects a square at the given coordinates.
 ---@param x integer X world coordinate
 ---@param y integer Y world coordinate
 ---@param z integer Z world coordinate
 ---@return IsoGridSquare square The square that was added
 IsoObjectUtils.addSquare = function(x, y, z)
-    local square = IsoGridSquare.getNew(nil, nil, x, y, z)
-    getCell():ConnectNewSquare(square, true)
-    return square
+    return cell:createNewGridSquare(x, y, z, true)
 end
 
 ---Gets or creates a square at the given coordinates.
