@@ -24,7 +24,8 @@ end
 ---If the wall is a combined north and west wall sprite, the other direction will be split so it remains.
 ---@param square IsoGridSquare The square to remove a wall from.
 ---@param side "north"|"west" Which direction wall to remove.
-IsoObjectUtils.removeWall = function(square, side)
+---@param removeAttached boolean? Whether to remove objects attached to the wall. Defaults to true.
+IsoObjectUtils.removeWall = function(square, side, removeAttached)
     local wall = square:getWall(side == "north")
     if wall then
         local properties = wall:getProperties()
@@ -36,6 +37,31 @@ IsoObjectUtils.removeWall = function(square, side)
             square:transmitAddObjectToSquare(newWall, -1)
         end
         square:transmitRemoveItemFromSquare(wall)
+        if removeAttached then
+            local objects = square:getLuaTileObjectList() --[=[@as IsoObject[]]=]
+            for i = #objects, 1, -1 do
+                local object = objects[i]
+                if object:getProperties():Is(side == "north" and IsoFlagType.attachedN or IsoFlagType.attachedW) then
+                    square:transmitRemoveItemFromSquare(object)
+                end
+                -- TODO: probably needs to check the adjacent square for objects attached to the opposite side
+            end
+        end
+    end
+end
+
+---Removes the floor from a square.
+---@param square IsoGridSquare The square to remove the floor from.
+---@param removeAttached boolean? Whether to remove objects attached to the floor. Defaults to true.
+IsoObjectUtils.removeFloor = function(square, removeAttached)
+    square:transmitRemoveItemFromSquare(square:getFloor())
+
+    local objects = square:getLuaTileObjectList() --[=[@as IsoObject[]]=]
+    for i = #objects, -1 do
+        local object = objects[i]
+        if object:getProperties():Is(IsoFlagType.attachedFloor) then
+            square:transmitRemoveItemFromSquare(object)
+        end
     end
 end
 
