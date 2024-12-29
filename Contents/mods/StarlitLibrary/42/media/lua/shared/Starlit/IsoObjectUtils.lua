@@ -6,6 +6,8 @@ Events.OnPostMapLoad.Add(function (_cell, x, y)
     cell = _cell
 end)
 
+local MIN_HEIGHT = -32
+
 ---Adds and connects a square at the given coordinates.
 ---@param x integer X world coordinate
 ---@param y integer Y world coordinate
@@ -30,6 +32,7 @@ end
 ---@param side "north"|"west" Which direction wall to remove.
 ---@param removeAttached boolean? Whether to remove objects attached to the wall. Defaults to true.
 IsoObjectUtils.removeWall = function(square, side, removeAttached)
+    removeAttached = removeAttached or true
     local wall = square:getWall(side == "north")
     if wall then
         local properties = wall:getProperties()
@@ -41,16 +44,13 @@ IsoObjectUtils.removeWall = function(square, side, removeAttached)
             square:transmitAddObjectToSquare(newWall, -1)
         end
         square:transmitRemoveItemFromSquare(wall)
-        if removeAttached then
-            local objects = square:getLuaTileObjectList() --[=[@as IsoObject[]]=]
-            for i = #objects, 1, -1 do
-                local object = objects[i]
-                if object:getProperties():Is(side == "north" and IsoFlagType.attachedN or IsoFlagType.attachedW) then
-                    square:transmitRemoveItemFromSquare(object)
-                end
-                -- TODO: probably needs to check the adjacent square for objects attached to the opposite side
-            end
+
+        if not removeAttached then
+            return
         end
+
+        IsoObjectUtils.removeAll(square,
+                                 side == "north" and IsoFlagType.attachedN or IsoFlagType.attachedW)
     end
 end
 
@@ -58,15 +58,75 @@ end
 ---@param square IsoGridSquare The square to remove the floor from.
 ---@param removeAttached boolean? Whether to remove objects attached to the floor. Defaults to true.
 IsoObjectUtils.removeFloor = function(square, removeAttached)
+    removeAttached = removeAttached or true
     square:transmitRemoveItemFromSquare(square:getFloor())
 
+    if not removeAttached then return end
+    IsoObjectUtils.removeAll(square, IsoFlagType.attachedFloor)
+end
+
+---Returns the first object on a square with a given flag.
+---@param square IsoGridSquare The square to search.
+---@param flag IsoFlagType The flag to search for.
+---@return IsoObject? object An object with the flag, if any.
+IsoObjectUtils.getFirst = function(square, flag)
     local objects = square:getLuaTileObjectList() --[=[@as IsoObject[]]=]
-    for i = #objects, -1 do
+    for i = 1, #objects do
         local object = objects[i]
-        if object:getProperties():Is(IsoFlagType.attachedFloor) then
+        if object:getProperties():Is(flag) then
+            return object
+        end
+    end
+end
+
+---Removes all objects on a square with a given flag.
+---@param square IsoGridSquare The square to remove objects from.
+---@param flag IsoFlagType The flag to remove objects with.
+IsoObjectUtils.removeAll = function(square, flag)
+    local objects = square:getLuaTileObjectList() --[=[@as IsoObject[]]=]
+    for i = #objects, 1, -1 do
+        local object = objects[i]
+        if object:getProperties():Is(flag) then
             square:transmitRemoveItemFromSquare(object)
         end
     end
+end
+
+---Returns true if a square is in the playable area. The playable area is any space the player can occupy.
+---Does not check if the square is actually reachable or blocked by objects.
+---@param square IsoGridSquare The square to check.
+---@return boolean playable Whether the square is in the playable area.
+IsoObjectUtils.isInPlayableArea = function(square)
+    if square:hasFloor() then return true end
+    local x, y = square:getX(), square:getY()
+    for z = square:getZ() - 1, MIN_HEIGHT, -1 do
+        local lowerSquare = getSquare(x, y, z)
+        if not lowerSquare then
+            return false
+        end
+        if lowerSquare:hasFloor() then
+            return true
+        end
+    end
+    return false
+end
+
+---Returns a wall on a specific side on the square.
+---@param square IsoGridSquare The square to search.
+---@param side "north"|"west"|"northwest"|"southeast" The side wall to find.
+---@return IsoObject? wall The wall, if any.
+IsoObjectUtils.getWall = function(square, side)
+    if side == "northwest" then
+        return square:getWallNW()
+    elseif side == "southeast" then
+        return square:getWallSE()
+    end
+
+    -- TODO: this can probably be optimised to not scan the object list twice
+    return IsoObjectUtils.getFirst(square,
+                                   side == "north" and IsoFlagType.WallN or IsoFlagType.WallW)
+            or IsoObjectUtils.getFirst(square,
+                                 IsoFlagType.WallNW)
 end
 
 -- TODO: some kind of way to define groups of wall sprites, which can then be added to squares
