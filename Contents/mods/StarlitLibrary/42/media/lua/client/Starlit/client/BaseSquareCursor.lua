@@ -2,14 +2,19 @@
 ---@class Starlit.BaseSquareCursor
 ---@field player IsoPlayer The player the cursor belongs to.
 ---@field private _isStarlitCursor true
+---@field private _selectedThisTick boolean
 local BaseSquareCursor = {}
 BaseSquareCursor.__index = BaseSquareCursor
 
 ---Called when the player clicks on a square.
 ---@param square IsoGridSquare The selected square.
-BaseSquareCursor.select = function(self, square)
-    ---@diagnostic disable-next-line: param-type-mismatch
-    getCell():setDrag(nil, self.player:getPlayerNum())
+---@param hide boolean? Whether to hide the cursor. Defaults to true.
+BaseSquareCursor.select = function(self, square, hide)
+    self._selectedThisTick = true
+    if hide then
+        ---@diagnostic disable-next-line: param-type-mismatch
+        getCell():setDrag(nil, self.player:getPlayerNum())
+    end
 end
 
 ---Called when determining if a square is valid. Invalid squares cannot be selected and render as red.
@@ -42,7 +47,7 @@ end
 ---Called when the player hits a key while the cursor is active.
 ---@param key integer The key that was pressed.
 BaseSquareCursor.keyPressed = function(self, key)
-    
+
 end
 
 ---Creates a new BaseSquareCursor. After creation the cursor can be made active using IsoCell.setDrag().
@@ -51,7 +56,8 @@ end
 BaseSquareCursor.new = function(player)
     local o = {
         player = player,
-        _isStarlitCursor = true
+        _isStarlitCursor = true,
+        _selectedThisTick = false
     }
     setmetatable(o, BaseSquareCursor) ---@cast o Starlit.BaseSquareCursor
 
@@ -81,7 +87,9 @@ Events.OnInitGlobalModData.Add(function()
             if isRender then
                 draggingItem:render(x, y, z, square)
             end
-            if (draggingItem.player:getPlayerNum() ~= 0 or (GameKeyboard.isKeyDown("Attack/Click") and not isMouseOverUI()))
+            ---@diagnostic disable-next-line: invisible
+            if not draggingItem._selectedThisTick
+                    and (draggingItem.player:getPlayerNum() ~= 0 or (GameKeyboard.isKeyDown("Attack/Click") and not isMouseOverUI()))
                     and draggingItem:isValid(square) then
                 draggingItem:select(square)
             end
@@ -91,6 +99,21 @@ Events.OnInitGlobalModData.Add(function()
     end
 
     Events.OnDoTileBuilding2.Add(DoTileBuilding);
+end)
+
+---@type IsoCell
+local CELL
+Events.OnPostMapLoad.Add(function(cell, x, y)
+    CELL = cell
+end)
+
+Events.OnTick.Add(function()
+    for i = 0, getNumActivePlayers() do
+        local drag = CELL:getDrag(i)
+        if drag and drag._isStarlitCursor and drag._selectedThisTick then
+            drag._selectedThisTick = false
+        end
+    end
 end)
 
 return BaseSquareCursor
