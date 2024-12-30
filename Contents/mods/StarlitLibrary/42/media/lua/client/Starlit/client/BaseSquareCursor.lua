@@ -10,6 +10,7 @@ BaseSquareCursor.__index = BaseSquareCursor
 ---@param square IsoGridSquare The selected square.
 ---@param hide boolean? Whether to hide the cursor. Defaults to true.
 BaseSquareCursor.select = function(self, square, hide)
+    hide = hide == nil and true or hide
     self._selectedThisTick = true
     if hide then
         ---@diagnostic disable-next-line: param-type-mismatch
