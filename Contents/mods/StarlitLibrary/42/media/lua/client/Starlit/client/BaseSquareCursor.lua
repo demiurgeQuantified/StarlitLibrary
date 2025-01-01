@@ -6,6 +6,13 @@
 local BaseSquareCursor = {}
 BaseSquareCursor.__index = BaseSquareCursor
 
+local CORE = getCore()
+---@type IsoCell
+local CELL
+Events.OnPostMapLoad.Add(function(cell, x, y)
+    CELL = cell
+end)
+
 ---Called when the player clicks on a square.
 ---@param square IsoGridSquare The selected square.
 ---@param hide boolean? Whether to hide the cursor. Defaults to true.
@@ -14,7 +21,7 @@ BaseSquareCursor.select = function(self, square, hide)
     self._selectedThisTick = true
     if hide then
         ---@diagnostic disable-next-line: param-type-mismatch
-        getCell():setDrag(nil, self.player:getPlayerNum())
+        CELL:setDrag(nil, self.player:getPlayerNum())
     end
 end
 
@@ -31,9 +38,9 @@ end
 ---@param z integer The Z coordinate of the square the cursor is over.
 ---@param square IsoGridSquare The square the cursor is over.
 BaseSquareCursor.render = function(self, x, y, z, square)
-	local hc = getCore():getGoodHighlitedColor()
+	local hc = CORE:getGoodHighlitedColor()
 	if not self:isValid(square) then
-		hc = getCore():getBadHighlitedColor()
+		hc = CORE:getBadHighlitedColor()
 	end
 	ISBuildingObject:getFloorCursorSprite():RenderGhostTileColor(x, y, z, hc:getR(), hc:getG(), hc:getB(), 0.8)
 end
@@ -89,8 +96,7 @@ Events.OnInitGlobalModData.Add(function()
                 draggingItem:render(x, y, z, square)
             end
             ---@diagnostic disable-next-line: invisible
-            if not draggingItem._selectedThisTick
-                    and (draggingItem.player:getPlayerNum() ~= 0 or (GameKeyboard.isKeyDown("Attack/Click") and not isMouseOverUI()))
+            if (draggingItem.player:getPlayerNum() ~= 0 or (GameKeyboard.isKeyPressed("Attack/Click") and not isMouseOverUI()))
                     and draggingItem:isValid(square) then
                 draggingItem:select(square)
             end
@@ -100,21 +106,6 @@ Events.OnInitGlobalModData.Add(function()
     end
 
     Events.OnDoTileBuilding2.Add(DoTileBuilding);
-end)
-
----@type IsoCell
-local CELL
-Events.OnPostMapLoad.Add(function(cell, x, y)
-    CELL = cell
-end)
-
-Events.OnTick.Add(function()
-    for i = 0, getNumActivePlayers() do
-        local drag = CELL:getDrag(i)
-        if drag and drag._isStarlitCursor and drag._selectedThisTick then
-            drag._selectedThisTick = false
-        end
-    end
 end)
 
 return BaseSquareCursor
