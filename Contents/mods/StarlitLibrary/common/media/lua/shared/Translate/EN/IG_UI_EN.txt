@@ -1,0 +1,3 @@
+IGUI_EN = {
+    IGUI_StarlitLibrary_VersionTooOld = "A mod you have installed expects a newer version of Starlit Library than you have installed. Some features may not work as intended. <br> Steam sometimes fails to update mods - unsubscribe and resubscribe to ensure your version is up to date.",
+}
