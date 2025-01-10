@@ -38,11 +38,11 @@ end
 ---@param z integer The Z coordinate of the square the cursor is over.
 ---@param square IsoGridSquare The square the cursor is over.
 BaseSquareCursor.render = function(self, x, y, z, square)
-	local hc = CORE:getGoodHighlitedColor()
-	if not self:isValid(square) then
-		hc = CORE:getBadHighlitedColor()
-	end
-	ISBuildingObject:getFloorCursorSprite():RenderGhostTileColor(x, y, z, hc:getR(), hc:getG(), hc:getB(), 0.8)
+    local hc = CORE:getGoodHighlitedColor()
+    if not self:isValid(square) then
+        hc = CORE:getBadHighlitedColor()
+    end
+    ISBuildingObject:getFloorCursorSprite():RenderGhostTileColor(x, y, z, hc:getR(), hc:getG(), hc:getB(), 0.8)
 end
 
 ---Called when the player hits a key while the cursor is active.
@@ -73,14 +73,14 @@ BaseSquareCursor.new = function(player)
 end
 
 local function isMouseOverUI()
-	local uis = UIManager.getUI()
-	for i=1,uis:size() do
-		local ui = uis:get(i-1)
-		if ui:isMouseOver() then
-			return true
-		end
-	end
-	return false
+    local uis = UIManager.getUI()
+    for i=1,uis:size() do
+        local ui = uis:get(i-1)
+        if ui:isMouseOver() then
+            return true
+        end
+    end
+    return false
 end
 
 -- must delay to OnInitGlobalModData so that server code has already loaded
