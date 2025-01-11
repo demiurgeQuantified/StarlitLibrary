@@ -1,6 +1,9 @@
 local modInfo = getModInfoByID("\\StarlitLibrary")
 
 local POPUP_HEIGHT = 100
+local STEAM_ENABLED = getSteamModeActive()
+local UPDATE_URL = STEAM_ENABLED and "https://steamcommunity.com/sharedfiles/filedetails/?id=3378285185" 
+                                          or "https://github.com/demiurgeQuantified/StarlitLibrary/releases/latest"
 
 local GAME_BUILD = getCore():getGameVersion():getMajor()
 
@@ -65,13 +68,27 @@ end
 Version.ensureVersion = function(major, minor, patch)
     local compareResult = Version.compareVersion(GAME_BUILD, major, minor, patch)
 
+    -- TODO: delay the pop-up until OnGameStart so that mods calling this function don't have to
+    -- this would also avoid showing multiple pop-ups: only show the one for the highest required version
+
     -- if compareResult ~= "compatible" then
     if compareResult == "toolow" then -- the too high message is probably just going to annoy people
-        local text = compareResult == "toolow" and getText("IGUI_StarlitLibrary_VersionTooOld") or getText("IGUI_StarlitLibrary_VersionTooNew")
+        local desiredVersionString = string.format("%d-%d.%d.%d", GAME_BUILD, major, minor, patch)
+        local text = getText(
+            compareResult == "toolow" and "IGUI_StarlitLibrary_VersionTooOld" or "IGUI_StarlitLibrary_VersionTooNew",
+            Version.VERSION_STRING, desiredVersionString)
+
         local width = TEXT_MANAGER:MeasureStringX(UIFont.Small, text)
         local popup = ISModalDialog:new(
             (CORE:getScreenWidth() - width) / 2, (CORE:getScreenHeight() - POPUP_HEIGHT) / 2,
-            width, POPUP_HEIGHT, text, false)
+            width, POPUP_HEIGHT, text, false, nil,
+            function()
+                if STEAM_ENABLED then
+                    activateSteamOverlayToWebPage(UPDATE_URL)
+                else
+                    openUrl(UPDATE_URL)
+                end
+            end)
         popup:initialise()
         popup:addToUIManager()
     end
