@@ -1,4 +1,4 @@
-local Events = require "Starlit/Events"
+local Events = require "Starlit/LuaEvent"
 
 local InventoryUI = {}
 
