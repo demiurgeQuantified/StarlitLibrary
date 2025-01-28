@@ -19,8 +19,8 @@ ISToolTipInv.render = function(self)
 
         InventoryUI.onFillItemTooltip:trigger(tooltip, layout, item)
 
-        local height = layout:render(5, tooltip:getHeight() - 5, tooltip)
-        tooltip:setHeight(height + 5)
+        local height = layout:render(tooltip.padLeft, tooltip:getHeight() - tooltip.padBottom, tooltip)
+        tooltip:setHeight(height + tooltip.padBottom)
         layout.items:clear()
     end
 
