@@ -276,7 +276,7 @@ local unexposedObjectFields = {}
 ---@param object any The object
 ---@param name string The name of the field
 ---@return any value The value of the field.
-Reflection.getUnexposedObjectField = function(object, name)
+Reflection.getField = function(object, name)
     local className = string.match(tostring(object), "^(.*)@")
     if not unexposedObjectFields[className] then
         local fieldMap = {}
@@ -365,5 +365,8 @@ Reflection.getLocals = function(callframeOffset)
 
     return locals
 end
+
+---@deprecated Renamed to getField in 42-1.4.0
+Reflection.getUnexposedObjectField = Reflection.getField
 
 return Reflection
