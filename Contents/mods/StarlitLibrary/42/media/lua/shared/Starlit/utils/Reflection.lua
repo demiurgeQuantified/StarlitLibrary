@@ -9,8 +9,6 @@ local __classmetatables = __classmetatables
 local type = type
 local getmetatable = getmetatable
 
-local Utils = require("Starlit/utils/Utils")
-
 -- umbrella doesn't declare this lol
 ---@class Field
 
@@ -289,6 +287,83 @@ Reflection.getUnexposedObjectField = function(object, name)
         unexposedObjectFields[className] = fieldMap
     end
     return getClassFieldVal(object, unexposedObjectFields[className][name])
+end
+
+---Returns whether the specified callframe has a local variable by that name.
+---@param callframeOffset number How many callframes downwards to search for the local.
+---@param name string The name of the local variable.
+---@return boolean hasLocalVariable Whether the callframe had a local variable by that name.
+Reflection.hasLocal = function(callframeOffset, name)
+    local coroutine = getCurrentCoroutine()
+    local callframe = getCoroutineCallframeStack(
+        coroutine, getCallframeTop(coroutine) - 3 - callframeOffset)
+
+    for i = 0, getLocalVarCount(callframe) - 1 do
+        if getLocalVarName(callframe, i) == name then
+            return true
+        end
+    end
+
+    return false
+end
+
+---Returns the value of a local variable by its name.
+---@param callframeOffset number How many callframes downwards to search for the local.
+---@param name string The name of the local variable.
+---@return any value The value of the local variable, or nil if there was no such local. This is indistinguishable from a local containing the value nil.
+Reflection.getLocalValue = function(callframeOffset, name)
+    local coroutine = getCurrentCoroutine()
+    local localIndex = -1
+    local callframe = getCoroutineCallframeStack(
+        coroutine, getCallframeTop(coroutine) - 3 - callframeOffset)
+
+    for i = 0, getLocalVarCount(callframe) - 1 do
+        if getLocalVarName(callframe, i) == name then
+            localIndex = i
+            break
+        end
+    end
+
+    if localIndex == -1 then
+        return nil
+    end
+
+    local stackIndex = getLocalVarStackIndex(callframe, localIndex)
+    return getCoroutineObjStack(coroutine, stackIndex)
+end
+
+---Returns the name of a local variable by its value.
+---@param callframeOffset number How many callframes downwards to search for the local.
+---@param value any The value of the local to search for.
+---@return string? name The name of the first local variable containing the value, or nil if no local variable containing the value could be found.
+Reflection.getLocalName = function(callframeOffset, value)
+    local coroutine = getCurrentCoroutine()
+    local callframe = getCoroutineCallframeStack(
+        coroutine, getCallframeTop(coroutine) - 3 - callframeOffset)
+
+    for i = 0, getLocalVarCount(callframe) - 1 do
+        if getCoroutineObjStack(coroutine, getLocalVarStackIndex(callframe, i)) == value then
+            return getLocalVarName(callframe, i)
+        end
+    end
+
+    return nil
+end
+
+---Returns a table containing all of the local variabless in a callframe.
+---@param callframeOffset number How many callframes downwards to get locals from.
+---@return table<string, any> locals The local variables in the callframe.
+Reflection.getLocals = function(callframeOffset)
+    local coroutine = getCurrentCoroutine()
+    local callframe = getCoroutineCallframeStack(
+        coroutine, getCallframeTop(coroutine) - 3 - callframeOffset)
+
+    local locals = {}
+    for i = 0, getLocalVarCount(callframe) - 1 do
+        locals[getLocalVarName(callframe, i)] = getCoroutineObjStack(coroutine, getLocalVarStackIndex(callframe, i))
+    end
+
+    return locals
 end
 
 return Reflection
