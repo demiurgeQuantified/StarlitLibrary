@@ -100,6 +100,7 @@ end
 ---@param arg any
 ---@param amount integer
 ---@return TransferItemTypeAction
+---@nodiscard
 TransferItemAction.new = function(character, type, predicate, arg, amount)
     local o = ISBaseTimedAction:new(character) --[[@as TransferItemTypeAction]]
     setmetatable(o, TransferItemAction)

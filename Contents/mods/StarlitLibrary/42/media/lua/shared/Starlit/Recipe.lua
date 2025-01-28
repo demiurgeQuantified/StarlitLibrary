@@ -4,6 +4,7 @@ local Recipe = {}
 ---@param arrayList ArrayList
 ---@param ... string
 ---@return InventoryItem? ...
+---@nodiscard
 Recipe.extractItems = function(arrayList, ...)
     ---@type string[]
     local wantedItems = table.newarray(...)

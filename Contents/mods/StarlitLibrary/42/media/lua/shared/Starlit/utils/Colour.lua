@@ -40,6 +40,7 @@ end
 ---Returns the R,G,B values of a colour.
 ---@param colour Starlit.Colour The colour.
 ---@return number r, number g, number b
+---@nodiscard
 Colour.getRGB = function(colour)
     return colour[1], colour[2], colour[3]
 end
@@ -47,6 +48,7 @@ end
 ---Returns the R,G,B,A values of a colour.
 ---@param colour Starlit.Colour The colour.
 ---@return number r, number g, number b, number a
+---@nodiscard
 Colour.getRGBA = function(colour)
     return colour[1], colour[2], colour[3], colour[4]
 end

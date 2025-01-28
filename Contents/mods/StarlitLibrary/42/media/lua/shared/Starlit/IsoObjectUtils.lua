@@ -78,6 +78,7 @@ end
 ---@param square IsoGridSquare The square to search.
 ---@param flag IsoFlagType The flag to search for.
 ---@return IsoObject? object An object with the flag, if any.
+---@nodiscard
 IsoObjectUtils.getFirst = function(square, flag)
     local objects = square:getLuaTileObjectList() --[=[@as IsoObject[]]=]
     for i = 1, #objects do
@@ -105,6 +106,7 @@ end
 ---Does not check if the square is actually reachable or blocked by objects.
 ---@param square IsoGridSquare The square to check.
 ---@return boolean playable Whether the square is in the playable area.
+---@nodiscard
 IsoObjectUtils.isInPlayableArea = function(square)
     if square:hasFloor() then return true end
     local x, y = square:getX(), square:getY()
@@ -124,6 +126,7 @@ end
 ---@param square IsoGridSquare The square to search.
 ---@param side "north"|"west"|"northwest"|"southeast" The side wall to find.
 ---@return IsoObject? wall The wall, if any.
+---@nodiscard
 IsoObjectUtils.getWall = function(square, side)
     if side == "northwest" then
         return square:getWallNW()

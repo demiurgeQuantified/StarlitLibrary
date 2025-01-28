@@ -191,6 +191,7 @@ end
 ---Creates a new BaseSquareCursor. After creation the cursor can be made active using IsoCell.setDrag().
 ---@param player IsoPlayer The player to create the cursor for.
 ---@return Starlit.BaseSquareCursor cursor The cursor.
+---@nodiscard
 BaseSquareCursor.new = function(player)
     local o = {
         player = player,

@@ -7,6 +7,7 @@ local Json = {}
 ---@param path string Path of the file to read
 ---@param mod string|nil The id of the mod containing the file. Defaults to searching the Zomboid/Lua/ folder instead
 ---@return table?
+---@nodiscard
 Json.fromFile = function(path, mod)
     local text = File.readFullFile(path, mod)
     if not text then return end

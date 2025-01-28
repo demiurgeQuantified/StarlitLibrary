@@ -45,6 +45,7 @@ end
 ---@param mod string
 ---@param minLevel? "error"|"warn"|"info"|"debug"
 ---@return Starlit.Logger
+---@nodiscard
 Logger.new = function(mod, minLevel)
     ---@type Starlit.Logger
     local o = {
@@ -85,6 +86,7 @@ end
 ---@param minLevel? "error"|"warn"|"info"|"debug"
 ---@param writer LuaFileWriter
 ---@return Starlit.FileLogger
+---@nodiscard
 FileLogger.new = function(mod, minLevel, writer)
     local o = Logger.new(mod, minLevel)
     ---@cast o Starlit.FileLogger
@@ -107,6 +109,7 @@ local LoggerAPI = {}
 ---@param file? string Optional path of a file to write to, relative to Zomboid/Lua/logs/{mod}/ <br> If no extension is included, .txt will be added <br> If this argument is not passed the logger will write to the game's logs instead, and errors will cause stack traces
 ---@return Starlit.Logger logger
 ---@see Starlit.Logger.__call
+---@nodiscard
 LoggerAPI.getLogger = function(mod, file)
     if file then
         if not string.match(file, "%.") then

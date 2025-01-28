@@ -186,6 +186,7 @@ local Reflection = {}
 ---Returns the name of the java class or lua type that o is an instance of
 ---@param o any The object
 ---@return string name Name of the object's class
+---@nodiscard
 Reflection.getClassName = function(o)
     local jClass = classNames[getmetatable(o)]
     if jClass then return jClass end
@@ -204,6 +205,7 @@ end
 ---Returns a table of the names of every field belonging to that class
 ---@param class string Name of the class
 ---@return string[] fields Field names
+---@nodiscard
 Reflection.getClassFieldNames = function(class)
     return classFields[class]
 end
@@ -276,6 +278,7 @@ local unexposedObjectFields = {}
 ---@param object any The object
 ---@param name string The name of the field
 ---@return any value The value of the field.
+---@nodiscard
 Reflection.getField = function(object, name)
     local className = string.match(tostring(object), "^(.*)@")
     if not unexposedObjectFields[className] then
@@ -293,6 +296,7 @@ end
 ---@param callframeOffset number How many callframes downwards to search for the local.
 ---@param name string The name of the local variable.
 ---@return boolean hasLocalVariable Whether the callframe had a local variable by that name.
+---@nodiscard
 Reflection.hasLocal = function(callframeOffset, name)
     local coroutine = getCurrentCoroutine()
     local callframe = getCoroutineCallframeStack(
@@ -310,7 +314,8 @@ end
 ---Returns the value of a local variable by its name.
 ---@param callframeOffset number How many callframes downwards to search for the local.
 ---@param name string The name of the local variable.
----@return any value The value of the local variable, or nil if there was no such local. This is indistinguishable from a local containing the value nil.
+---@return any value The value of the local variable, or nil if there was no such local. A non-existent local is indistinguishable from a local containing the value nil.
+---@nodiscard
 Reflection.getLocalValue = function(callframeOffset, name)
     local coroutine = getCurrentCoroutine()
     local localIndex = -1
@@ -336,6 +341,7 @@ end
 ---@param callframeOffset number How many callframes downwards to search for the local.
 ---@param value any The value of the local to search for.
 ---@return string? name The name of the first local variable containing the value, or nil if no local variable containing the value could be found.
+---@nodiscard
 Reflection.getLocalName = function(callframeOffset, value)
     local coroutine = getCurrentCoroutine()
     local callframe = getCoroutineCallframeStack(
@@ -353,6 +359,7 @@ end
 ---Returns a table containing all of the local variabless in a callframe.
 ---@param callframeOffset number How many callframes downwards to get locals from.
 ---@return table<string, any> locals The local variables in the callframe.
+---@nodiscard
 Reflection.getLocals = function(callframeOffset)
     local coroutine = getCurrentCoroutine()
     local callframe = getCoroutineCallframeStack(
