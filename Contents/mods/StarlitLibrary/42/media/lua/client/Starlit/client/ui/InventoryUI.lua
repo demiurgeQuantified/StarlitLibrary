@@ -99,4 +99,20 @@ InventoryUI.addTooltipInteger = function(layout, label, value, highGood, labelCo
     layoutItem:setValueRight(value, highGood)
 end
 
+---Removes an existing tooltip element from a tooltip by its name.
+---@param layout Layout The tooltip layout.
+---@param label string The text of the label of the tooltip element to remove.
+---@return LayoutItem? item The tooltip element that was removed. If nil, no matching element was found.
+InventoryUI.removeTooltipElement = function(layout, label)
+    local items = layout.items
+    for i = 0, items:size() - 1 do
+        local item = items:get(i)
+        if item.label == label then
+            items:remove(item)
+            return item
+        end
+    end
+    return nil
+end
+
 return InventoryUI
