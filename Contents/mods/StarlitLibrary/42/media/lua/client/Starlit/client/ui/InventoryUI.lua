@@ -28,7 +28,8 @@ ISToolTipInv.render = function(self)
         local layout = tooltip:beginLayout()
         item:DoTooltipEmbedded(tooltip, layout, 0)
 
-        -- old_DoTooltip(self, tooltip)
+        -- because we no longer call the original function, this may affect mod compatibility
+        -- there isn't really any way to avoid that though
 
         InventoryUI.onFillItemTooltip:trigger(tooltip, layout, item)
 
@@ -50,8 +51,7 @@ end
 ---@param label string The text to display as a label.
 ---@param colour? Starlit.Colour The colour of the text.
 InventoryUI.addTooltipLabel = function(layout, label, colour)
-    local layoutItem = LayoutItem.new()
-    layout.items:add(layoutItem)
+    local layoutItem = layout:addItem()
     layoutItem:setLabel(label, Colour.getRGBA(colour or COLOUR_LABEL))
 end
 
@@ -62,8 +62,7 @@ end
 ---@param keyColour? Starlit.Colour Key colour.
 ---@param valueColour? Starlit.Colour Value colour.
 InventoryUI.addTooltipKeyValue = function(layout, key, value, keyColour, valueColour)
-    local layoutItem = LayoutItem.new()
-    layout.items:add(layoutItem)
+    local layoutItem = layout:addItem()
     layoutItem:setLabel(key, Colour.getRGBA(keyColour or COLOUR_LABEL))
     layoutItem:setValue(value, Colour.getRGBA(valueColour or COLOUR_VALUE))
 end
@@ -75,8 +74,7 @@ end
 ---@param labelColour? Starlit.Colour Label colour.
 ---@param barColour? Starlit.Colour Colour of the filled part of the bar. Defaults to lerping between the user's good colour and bad colour by the amount.
 InventoryUI.addTooltipBar = function(layout, label, amount, labelColour, barColour)
-    local layoutItem = LayoutItem.new()
-    layout.items:add(layoutItem)
+    local layoutItem = layout:addItem()
     layoutItem:setLabel(label, Colour.getRGBA(labelColour or COLOUR_LABEL))
     layoutItem:setProgress(
         amount,
@@ -93,8 +91,7 @@ end
 ---@param highGood boolean If true, values above zero are shown in green and values below zero are shown in red. If false, the opposite is true.
 ---@param labelColour? Starlit.Colour Label colour.
 InventoryUI.addTooltipInteger = function(layout, label, value, highGood, labelColour)
-    local layoutItem = LayoutItem.new()
-    layout.items:add(layoutItem)
+    local layoutItem = layout:addItem()
     layoutItem:setLabel(label, Colour.getRGBA(labelColour or COLOUR_LABEL))
     layoutItem:setValueRight(value, highGood)
 end
@@ -114,5 +111,7 @@ InventoryUI.removeTooltipElement = function(layout, label)
     end
     return nil
 end
+
+-- TODO: functions to set positions of tooltip elements?
 
 return InventoryUI
