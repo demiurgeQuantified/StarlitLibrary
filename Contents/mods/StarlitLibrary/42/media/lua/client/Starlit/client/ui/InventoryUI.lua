@@ -14,8 +14,6 @@ InventoryUI.onFillItemTooltip = Events.new()
 local old_render = ISToolTipInv.render
 ---@diagnostic disable-next-line: duplicate-set-field
 ISToolTipInv.render = function(self)
-    local layout = self.tooltip--[[@as ObjectTooltip]]:beginLayout()
-    self.tooltip.freeLayouts:push(layout)
     local item = self.item
 
     if instanceof(item, "FluidContainer") then
@@ -27,15 +25,19 @@ ISToolTipInv.render = function(self)
     local old_DoTooltip = itemMetatable.DoTooltip
     ---@param tooltip ObjectTooltip
     itemMetatable.DoTooltip = function(self, tooltip)
-        old_DoTooltip(self, tooltip)
+        local layout = tooltip:beginLayout()
+        item:DoTooltipEmbedded(tooltip, layout, 0)
+
+        -- old_DoTooltip(self, tooltip)
 
         InventoryUI.onFillItemTooltip:trigger(tooltip, layout, item)
 
-        -- FIXME: previously rendered layout items right justify to the total width of the original tooltip,
-        -- but listeners may make the tooltip wider than the original
-        local height = layout:render(tooltip.padLeft, tooltip:getHeight() - tooltip.padBottom, tooltip)
+        local height = layout:render(tooltip.padLeft, layout.offsetY, tooltip)
+        tooltip:endLayout(layout)
         tooltip:setHeight(height + tooltip.padBottom)
-        layout.items:clear()
+        if tooltip:getWidth() < 150 then
+            tooltip:setWidth(150)
+        end
     end
 
     old_render(self)
