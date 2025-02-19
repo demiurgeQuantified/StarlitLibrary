@@ -18,6 +18,11 @@ ISToolTipInv.render = function(self)
     self.tooltip.freeLayouts:push(layout)
     local item = self.item
 
+    if instanceof(item, "FluidContainer") then
+        old_render(self)
+        return
+    end
+
     local itemMetatable = getmetatable(self.item).__index
     local old_DoTooltip = itemMetatable.DoTooltip
     ---@param tooltip ObjectTooltip
