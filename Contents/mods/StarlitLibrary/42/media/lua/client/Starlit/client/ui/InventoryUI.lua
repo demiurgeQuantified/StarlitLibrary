@@ -21,23 +21,38 @@ ISToolTipInv.render = function(self)
         return
     end
 
-    local itemMetatable = getmetatable(self.item).__index
+    local itemMetatable = getmetatable(item).__index
     local old_DoTooltip = itemMetatable.DoTooltip
     ---@param tooltip ObjectTooltip
     itemMetatable.DoTooltip = function(self, tooltip)
         local layout = tooltip:beginLayout()
-        item:DoTooltipEmbedded(tooltip, layout, 0)
+        local isInventoryContainer = instanceof(item, "InventoryContainer")
+        if not isInventoryContainer then
+            item:DoTooltipEmbedded(tooltip, layout, 0)
+        else
+            -- HACK: inventorycontainers have extra code in their DoTooltip so we can't use DoTooltipEmbedded
+            local freeLayouts = tooltip.freeLayouts --[[@as Stack]]
+            freeLayouts:push(layout)
+            old_DoTooltip(self, tooltip)
+        end
 
         -- because we no longer call the original function, this may affect mod compatibility
         -- there isn't really any way to avoid that though
 
         InventoryUI.onFillItemTooltip:trigger(tooltip, layout, item)
 
-        local height = layout:render(tooltip.padLeft, layout.offsetY, tooltip)
-        tooltip:endLayout(layout)
-        tooltip:setHeight(height + tooltip.padBottom)
-        if tooltip:getWidth() < 150 then
-            tooltip:setWidth(150)
+        if not isInventoryContainer then
+            local height = layout:render(tooltip.padLeft, layout.offsetY, tooltip)
+            tooltip:endLayout(layout)
+            tooltip:setHeight(height + tooltip.padBottom)
+            if tooltip:getWidth() < 150 then
+                tooltip:setWidth(150)
+            end
+        else
+            local padBottom = tooltip.padBottom
+            local height = layout:render(tooltip.padLeft, tooltip:getHeight() - padBottom, tooltip)
+            tooltip:setHeight(height + padBottom)
+            layout.items:clear()
         end
     end
 
@@ -101,6 +116,7 @@ end
 ---@param label string The text of the label of the tooltip element to remove.
 ---@return LayoutItem? item The tooltip element that was removed. If nil, no matching element was found.
 InventoryUI.removeTooltipElement = function(layout, label)
+    -- FIXME: because of the inventorycontainer workaround this no longer works for them
     local items = layout.items
     for i = 0, items:size() - 1 do
         local item = items:get(i)
