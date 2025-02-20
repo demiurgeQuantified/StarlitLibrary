@@ -14,46 +14,68 @@ InventoryUI.onFillItemTooltip = Events.new()
 local old_render = ISToolTipInv.render
 ---@diagnostic disable-next-line: duplicate-set-field
 ISToolTipInv.render = function(self)
-    local item = self.item
+    local item = self.item --[[@as InventoryItem|FluidContainer]]
 
     if instanceof(item, "FluidContainer") then
+        ---@cast item FluidContainer
         old_render(self)
         return
     end
+    ---@cast item -FluidContainer
 
     local itemMetatable = getmetatable(item).__index
     local old_DoTooltip = itemMetatable.DoTooltip
     ---@param tooltip ObjectTooltip
     itemMetatable.DoTooltip = function(self, tooltip)
         local layout = tooltip:beginLayout()
-        local isInventoryContainer = instanceof(item, "InventoryContainer")
-        if not isInventoryContainer then
-            item:DoTooltipEmbedded(tooltip, layout, 0)
-        else
-            -- HACK: inventorycontainers have extra code in their DoTooltip so we can't use DoTooltipEmbedded
-            local freeLayouts = tooltip.freeLayouts --[[@as Stack]]
-            freeLayouts:push(layout)
-            old_DoTooltip(self, tooltip)
-        end
+        item:DoTooltipEmbedded(tooltip, layout, 0)
 
         -- because we no longer call the original function, this may affect mod compatibility
         -- there isn't really any way to avoid that though
 
         InventoryUI.onFillItemTooltip:trigger(tooltip, layout, item)
 
-        if not isInventoryContainer then
-            local height = layout:render(tooltip.padLeft, layout.offsetY, tooltip)
-            tooltip:endLayout(layout)
-            tooltip:setHeight(height + tooltip.padBottom)
-            if tooltip:getWidth() < 150 then
-                tooltip:setWidth(150)
-            end
-        else
-            local padBottom = tooltip.padBottom
-            local height = layout:render(tooltip.padLeft, tooltip:getHeight() - padBottom, tooltip)
-            tooltip:setHeight(height + padBottom)
-            layout.items:clear()
+        local padLeft = tooltip.padLeft
+        local padBottom = tooltip.padBottom
+
+        local height = layout:render(padLeft, layout.offsetY, tooltip)
+        tooltip:endLayout(layout)
+
+        local width = tooltip:getWidth()
+        if width < 150 then
+            width = 150
         end
+
+        if instanceof(item, "InventoryContainer") then
+            if width < 160 then
+                width = 160
+            end
+            ---@cast item InventoryContainer
+            local items = item:getItemContainer():getItems()
+            local padRight = tooltip.padRight
+            if not items:isEmpty() then
+                ---@type {string : true}
+                local seenItems = {}
+                local xOffset = padLeft
+                height = height + 4
+                for i = items:size() - 1, 0, -1 do
+                    local item = items:get(i) --[[@as InventoryItem]]
+                    local name = item:getName()
+                    if not seenItems[name] then
+                        seenItems[name] = true
+                        tooltip:DrawTextureScaledAspect(item:getTex(), xOffset, height, 16, 16, 1, 1, 1, 1)
+                        xOffset = xOffset + 17
+                        if xOffset + 16 > width - padRight then
+                            break
+                        end
+                    end
+                end
+
+                height = height + 16
+            end
+        end
+        tooltip:setHeight(height + padBottom)
+        tooltip:setWidth(width)
     end
 
     old_render(self)
