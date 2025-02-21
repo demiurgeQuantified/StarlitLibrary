@@ -192,6 +192,10 @@ Reflection.getClassName = function(o)
     if jClass then return jClass end
 
     local objType = type(o)
+    if objType == "userdata" then
+        return string.match(tostring(o), "^(.*)@")
+    end
+
     return (objType == "table" and o.Type) or objType
 end
 
