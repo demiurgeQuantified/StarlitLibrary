@@ -2,20 +2,17 @@
 ---@class Starlit.LuaEvent
 ---@field [integer] function
 local LuaEvent = {}
----@type table<string, Starlit.LuaEvent>
-LuaEvent.list = {}
+---@type Starlit.LuaEvent[]
+LuaEvent._list = {}
 LuaEvent.__index = LuaEvent
 
 ---Creates a new event and registers it in the event list
----@param name string? Name of the event. If nil it will not be registered to the event list.
 ---@return Starlit.LuaEvent
-LuaEvent.new = function(name)
+LuaEvent.new = function()
     local o = table.newarray() --[[@as table]]
 
     setmetatable(o, LuaEvent)
-    if name then
-        LuaEvent.list[name] = o
-    end
+    table.insert(LuaEvent._list, o)
 
     return o
 end
@@ -81,6 +78,20 @@ LuaEvent.trigger = function(self, ...)
     for i = #self, 1, -1 do
         self[i](...)
     end
+end
+
+local _reloadLuaFile = reloadLuaFile
+---@param filename string
+reloadLuaFile = function(filename)
+    for i = 1, #LuaEvent._list do
+        local event = LuaEvent._list[i]
+        for j = #event, 1, -1 do
+            if getFilenameOfClosure(event[j]) == filename then
+                table.remove(event, j)
+            end
+        end
+    end
+    _reloadLuaFile(filename)
 end
 
 return LuaEvent
