@@ -284,7 +284,7 @@ local unexposedObjectFields = {}
 ---@return any value The value of the field.
 ---@nodiscard
 Reflection.getField = function(object, name)
-    local className = string.match(tostring(object), "^(.*)@")
+    local className = Reflection.getClassName(object)
     if not unexposedObjectFields[className] then
         local fieldMap = {}
         for i = 0, getNumClassFields(object)-1 do
