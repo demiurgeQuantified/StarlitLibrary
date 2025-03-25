@@ -167,7 +167,7 @@ end
 ---Removes an existing tooltip element from a tooltip.
 ---@param layout Layout The tooltip layout.
 ---@param element LayoutItem | integer The tooltip element to remove, or the index (from the top) of the element to remove. Negative indices count from the bottom.
----@return LayoutItem element The element that was removed.
+---@return LayoutItem? element The element that was removed.
 InventoryUI.removeTooltipElement = function(layout, element)
     local items = layout.items --[[@as ArrayList]]
 
@@ -183,8 +183,6 @@ InventoryUI.removeTooltipElement = function(layout, element)
                 return item
             end
         end
-
-        return nil
     elseif argType == "number" then
         ---@cast element integer
         if element < 0 then
