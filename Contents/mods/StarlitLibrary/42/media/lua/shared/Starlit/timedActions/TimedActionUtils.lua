@@ -63,9 +63,9 @@ end
 
 ---Queues actions to transfer an item to the character's inventory and equip it.
 ---Actions will be skipped as appropriate if the item is already in the player's inventory or already equipped in that slot.
----@param character IsoGameCharacter The character
----@param item InventoryItem The item to equip
----@param slot? "primary"|"secondary" Which slot to equip it in. If not passed, primary is assumed
+---@param character IsoGameCharacter The character.
+---@param item InventoryItem | nil The item to equip. If nil, the item already equipped in the slot will be unequipped, if any.
+---@param slot? "primary"|"secondary" Which slot to equip it in. If not passed, primary is assumed.
 TimedActionUtils.transferAndEquip = function(character, item, slot)
     slot = slot or "primary"
     local needEquip
@@ -76,12 +76,14 @@ TimedActionUtils.transferAndEquip = function(character, item, slot)
     end
     if not needEquip then return end
 
-    local inventory = character:getInventory()
-    if not inventory:contains(item) then
-        ISTimedActionQueue.add(
-            ISInventoryTransferAction:new(
-                character, item,
-                item:getContainer(), inventory))
+    if item then
+        local inventory = character:getInventory()
+        if not inventory:contains(item) then
+            ISTimedActionQueue.add(
+                ISInventoryTransferAction:new(
+                    character, item,
+                    item:getContainer(), inventory))
+        end
     end
 
     ISTimedActionQueue.add(
