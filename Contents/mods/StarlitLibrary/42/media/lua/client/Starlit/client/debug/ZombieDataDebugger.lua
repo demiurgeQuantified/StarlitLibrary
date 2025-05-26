@@ -158,6 +158,4 @@ local ZombieDataDebugger = UI.Window{
     }
 }
 
-function OpenZombieDataDebugger()
-    ZombieDataDebugger:instantiate()
-end
+return ZombieDataDebugger
