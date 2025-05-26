@@ -1,5 +1,7 @@
 local Bitwise = {}
 
+-- TODO: add tests for this module
+
 ---Gets the value of a specific bit in a number.
 ---This is optimised for the case where you only need to check one or two bits: if you want to analyse an entire number, it is far more efficient to convert the number to a binary string instead.
 ---@param int integer The bitwise number.

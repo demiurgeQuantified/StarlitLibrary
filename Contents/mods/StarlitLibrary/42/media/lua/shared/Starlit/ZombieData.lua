@@ -1,10 +1,4 @@
-local Bitwise = require("Starlit/utils/Bitwise")
-
----@param zombie IsoZombie
----@return integer
-local function getZombieID(zombie)
-    return Bitwise.set(zombie:getPersistentOutfitID(), 16, true)
-end
+local ZombieIds = require("Starlit/ZombieIds")
 
 ---@type {version: integer, [integer]: table}
 local modData
@@ -21,7 +15,7 @@ Events.OnInitGlobalModData.Add(initModData)
 
 ---@type Callback_OnZombieDead
 local function removeZombieDataIfNeeded(zombie)
-    local id = getZombieID(zombie)
+    local id = ZombieIds.get(zombie)
     if modData[id] then
         modData[id] = nil
     end
@@ -38,7 +32,7 @@ local ZombieData = {}
 ---@return table zombieData The zombie data.
 ---@nodiscard
 function ZombieData.get(zombie)
-    local id = getZombieID(zombie)
+    local id = ZombieIds.get(zombie)
     if not modData[id] then
         modData[id] = {}
     end
