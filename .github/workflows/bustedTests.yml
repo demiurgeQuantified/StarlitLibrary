@@ -1,0 +1,12 @@
+name: Busted
+on: [push, pull_request]
+jobs:
+  busted:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Run Busted
+        uses: lunarmodules/busted@v2.2.0
+        with:
+          args: './tests -m="./Contents/mods/StarlitLibrary/42/media/lua/shared/?.lua;./Contents/mods/StarlitLibrary/42/media/lua/client/?.lua;./Contents/mods/StarlitLibrary/42/media/lua/server/?.lua"'
