@@ -7,11 +7,16 @@ local Bitwise = {}
 ---@return boolean bit Value of the bit.
 ---@nodiscard
 Bitwise.get = function(int, pos)
-    local bit = 2^pos
+    local bit = 2^(pos - 1)
 
     int = int / bit
+    -- round towards 0
     int = int - int % 1
-    return int % 2 == 1
+    if int < 0 then
+        int = int + 1
+    end
+    -- odd = present
+    return int % 2 ~= 0
 end
 
 ---Sets the value of a specific bit in a number. If the bit is already set, returns the original number.
@@ -21,7 +26,7 @@ end
 ---@return integer int The modified number.
 ---@nodiscard
 Bitwise.set = function(int, pos, value)
-    local bit = 2^pos
+    local bit = 2^(pos - 1)
     local hasBit = Bitwise.get(int, pos)
 
     if hasBit then
@@ -29,7 +34,7 @@ Bitwise.set = function(int, pos, value)
             int = int - bit
         end
     elseif value then
-        int = int - bit
+        int = int + bit
     end
 
     return int
