@@ -1,23 +1,31 @@
-local Actions = require("Starlit/action/Actions")
+local ActionState = require("Starlit/action/ActionState")
 
 ---@class starlit.PerformActionAction : ISBaseTimedAction
----@field actionState starlit.ActionState
+---@field state starlit.ActionState
 local PerformActionAction = ISBaseTimedAction:derive("starlit.PerformActionAction")
 
 PerformActionAction.isValid = function(self)
-    return Actions.isActionStateStillValid(self.actionState)
+    return ActionState.isActionStateStillValid(self.state)
 end
 
 PerformActionAction.update = function(self)
     self:setItemsJobDelta(self:getJobDelta())
 
-    self.actionState.def.update(self.actionState)
+    self.state.def.update(self.state)
     ISBaseTimedAction.update(self)
+end
+
+PerformActionAction.waitToStart = function(self)
+    if not self.state.def.faceObject then
+        return false
+    end
+    self.character:faceThisObject(self.state.objects[self.state.def.faceObject])
+    return self.character:shouldBeTurning()
 end
 
 ---@param delta number
 PerformActionAction.setItemsJobDelta = function(self, delta)
-    for _, item in pairs(self.actionState.items) do
+    for _, item in pairs(self.state.items) do
         if type(item) == "table" then
             for i = 1, #item do
                 item[i]:setJobDelta(delta)
@@ -30,7 +38,7 @@ end
 
 ---@param name string | nil
 PerformActionAction.setItemsJobType = function(self, name)
-    for _, item in pairs(self.actionState.items) do
+    for _, item in pairs(self.state.items) do
         if type(item) == "table" then
             for i = 1, #item do
                 item[i]:setJobType(name)
@@ -47,30 +55,34 @@ PerformActionAction.cleanup = function(self)
 end
 
 PerformActionAction.stop = function(self)
-    self.actionState.def.stop(self.actionState)
+    self.state.def.stop(self.state)
     self:cleanup()
     ISBaseTimedAction.stop(self)
 end
 
 PerformActionAction.perform = function(self)
-    self.actionState.def.complete(self.actionState)
+    self.state.def.complete(self.state)
     self:cleanup()
     ISBaseTimedAction.perform(self)
 end
 
 PerformActionAction.start = function(self)
-    if not Actions.isActionStateStillValid(self.actionState) then
+    if not ActionState.isActionStateStillValid(self.state) then
         -- TODO: in some situations we may want to build a new state instead of cancelling
         -- e.g. if i queued the action for later, even if i lost the item i was going to use for it
         -- i may still have a valid one
-        self:forceStop()
+        self:forceCancel()
         return
     end
 
     self:setItemsJobDelta(0)
-    self:setItemsJobType(self.actionState.def.name)
+    self:setItemsJobType(self.state.def.name)
 
-    self.actionState.def.start(self.actionState)
+    if self.state.def.animation then
+        self:setActionAnim(self.state.def.animation)
+    end
+
+    self.state.def.start(self.state)
 
     ISBaseTimedAction.start(self)
 end
@@ -82,8 +94,16 @@ PerformActionAction.new = function(state)
     setmetatable(o, PerformActionAction) ---@cast o starlit.PerformActionAction
     o.Type = state.def.name
 
-    o.actionState = state
+    o.state = state
+
     o.maxTime = state.def.time
+    o.stopOnAim = state.def.stopOnAim
+    o.stopOnWalk = state.def.stopOnWalk
+    o.stopOnRun = state.def.stopOnRun
+
+    if state.character:isTimedActionInstant() then
+        o.maxTime = 0
+    end
 
     return o
 end

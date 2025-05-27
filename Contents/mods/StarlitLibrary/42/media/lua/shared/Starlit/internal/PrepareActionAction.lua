@@ -2,22 +2,97 @@ local TimedActionUtils = require("Starlit/timedActions/TimedActionUtils")
 local PerformActionAction = require("Starlit/internal/PerformActionAction")
 
 ---@class starlit.PrepareActionAction : ISBaseTimedAction
----@field actionState starlit.ActionState
+---@field state starlit.ActionState
 local PrepareActionAction = ISBaseTimedAction:derive("starlit.PrepareActionAction")
 
 PrepareActionAction.isValid = function(self)
     return true
 end
 
-PrepareActionAction.perform = function (self)
+---@param slot "primary"|"secondary"
+---@param model string | nil
+PrepareActionAction.setHandModel = function(self, slot, model)
+    if not model then
+        -- nil means we don't care what's in this hand
+        return
+    end
+
+    if model == "EMPTY" then
+        -- EMPTY removes any equipped item from the hand
+        local equippedItem
+        if slot == "primary" then
+            equippedItem = self.character:getPrimaryHandItem()
+        else
+            equippedItem = self.character:getSecondaryHandItem()
+            if equippedItem == self.character:getPrimaryHandItem() then
+                -- we don't unequip anything if the secondary item is being two-handed (we consider this a primary item)
+                return
+            end
+        end
+
+        if not equippedItem then
+            return
+        end
+
+        TimedActionUtils.unequip(
+            self.character,
+            equippedItem
+        )
+        return
+    end
+
+    local item = self.state.items[model]
+    if item then
+        -- if it's an item identifier, equip that item
+        if type(item) == "table" then
+            item = item[1]
+        end
+        TimedActionUtils.transferAndEquip(self.character, item, slot)
+    else
+        -- otherwise set as string model
+        -- we need to get the existing model in the other slot to avoid overriding it with nil
+        if slot == "primary" then
+            self:setOverrideHandModelsString(model, self.action:getSecondaryHandMdl())
+        else
+            self:setOverrideHandModelsString(self.action:getPrimaryHandMdl(), model)
+        end
+    end
+end
+
+PrepareActionAction.perform = function(self)
     self:beginAddingActions()
 
-    local prop1 = type(self.actionState.items.prop1) == "table" and self.actionState.items.prop1[1] or self.actionState.items.prop1
-    local prop2 = type(self.actionState.items.prop2) == "table" and self.actionState.items.prop2[1] or self.actionState.items.prop2
-    TimedActionUtils.transferAndEquip(self.character, prop1, "primary")
-    TimedActionUtils.transferAndEquip(self.character, prop2, "secondary")
+    if self.state.def.walkToObject then
+        local object = self.state.objects[self.state.def.walkToObject]
 
-    ISTimedActionQueue.add(PerformActionAction.new(self.actionState))
+        local square
+        if instanceof(object, "IsoDoor") or instanceof(object, "IsoWindow") then
+            -- doors and windows use a different square selection algorithm
+            square = AdjacentFreeTileFinder.FindWindowOrDoor(
+                object:getSquare(), object, self.character
+            )
+        else
+            square = AdjacentFreeTileFinder.Find(
+                object:getSquare(), self.character
+            )
+        end
+
+        if not square then
+            self:forceCancel()
+            return
+        end
+
+        ISTimedActionQueue.add(
+            ISWalkToTimedAction:new(self.character, square)
+        )
+    end
+
+    -- TODO: support moving items into main inventory
+
+    self:setHandModel("primary", self.state.def.primaryItem)
+    self:setHandModel("secondary", self.state.def.secondaryItem)
+
+    ISTimedActionQueue.add(PerformActionAction.new(self.state))
 
     self:endAddingActions()
     ISBaseTimedAction.perform(self)
@@ -31,7 +106,7 @@ PrepareActionAction.new = function(state)
     setmetatable(o, PrepareActionAction)
     ---@cast o starlit.PrepareActionAction
 
-    o.actionState = state
+    o.state = state
     o.maxTime = 0
 
     return o

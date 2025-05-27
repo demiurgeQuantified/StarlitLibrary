@@ -23,7 +23,7 @@ end
 ---to fail even though there are still valid items in the player's inventory.
 ---@param character IsoGameCharacter The character.
 ---@param type string The item type to transfer.
----@param predicate? ItemContainer_Predicate Optional item evaluation function.
+---@param predicate? umbrella.ItemContainer_Predicate Optional item evaluation function.
 ---@param predicateArg? any Optional predicate argument.
 ---@deprecated Replaced by TimedActionUtils.transferFirstValid
 TimedActionUtils.transferFirstType = function(character, type, predicate, predicateArg)
@@ -36,7 +36,7 @@ end
 ---to fail even though there are still valid items in the player's inventory.
 ---@param character IsoGameCharacter The character.
 ---@param type? string The item type to transfer. If nil does not check item type.
----@param predicate? ItemContainer_Predicate Optional item evaluation function.
+---@param predicate? umbrella.ItemContainer_Predicate Optional item evaluation function.
 ---@param predicateArg? any Optional predicate argument.
 TimedActionUtils.transferFirstValid = function(character, type, predicate, predicateArg)
     assert(type or predicate, "No item predicate or type passed to TimedActionUtils.transferFirstValid")
@@ -51,7 +51,7 @@ end
 ---to fail even though there are still valid items in the player's inventory.
 ---@param character IsoGameCharacter The character.
 ---@param type? string The item type to transfer. If nil does not check item type.
----@param predicate? ItemContainer_Predicate Optional item evaluation function.
+---@param predicate? umbrella.ItemContainer_Predicate Optional item evaluation function.
 ---@param predicateArg? any Optional predicate argument.
 ---@param amount integer Amount of items to transfer.
 TimedActionUtils.transferSomeValid = function(character, type, predicate, predicateArg, amount)
@@ -84,18 +84,26 @@ TimedActionUtils.transferAndEquip = function(character, item, slot)
                     character, item,
                     item:getContainer(), inventory))
         end
-    end
 
-    ISTimedActionQueue.add(
-        ISEquipWeaponAction:new(
-            character, item, 50, slot == "primary"))
+        ISTimedActionQueue.add(
+            ISEquipWeaponAction:new(
+                character, item, 50, slot == "primary"))
+    else
+        ISTimedActionQueue.add(
+            ISUnequipAction:new(
+                character,
+                slot == "primary" and character:getPrimaryHandItem() or character:getSecondaryHandItem(),
+                50
+            )
+        )
+    end
 end
 
 ---Finds an item and queues actions to transfer it to the character's inventory and equip it.
 ---Actions will be skipped as appropriate if a passing item is already in the player's inventory or already equipped in that slot.
 ---No actions are queued if no item was found.
 ---@param character IsoGameCharacter The character
----@param eval ItemContainer_Predicate Item evaluation function
+---@param eval umbrella.ItemContainer_Predicate Item evaluation function
 ---@param slot? "primary"|"secondary" Which slot to equip it in. If not passed, primary is assumed
 ---@return boolean found Whether an item was found. This doesn't necessarily mean the actions will go through, as the item could already be equipped.
 TimedActionUtils.transferAndEquipFirstEval = function(character, eval, slot)
@@ -148,7 +156,7 @@ end
 ---Actions will be skipped as appropriate if the item is already in the player's inventory or already worn.
 ---No actions are queued if no item was found.
 ---@param character IsoGameCharacter The character
----@param eval ItemContainer_Predicate Item evaluation function. It must not return true for items that cannot be worn.
+---@param eval umbrella.ItemContainer_Predicate Item evaluation function. It must not return true for items that cannot be worn.
 ---@return boolean found Whether an item was found. This doesn't necessarily mean the actions will go through, as the item could already be equipped.
 TimedActionUtils.transferAndWearFirstEval = function(character, eval)
     local wornItems = character:getWornItems()
@@ -174,7 +182,7 @@ TimedActionUtils.transferAndWearFirstEval = function(character, eval)
     return true
 end
 
----Queues actions to unequip an item if it is equipped or worn. Does nothing if the item is not equipped or worn..
+---Queues actions to unequip an item if it is equipped or worn. Does nothing if the item is not equipped or worn.
 ---@param character IsoGameCharacter The character.
 ---@param item InventoryItem The item to unequip.
 TimedActionUtils.unequip = function(character, item)
