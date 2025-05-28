@@ -41,9 +41,11 @@ PerformActionAction.setItemsJobType = function(self, name)
     for _, item in pairs(self.state.items) do
         if type(item) == "table" then
             for i = 1, #item do
+                ---@diagnostic disable-next-line: param-type-mismatch
                 item[i]:setJobType(name)
             end
         else
+            ---@diagnostic disable-next-line: param-type-mismatch
             item:setJobType(name)
         end
     end
@@ -76,7 +78,7 @@ PerformActionAction.start = function(self)
     end
 
     self:setItemsJobDelta(0)
-    self:setItemsJobType(self.state.def.name)
+    self:setItemsJobType(self.state.def.name and getText(self.state.def.name) or nil)
 
     if self.state.def.animation then
         self:setActionAnim(self.state.def.animation)
