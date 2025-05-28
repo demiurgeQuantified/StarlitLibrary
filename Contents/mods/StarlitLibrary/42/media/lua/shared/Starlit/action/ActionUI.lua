@@ -1,3 +1,7 @@
+local ActionState = require("Starlit/action/ActionState")
+local Actions = require("Starlit/action/Actions")
+
+
 local ActionUI = {}
 
 ---Creates a tooltip for an action describing any failed requirements.
@@ -59,5 +63,46 @@ ActionUI.createFailTooltip = function(action, failReasons)
 
     return tooltip
 end
+
+
+---Conditions to show an action that cannot be performed.
+---@class starlit.Action.TooltipConditions
+---@field mustPass {items: string[], objects: string[], predicates: integer[]}
+
+
+---@type {action: starlit.Action, tooltipConditions: starlit.Action.TooltipConditions}[]
+local objectActions = {}
+
+
+---@param action starlit.Action
+---@param tooltipConditions starlit.Action.TooltipConditions
+ActionUI.addObjectAction = function(action, tooltipConditions)
+    table.insert(objectActions, {action = action, tooltipConditions = tooltipConditions})
+end
+
+
+---@type Callback_OnFillWorldObjectContextMenu
+local function showObjectActions(playerNum, context, worldObjects, test)
+    local character = getSpecificPlayer(playerNum)
+    for i = 1, #objectActions do
+        local objectAction = objectActions[i]
+        local state, failReasons = ActionState.tryBuildActionState(
+            objectAction.action,
+            character,
+            worldObjects
+        )
+
+        local optionName = getText(objectAction.action.name)
+        if state then
+            context:addOption(optionName, state, Actions.queueAction)
+        elseif failReasons then
+            local option = context:addOption(optionName)
+            option.notAvailable = true
+            option.toolTip = ActionUI.createFailTooltip(objectAction.action, failReasons)
+        end
+    end
+end
+
+Events.OnFillWorldObjectContextMenu.Add(showObjectActions)
 
 return ActionUI

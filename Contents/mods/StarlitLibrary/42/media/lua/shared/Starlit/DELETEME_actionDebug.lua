@@ -62,39 +62,43 @@ local function onOptionSelected(character, objects)
     end
 end
 
-Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObjects, test)
-    local states = {}
-    local failReasons
 
-    for i = 2, #worldObjects do
-        local object = worldObjects[i]
-        if instanceof(object, "IsoWindow") then
-            local state
-            state, failReasons = ActionState.tryBuildActionState(
-                addWindowAction,
-                getSpecificPlayer(playerNum),
-                worldObjects,
-                {
-                    objects = {
-                        window = object
-                    }
-                }
-            )
-            table.insert(states, state)
-        end
-    end
+-- Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObjects, test)
+--     local states = {}
+--     local failReasons
 
-    if #states == 0 then
-        -- only shows failReasons if at least one window was found and none were valid
-        if failReasons then
-            local option = context:addOption("(DEBUG) " .. getText(addWindowAction.name))
-            option.notAvailable = true
-            option.toolTip = ActionUI.createFailTooltip(addWindowAction, failReasons)
-        end
-    else
-        for i = 1, #states do
-            -- IDEA: highlight object when mousing over option
-            context:addOption("(DEBUG) " .. getText(addWindowAction.name), PrepareActionAction.new(states[i]), ISTimedActionQueue.add)
-        end
-    end
-end)
+--     for i = 2, #worldObjects do
+--         local object = worldObjects[i]
+--         if instanceof(object, "IsoWindow") then
+--             local state
+--             state, failReasons = ActionState.tryBuildActionState(
+--                 addWindowAction,
+--                 getSpecificPlayer(playerNum),
+--                 worldObjects,
+--                 {
+--                     objects = {
+--                         window = object
+--                     }
+--                 }
+--             )
+--             table.insert(states, state)
+--         end
+--     end
+
+--     if #states == 0 then
+--         -- only shows failReasons if at least one window was found and none were valid
+--         if failReasons and failReasons.type ~= "forced" then
+--             local option = context:addOption("(DEBUG) " .. getText(addWindowAction.name))
+--             option.notAvailable = true
+--             option.toolTip = ActionUI.createFailTooltip(addWindowAction, failReasons)
+--         end
+--     else
+--         for i = 1, #states do
+--             -- IDEA: highlight object when mousing over option
+--             context:addOption("(DEBUG) " .. getText(addWindowAction.name), PrepareActionAction.new(states[i]), ISTimedActionQueue.add)
+--         end
+--     end
+-- end)
+
+
+ActionUI.addObjectAction(addWindowAction, {mustPass = {}})
