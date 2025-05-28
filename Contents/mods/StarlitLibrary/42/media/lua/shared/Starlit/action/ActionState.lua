@@ -93,19 +93,22 @@ function ActionState.tryBuildActionState(action, character, objects)
 
         ---@type ArrayList
         local itemArray = nil
-        if def._type == "types" then
+        if def.types then
             itemArray = ArrayList.new()
             for i = 1, #def.types do
                 inventory:getAllTypeRecurse(def.types[i], itemArray)
             end
-        elseif def._type == "tags" then
+        elseif def.tags then
             itemArray = ArrayList.new()
             for i = 1, #def.tags do
                 inventory:getAllTagRecurse(def.tags[i], itemArray)
             end
-        elseif def._type == "predicates" then
+        elseif def.predicates then
             -- FIXME: this does not recurse
             itemArray = ArrayList.new(inventory:getItems())
+        else
+            -- TODO: replace with starlit logger
+            error("empty RequiredItem '" + name + "' in action " + action.name)
         end
 
         itemArray:removeAll(claimedItems)

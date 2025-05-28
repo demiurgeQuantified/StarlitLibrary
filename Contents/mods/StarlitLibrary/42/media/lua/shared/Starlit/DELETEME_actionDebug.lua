@@ -7,19 +7,19 @@ local predicateNotBroken = function(item)
 end
 
 
-local myAction = Action{
+local myAction = Action.Action{
     name = "MyAction",
     time = 500,
     requiredItems = {
-        prop1 = Action.requiredItemTypes{
+        prop1 = Action.RequiredItem{
             types = {"Base.Shovel", "Base.PickAxe"},
             predicates = {predicateNotBroken},
             count = 5
         },
-        prop2 = Action.requiredItemTags{
+        prop2 = Action.RequiredItem{
             tags = {"TakeDirt"}
         },
-        Action.requiredItemPredicates{
+        Action.RequiredItem{
             predicates = {predicateNotBroken}
         }
     },
@@ -43,14 +43,14 @@ local myAction = Action{
 }
 
 
-local addWindowAction = Action{
+local addWindowAction = Action.Action{
     name = "AddWindow",
     time = 192,
     stopOnAim = true,
     stopOnRun = true,
     stopOnWalk = true,
     requiredItems = {
-        glass = Action.requiredItemTypes{
+        glass = Action.RequiredItem{
             types = {"Base.GlassPanel"},
             mainInventory = true
         }
@@ -58,7 +58,7 @@ local addWindowAction = Action{
     primaryItem = "EMPTY",
     secondaryItem = "EMPTY",
     requiredObjects = {
-        window = Action.requiredObject{
+        window = Action.RequiredObject{
             predicates = {
                 function (object)
                     return instanceof(object, "IsoWindow") --[[@cast object IsoWindow]]

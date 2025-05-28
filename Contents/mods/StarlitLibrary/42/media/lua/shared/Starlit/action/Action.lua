@@ -1,5 +1,25 @@
 local pass = function() end
 
+
+---@type metatable
+local selfMergeTableMeta
+selfMergeTableMeta = {
+    -- when called with a table argument, return both tables merged 
+    ---@param t table
+    ---@param args table
+    __call = function(t, args)
+        local o = copyTable(t)
+        for k, v in pairs(args) do
+            o[k] = v
+        end
+        return setmetatable(o, selfMergeTableMeta)
+    end
+}
+
+---@overload fun(table, table): table
+local selfMergeTable = setmetatable({}, selfMergeTableMeta)
+
+
 ---@class starlit.Action.RequiredItemDef
 ---@field predicates (fun(item:InventoryItem):boolean)[] | nil
 ---@field count integer | nil
@@ -8,13 +28,13 @@ local pass = function() end
 
 
 ---@class starlit.Action.RequiredItem : starlit.Action.RequiredItemDef
----@field _type "types"|"tags"|"predicates"
 ---@field predicates (fun(item:InventoryItem):boolean)[]
 ---@field types string[]
 ---@field tags string[]
 ---@field count integer
 ---@field mainInventory boolean
 ---@field mustBeSameType boolean  # TODO: not implemented
+-- common needs for predicates should be made into fields, as they can be optimised into a single predicate
 
 
 ---@class starlit.Action.RequiredObject
@@ -55,85 +75,35 @@ local pass = function() end
 ---@field stop fun(state:starlit.ActionState)
 
 
----@overload fun(def:starlit.ActionDef):starlit.Action
----@nodiscard
-local Action = {}
+local Action = {
+    ---@overload fun(def:starlit.ActionDef):starlit.Action
+    ---@nodiscard
+    Action = selfMergeTable{
+        stopOnAim = false,
+        stopOnWalk = false,
+        stopOnRun = false,
+        requiredItems = {},
+        requiredObjects = {},
+        predicates = {},
+        start = pass,
+        complete = pass,
+        update = pass,
+        stop = pass,
+    },
+    ---@overload fun(def:starlit.Action.RequiredItemDef):starlit.Action.RequiredItem
+    ---@nodiscard
+    RequiredItem = selfMergeTable{
+        predicates = {},
+        count = 1,
+        mainInventory = false,
+        mustBeSameType = false,
+    },
+    ---@overload fun(def:starlit.Action.RequiredObject):starlit.Action.RequiredObject
+    ---@nodiscard
+    RequiredObject = selfMergeTable{
 
----@param def starlit.Action.RequiredItemDef
----@return starlit.Action.RequiredItem
-Action.requiredItemTypes = function(def)
-    local o = copyTable(def)
-
-    o._type = "types"
-    o.predicates = o.predicates or {}
-    o.count = o.count or 1
-    o.mainInventory = o.mainInventory or false
-    o.mustBeSameType = o.mustBeSameType or false
-
-    return o
-end
-
----@param def starlit.Action.RequiredItemDef
----@return starlit.Action.RequiredItem
-Action.requiredItemTags = function(def)
-    local o = copyTable(def)
-
-    o._type = "tags"
-    o.predicates = o.predicates or {}
-    o.count = o.count or 1
-    o.mainInventory = o.mainInventory or false
-    o.mustBeSameType = o.mustBeSameType or false
-
-    return o
-end
-
----@param def starlit.Action.RequiredItemDef
----@return starlit.Action.RequiredItem
-Action.requiredItemPredicates = function(def)
-    local o = copyTable(def)
-
-    o._type = "predicates"
-    o.predicates = o.predicates or {}
-    o.count = o.count or 1
-    o.mainInventory = o.mainInventory or false
-    o.mustBeSameType = o.mustBeSameType or false
-
-    return o
-end
-
----@param def starlit.Action.RequiredObject
----@return starlit.Action.RequiredObject
-Action.requiredObject = function(def)
-    local o = copyTable(def)
-
-    return o
-end
-
-local meta = {
-    ---@param def starlit.ActionDef
-    ---@return starlit.Action
-    __call = function(self, def)
-        local o = copyTable(def) --[[@as starlit.Action]]
-
-        o.stopOnAim = o.stopOnAim or false
-        o.stopOnWalk = o.stopOnWalk or false
-        o.stopOnRun = o.stopOnRun or false
-
-        o.requiredObjects = o.requiredObjects or {}
-        o.requiredItems = o.requiredItems or {}
-        o.predicates = o.predicates or {}
-        o.complete = o.complete or pass
-        o.start = o.start or pass
-        o.update = o.update or pass
-        o.stop = o.stop or pass
-
-        -- TODO: set metatable that allows 'inheritance' by merging values in the 'base' with passed table
-
-        return o
-    end
+    }
 }
 
----@diagnostic disable-next-line: param-type-mismatch
-setmetatable(Action, meta)
 
 return Action
