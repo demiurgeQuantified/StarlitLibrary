@@ -23,7 +23,7 @@ local ActionState = {}
 ---The character performing the action.
 ---@field character IsoGameCharacter
 
----@alias starlit.ActionState.FailReasons {objects: any[], predicates: integer[], items: any[]}
+---@alias starlit.ActionState.FailReasons {objects: any[], predicates: integer[], items: any[], type: string}
 ---@alias starlit.ActionState.ForceParams {objects: {[any]: IsoObject} | nil, items: {[any]: InventoryItem|InventoryItem[]} | nil}
 
 ---Checks a list of objects against an object requirement.
@@ -134,7 +134,8 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
     local failedRequirements = {
         objects = {},
         predicates = {},
-        items = {}
+        items = {},
+        type = "forced"
     }
 
     local requiredObjects = action.requiredObjects
@@ -203,6 +204,8 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
             return nil, failedRequirements
         end
     end
+
+    failedRequirements.type = "regular"
 
     -- copy the table before changing it so that changes don't propagate out of the function
     objects = copyTable(objects)
