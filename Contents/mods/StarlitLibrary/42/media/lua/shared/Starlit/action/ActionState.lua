@@ -6,10 +6,21 @@ local DEBUG = getDebug()
 
 local ActionState = {}
 
+---State of a specific action attempt.
+---Where an Action defines the kinds of items and objects needed, an ActionState contains the specific items and objects being used in an action.
 ---@class starlit.ActionState
+---
+---The Action this ActionState corresponds to.
 ---@field def starlit.Action
+---
+---The items used in the action. Keys correspond to requiredItems.
+---Values will be a table if the count of the requiredItem is more than 1. Otherwise they are InventoryItems.
 ---@field items table<any, InventoryItem | InventoryItem[]>
+---
+---The objects used in the action. Keys correspond to the action's requiredObjects.
 ---@field objects table<any, IsoObject>
+---
+---The character performing the action.
 ---@field character IsoGameCharacter
 
 ---@alias starlit.ActionState.FailReasons {objects: {}, predicates: {}, items: {}}
