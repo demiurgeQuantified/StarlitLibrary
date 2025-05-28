@@ -50,27 +50,19 @@ function ActionState.tryBuildActionState(action, character, objects)
     objects = copyTable(objects)
 
     for name, def in pairs(action.requiredObjects) do
+        ---@type {[string] : boolean} | nil
+        local spriteLookup = nil
+        if def.sprites then
+            spriteLookup = {}
+            for i = 1, #def.sprites do
+                spriteLookup[def.sprites[i]] = true
+            end
+        end
+
         local matchFound = false
         for i = 1, #objects do
             local object = objects[i]
-
-            local spriteAllowed = true
-            if def.sprites then
-                local sprite = object:getSprite():getName()
-                local found = false
-                for j = 1, #def.sprites do
-                    if sprite == def.sprites[j] then
-                        found = true
-                        break
-                    end
-                end
-                if not found then
-                    spriteAllowed = false
-                end
-            end
-
-            -- true if the sprite matched the list, or there is no sprite list
-            if spriteAllowed then
+            if spriteLookup == nil or spriteLookup[object:getSprite():getName()] then
                 local passedAll = true
                 for k = 1, #def.predicates do
                     if not def.predicates[k](object) then
