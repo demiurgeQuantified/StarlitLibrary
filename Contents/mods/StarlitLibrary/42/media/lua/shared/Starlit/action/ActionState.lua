@@ -102,6 +102,7 @@ function ActionState.findItemMatch(requirement, itemArray)
     end
 end
 
+
 ---Creates an action state for a specific action.
 ---An action must be complete for an action state to be built for it.
 ---@param action starlit.Action The action.
@@ -173,13 +174,44 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
 
         if forceParams.items then
             for name, item in pairs(forceParams.items) do
+                local requirement = requiredItems[name]
+
+                ---@type {[string]: boolean}
+                local types = {}
+                if requirement.types then
+                    for i = 1, #requirement.types do
+                        types[requirement.types[i]] = true
+                    end
+                end
+
+                ---@type umbrella.ItemContainer_Predicate
+                local function predicateTypeOrTags(item)
+                    if types[item:getFullType()] then
+                        return true
+                    end
+                    if requirement.tags then
+                        for i = 1, #requirement.tags do
+                            if item:hasTag(requirement.tags[i]) then
+                                return true
+                            end
+                        end
+                    end
+                    return false
+                end
+
                 local itemList = ArrayList.new()
                 if type(item) == "table" then
+                    ---@cast item InventoryItem[]
                     for i = 1, #item do
-                        itemList:add(item[i])
+                        local item = item[i]
+                        if predicateTypeOrTags(item) then
+                            itemList:add(item)
+                        end
                     end
                 else
-                    itemList:add(item)
+                    if predicateTypeOrTags(item) then
+                        itemList:add(item)
+                    end
                 end
 
                 if ActionState.findItemMatch(requiredItems[name], itemList) ~= nil then
