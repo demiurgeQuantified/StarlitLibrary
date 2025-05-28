@@ -25,7 +25,6 @@ local addWindowAction = Action.Action{
                 Action.Predicate{
                     evaluate = function(self, object)
                         return instanceof(object, "IsoWindow") --[[@cast object IsoWindow]]
-                            and object:isExistInTheWorld()
                             and object:isSmashed()
                     end,
                     description = "IGUI_RepairableWindows_Predicate_IsSmashedWindow"
@@ -95,7 +94,7 @@ Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObject
     else
         for i = 1, #states do
             -- IDEA: highlight object when mousing over option
-            context:addOption("(DEBUG) Replace window", PrepareActionAction.new(states[i]), ISTimedActionQueue.add)
+            context:addOption("(DEBUG) " .. getText(addWindowAction.name), PrepareActionAction.new(states[i]), ISTimedActionQueue.add)
         end
     end
 end)

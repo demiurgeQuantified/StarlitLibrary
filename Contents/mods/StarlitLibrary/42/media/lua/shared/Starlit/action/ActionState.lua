@@ -156,7 +156,9 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
 
         if forceParams.objects then
             for name, object in pairs(forceParams.objects) do
-                if ActionState.findObjectMatch(requiredObjects[name], {object}) ~= nil then
+                -- we don't assume passed objects exist as they might be coming from isActionStateStillValid
+                if object:isExistInTheWorld()
+                    and ActionState.findObjectMatch(requiredObjects[name], {object}) ~= nil then
                     -- remove the requirement so that it isn't checked later
                     requiredObjects[name] = nil
                     state.objects[name] = object
