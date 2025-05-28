@@ -20,72 +20,176 @@ selfMergeTableMeta = {
 local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 
 
+---Predicate container class.
 ---@class starlit.Action.Predicate<T>
+---
+---Evaluator function for the predicate.
 ---@field evaluate fun(starlit.Action.Predicate, T):boolean
+---
+---Translation string to use as the description of the predicate in UI elements.
 ---@field description string
 ---@overload fun(other:starlit.Action.Predicate):starlit.Action.Predicate
 
 
+---RequiredItem args.
+---This is the same as RequiredItem, but fields are marked as nullable to avoid the type checker reporting false negatives.
 ---@class starlit.Action.RequiredItemDef
+---
+---List of item types. Any item of any type listed can satisfy the condition.
 ---@field types string[] | nil
+---
+---List of tags. Any item with at least one of the tags can satisfy the condition.
 ---@field tags string[] | nil
+---
+---List of predicates the items must pass to be used.
+---These are used to implement custom conditions for items.
 ---@field predicates starlit.Action.Predicate<InventoryItem>[] | nil
+---
+---Number of items required.
 ---@field count integer | nil
+---
+---Whether the item should be moved from any containers into the player's main inventory before performing the action.
 ---@field mainInventory boolean | nil
----@field mustBeSameType boolean | nil
+---@field uses integer | nil  # TODO: not implemented
+---@field mustBeSameType boolean | nil  # TODO: not implemented
 
 
+---Concrete RequiredItem.
 ---@class starlit.Action.RequiredItem : starlit.Action.RequiredItemDef
+---
+---List of predicates the items must pass to be used.
+---These are used to implement custom conditions for items.
 ---@field predicates starlit.Action.Predicate<InventoryItem>[]
+---
+---Number of items required.
 ---@field count integer
+---
+---Whether the item should be moved from any containers into the player's main inventory before performing the action.
 ---@field mainInventory boolean
+---@field uses integer | nil  # TODO: not implemented
 ---@field mustBeSameType boolean  # TODO: not implemented
 -- common needs for predicates should be made into fields, as they can be optimised into a single predicate
 
 
+---Represents an object requirement for an action.
 ---@class starlit.Action.RequiredObject
----@field predicates starlit.Action.Predicate<IsoObject>[] | nil
+---
+---Conditions an object must meet.
+---@field predicates starlit.Action.Predicate<IsoObject>[]
 
 
+---Action args.
+---This is the same as Action, but fields are marked as nullable to avoid the type checker reporting false negatives.
 ---@class starlit.ActionDef
+---
+---Translation string to use as the name of the action. Displayed in context menus and tooltips.
 ---@field name string
+---
+---The time it should take to perform the action.
+---48 time units are equivalent to 1 real second.
 ---@field time integer
----@field animation string | nil  # TODO: not tested
+---
+---The animation the character should play during the action.  # TODO: not tested
+---@field animation string | nil
+---
+---Whether to stop the action if the character begins aiming during it.
 ---@field stopOnAim boolean | nil
+---
+---Whether to stop the action if the character being walking during it.
 ---@field stopOnWalk boolean | nil
+---
+---Whether to stop the action if the character begins running during it.
 ---@field stopOnRun boolean | nil
+---
+---List of items required to perform the action.
+---The items picked will be stored under <b>state.items</b> with the same key ('name') as in this table.
+---If count is 1, the item will be stored directly: otherwise, it will be a list of items.
 ---@field requiredItems table<any, starlit.Action.RequiredItem> | nil
----@field primaryItem string | nil
----@field secondaryItem string | nil
+---
+---The name of the item requirement to equip in the primary slot.
+---If nil, the character's equipped item will not change.
+---If "EMPTY", the character will be forced to unequip any currently equipped item.
+---If it is any other string, a requiredItem with the same name will be equipped. (If count > 1, the first item picked will be equipped.)
+---If there is no requiredItem going by that name, it will act as a string model name override.
+---@field primaryItem string | "EMPTY" | nil
+---
+---The name of the item requirement to equip in the primary slot.
+---If nil, the character's equipped item will not change.
+---If "EMPTY", the character will be forced to unequip any currently equipped item.
+---If it is any other string, a requiredItem with the same name will be equipped. (If count > 1, the first item picked will be equipped.)
+---If there is no requiredItem going by that name, it will act as a string model name override.
+---@field secondaryItem string | "EMPTY" | nil
+---
+---List of objects required to perform the action.
+---The objects picked will be stored under <b>state.objects</b> with the same key ('name') as in this table.
 ---@field requiredObjects table<any, starlit.Action.RequiredObject> | nil
+---
+---The name of the object in requiredObjects for the character to face while performing the action.
+---If nil, the player's facing direction will be unchanged.
 ---@field faceObject string | nil
+---
+---The name of the object in requiredObjects for the character to walk to before performing the action.
+---If nil, the player will perform the action in their current position.
 ---@field walkToObject string | nil
+---
+---List of predicates that must be met to perform the action.
 ---@field predicates starlit.Action.Predicate<IsoGameCharacter>[] | nil
+---
+---Function called upon completion of the action.
 ---@field complete fun(state:starlit.ActionState) | nil
+---
+---Function called when the action begins.
 ---@field start fun(state:starlit.ActionState) | nil
+---
+---Function called every tick while the action is active.
 ---@field update fun(state:starlit.ActionState) | nil
+---
+---Function called when the action is stopped before it is successfully completed.
 ---@field stop fun(state:starlit.ActionState) | nil
 
 
+---Concrete Action.
 ---@class starlit.Action : starlit.ActionDef
+---Whether to stop the action if the character begins aiming during it.
 ---@field stopOnAim boolean
+---
+---Whether to stop the action if the character being walking during it.
 ---@field stopOnWalk boolean
+---
+---Whether to stop the action if the character begins running during it.
 ---@field stopOnRun boolean
+---
+---List of items required to perform the action.
+---The items picked will be stored under <b>state.items</b> with the same key ('name') as in this table.
+---If count is 1, the item will be stored directly: otherwise, it will be a list of items.
 ---@field requiredItems table<any, starlit.Action.RequiredItem>
+---
+---List of objects required to perform the action.
+---The objects picked will be stored under <b>state.objects</b> with the same key ('name') as in this table.
 ---@field requiredObjects table<any, starlit.Action.RequiredObject>
+---
+---List of predicates that must be met to perform the action.
 ---@field predicates starlit.Action.Predicate<IsoGameCharacter>[]
+---
+---Function called upon completion of the action.
 ---@field complete fun(state:starlit.ActionState)
+---
+---Function called when the action begins.
 ---@field start fun(state:starlit.ActionState)
+---
+---Function called every tick while the action is active.
 ---@field update fun(state:starlit.ActionState)
+---
+---Function called when the action is stopped before it is successfully completed.
 ---@field stop fun(state:starlit.ActionState)
 
 local Action = {
     ---@overload fun(def:starlit.ActionDef):starlit.Action
     ---@nodiscard
     Action = selfMergeTable{
-        stopOnAim = false,
+        stopOnAim = true,
         stopOnWalk = false,
-        stopOnRun = false,
+        stopOnRun = true,
         requiredItems = {},
         requiredObjects = {},
         predicates = {},
