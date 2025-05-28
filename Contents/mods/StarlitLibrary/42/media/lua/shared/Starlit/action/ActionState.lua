@@ -1,3 +1,9 @@
+local Action = require("Starlit/action/Action")
+local log = require("Starlit/debug/StarlitLog")
+
+local DEBUG = getDebug()
+
+
 local ActionState = {}
 
 ---@class starlit.ActionState
@@ -11,6 +17,17 @@ local ActionState = {}
 ---@param objects IsoObject[]
 ---@return starlit.ActionState | nil
 function ActionState.tryBuildActionState(action, character, objects)
+    if not Action.isComplete(action) then
+        if DEBUG then
+            -- TODO: print this error even outside of debug mode
+            --  this is disabled currently because the error will always blame starlit library,
+            --  when it's the mod that created the action at fault.
+            --  at the time of action creation, we could look up the callstack to see which mod is creating it
+            log("Attempting to create state for action %s, but it is incomplete.", "error", action.name)
+        end
+        return nil
+    end
+
     -- TODO: if this fails, it would be ideal to return *why* the action isn't valid
     -- TODO: being able to pass in a set of items that *must* be used would be useful
     --  e.g. disassemble action, this screwdriver that the player clicked on must be used as prop1
@@ -21,6 +38,7 @@ function ActionState.tryBuildActionState(action, character, objects)
         items = {}
     }
 
+    -- this could probably be cached at time of action creation to prevent wasteful recalculations
     local numRequiredObjects = 0
     for _, _ in pairs(action.requiredObjects) do
         numRequiredObjects = numRequiredObjects + 1
@@ -30,50 +48,52 @@ function ActionState.tryBuildActionState(action, character, objects)
         return nil
     end
 
-    -- modifying the table passed to us may be undesirable
-    objects = copyTable(objects)
+    -- copy the table before changing it so that changes don't propagate out of the function
+    if numRequiredObjects > 0 then
+        objects = copyTable(objects)
 
-    for name, def in pairs(action.requiredObjects) do
-        local matchFound = false
-        for i = 1, #objects do
-            local object = objects[i]
+        for name, def in pairs(action.requiredObjects) do
+            local matchFound = false
+            for i = 1, #objects do
+                local object = objects[i]
 
-            local spriteAllowed = true
-            if def.sprites then
-                local sprite = object:getSprite():getName()
-                local found = false
-                for j = 1, #def.sprites do
-                    if sprite == def.sprites[j] then
-                        found = true
-                        break
+                local spriteAllowed = true
+                if def.sprites then
+                    local sprite = object:getSprite():getName()
+                    local found = false
+                    for j = 1, #def.sprites do
+                        if sprite == def.sprites[j] then
+                            found = true
+                            break
+                        end
                     end
-                end
-                if not found then
-                    spriteAllowed = false
-                end
-            end
-
-            -- true if the sprite matched the list, or there is no sprite list
-            if spriteAllowed then
-                local passedAll = true
-                for k = 1, #def.predicates do
-                    if not def.predicates[k](object) then
-                        passedAll = false
-                        break
+                    if not found then
+                        spriteAllowed = false
                     end
                 end
 
-                if passedAll then
-                    matchFound = true
-                    table.remove(objects, i)
-                    state.objects[name] = object
-                    break
+                -- true if the sprite matched the list, or there is no sprite list
+                if spriteAllowed then
+                    local passedAll = true
+                    for k = 1, #def.predicates do
+                        if not def.predicates[k](object) then
+                            passedAll = false
+                            break
+                        end
+                    end
+
+                    if passedAll then
+                        matchFound = true
+                        table.remove(objects, i)
+                        state.objects[name] = object
+                        break
+                    end
                 end
             end
-        end
 
-        if not matchFound then
-            return nil
+            if not matchFound then
+                return nil
+            end
         end
     end
 
@@ -103,12 +123,9 @@ function ActionState.tryBuildActionState(action, character, objects)
             for i = 1, #def.tags do
                 inventory:getAllTagRecurse(def.tags[i], itemArray)
             end
-        elseif def.predicates then
+        else
             -- FIXME: this does not recurse
             itemArray = ArrayList.new(inventory:getItems())
-        else
-            -- TODO: replace with starlit logger
-            error("empty RequiredItem '" + name + "' in action " + action.name)
         end
 
         itemArray:removeAll(claimedItems)

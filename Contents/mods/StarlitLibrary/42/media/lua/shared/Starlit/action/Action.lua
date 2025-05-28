@@ -21,6 +21,8 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 
 
 ---@class starlit.Action.RequiredItemDef
+---@field types string[] | nil
+---@field tags string[] | nil
 ---@field predicates (fun(item:InventoryItem):boolean)[] | nil
 ---@field count integer | nil
 ---@field mainInventory boolean | nil
@@ -29,8 +31,6 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 
 ---@class starlit.Action.RequiredItem : starlit.Action.RequiredItemDef
 ---@field predicates (fun(item:InventoryItem):boolean)[]
----@field types string[]
----@field tags string[]
 ---@field count integer
 ---@field mainInventory boolean
 ---@field mustBeSameType boolean  # TODO: not implemented
@@ -104,6 +104,47 @@ local Action = {
 
     }
 }
+
+---@param action starlit.Action
+---@return boolean
+---@nodiscard
+function Action.isComplete(action)
+    if action.name == nil or action.time == nil then
+        return false
+    end
+
+    for _, item in pairs(action.requiredItems) do
+        if not Action.isRequiredItemComplete(item) then
+            return false
+        end
+    end
+
+    for _, object in pairs(action.requiredObjects) do
+        if not Action.isRequiredObjectComplete(object) then
+            return false
+        end
+    end
+
+    return true
+end
+
+
+---@param requiredItem starlit.Action.RequiredItem
+---@return boolean
+---@nodiscard
+function Action.isRequiredItemComplete(requiredItem)
+    return (requiredItem.tags ~= nil and #requiredItem.tags > 0)
+        or (requiredItem.types ~= nil and #requiredItem.types > 0)
+        or (#requiredItem.predicates > 0)
+end
+
+---@param requiredObject starlit.Action.RequiredObject
+---@return boolean
+---@nodiscard
+function Action.isRequiredObjectComplete(requiredObject)
+    return (#requiredObject.predicates > 0)
+        or (requiredObject.sprites ~= nil and #requiredObject.sprites > 0)
+end
 
 
 return Action
