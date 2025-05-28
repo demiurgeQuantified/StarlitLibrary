@@ -51,10 +51,11 @@ local addWindowAction = Action{
     stopOnWalk = true,
     requiredItems = {
         glass = Action.requiredItemTypes{
-            types = {"Base.GlassPanel"}
+            types = {"Base.GlassPanel"},
+            mainInventory = true
         }
     },
-    primaryItem = "glass",
+    primaryItem = "EMPTY",
     secondaryItem = "EMPTY",
     requiredObjects = {
         window = Action.requiredObject{

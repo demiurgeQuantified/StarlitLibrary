@@ -71,7 +71,7 @@ function ActionState.tryBuildActionState(action, character, objects)
                 end
             end
         end
-    
+
         if not matchFound then
             return nil
         end
@@ -96,14 +96,15 @@ function ActionState.tryBuildActionState(action, character, objects)
         if def._type == "types" then
             itemArray = ArrayList.new()
             for i = 1, #def.types do
-                inventory:getAllType(def.types[i], itemArray)
+                inventory:getAllTypeRecurse(def.types[i], itemArray)
             end
         elseif def._type == "tags" then
             itemArray = ArrayList.new()
             for i = 1, #def.tags do
-                inventory:getAllTag(def.tags[i], itemArray)
+                inventory:getAllTagRecurse(def.tags[i], itemArray)
             end
         elseif def._type == "predicates" then
+            -- FIXME: this does not recurse
             itemArray = ArrayList.new(inventory:getItems())
         end
 
@@ -156,7 +157,7 @@ end
 ---@return boolean
 function ActionState.isActionStateStillValid(state)
     -- TODO: cheaper function that just checks the state still passes its conditions
-    -- e.g. items still in inventory + all predicates pass
+    --  e.g. items still in inventory + all predicates pass
     local objects = {}
     for _, object in pairs(state.objects) do
         table.insert(objects, object)

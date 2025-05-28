@@ -3,6 +3,7 @@ local pass = function() end
 ---@class starlit.Action.RequiredItemDef
 ---@field predicates (fun(item:InventoryItem):boolean)[] | nil
 ---@field count integer | nil
+---@field mainInventory boolean | nil
 ---@field mustBeSameType boolean | nil
 
 
@@ -12,6 +13,7 @@ local pass = function() end
 ---@field types string[]
 ---@field tags string[]
 ---@field count integer
+---@field mainInventory boolean
 ---@field mustBeSameType boolean  # TODO: not implemented
 
 
@@ -23,7 +25,7 @@ local pass = function() end
 ---@class starlit.ActionDef
 ---@field name string
 ---@field time integer
----@field animation string | nil  -- TODO: not tested
+---@field animation string | nil  # TODO: not tested
 ---@field stopOnAim boolean | nil
 ---@field stopOnWalk boolean | nil
 ---@field stopOnRun boolean | nil
@@ -65,6 +67,7 @@ Action.requiredItemTypes = function(def)
     o._type = "types"
     o.predicates = o.predicates or {}
     o.count = o.count or 1
+    o.mainInventory = o.mainInventory or false
     o.mustBeSameType = o.mustBeSameType or false
 
     return o
@@ -78,6 +81,7 @@ Action.requiredItemTags = function(def)
     o._type = "tags"
     o.predicates = o.predicates or {}
     o.count = o.count or 1
+    o.mainInventory = o.mainInventory or false
     o.mustBeSameType = o.mustBeSameType or false
 
     return o
@@ -91,6 +95,7 @@ Action.requiredItemPredicates = function(def)
     o._type = "predicates"
     o.predicates = o.predicates or {}
     o.count = o.count or 1
+    o.mainInventory = o.mainInventory or false
     o.mustBeSameType = o.mustBeSameType or false
 
     return o
@@ -121,6 +126,8 @@ local meta = {
         o.start = o.start or pass
         o.update = o.update or pass
         o.stop = o.stop or pass
+
+        -- TODO: set metatable that allows 'inheritance' by merging values in the 'base' with passed table
 
         return o
     end

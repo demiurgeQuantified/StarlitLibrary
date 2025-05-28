@@ -87,7 +87,14 @@ PrepareActionAction.perform = function(self)
         )
     end
 
-    -- TODO: support moving items into main inventory
+    for name, itemDef in pairs(self.state.def.requiredItems) do
+        if itemDef.mainInventory then
+            TimedActionUtils.transfer(
+                self.character,
+                self.state.items[name]
+            )
+        end
+    end
 
     self:setHandModel("primary", self.state.def.primaryItem)
     self:setHandModel("secondary", self.state.def.secondaryItem)
