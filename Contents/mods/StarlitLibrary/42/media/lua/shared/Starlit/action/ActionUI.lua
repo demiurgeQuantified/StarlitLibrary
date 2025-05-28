@@ -2,6 +2,9 @@ local ActionState = require("Starlit/action/ActionState")
 local Actions = require("Starlit/action/Actions")
 
 
+local core = getCore()
+
+
 local ActionUI = {}
 
 ---Creates a tooltip for an action describing any failed requirements.
@@ -11,6 +14,17 @@ local ActionUI = {}
 ---@nodiscard
 ActionUI.createFailTooltip = function(action, failReasons)
     local tooltip = ISWorldObjectContextMenu.addToolTip() --[[@as ISToolTip]]
+
+    -- we don't cache this because the player can change it midgame and that's annoying to catch
+    local desaturatedBadColour = ColorInfo.new():set(core:getBadHighlitedColor())
+    desaturatedBadColour:desaturate(0.3)
+
+    local desaturatedBadColourString = string.format(
+        "%f,%f,%f",
+        desaturatedBadColour:getR(),
+        desaturatedBadColour:getG(),
+        desaturatedBadColour:getB()
+    )
 
     tooltip.name = getText(action.name)
     local description = "<BHC> "
@@ -23,23 +37,25 @@ ActionUI.createFailTooltip = function(action, failReasons)
         local requirement = action.requiredObjects[failReasons.objects[i]]
         description = description .. " <INDENT:0> "
                                   .. getText("IGUI_StarlitLibrary_Action_Object")
-                                  .. "\n <INDENT:8> "
+                                  .. "\n <INDENT:8> <PUSHRGB:" .. desaturatedBadColourString .. "> "
 
         for j = 1, #requirement.predicates do
             description = description .. getText(requirement.predicates[j].description) .. "\n "
         end
+
+        description = description .. " <POPRGB> "
     end
 
     for i = 1, #failReasons.items do
         local requirement = action.requiredItems[failReasons.items[i]]
         description = description .. " <INDENT:0> "
                                   .. getText("IGUI_StarlitLibrary_Action_Item")
-                                  .. "\n"
+                                  .. " <PUSHRGB:" .. desaturatedBadColourString .. "> \n"
 
         if requirement.types then
             description = description .. " <INDENT:8> "
                                       .. getText("IGUI_StarlitLibrary_Action_ItemTypeList")
-                                      .. "\n <INDENT:16>"
+                                      .. "\n <INDENT:16> "
 
             local itemNames = {}
             for j = 1, #requirement.types do
@@ -57,6 +73,8 @@ ActionUI.createFailTooltip = function(action, failReasons)
         for j = 1, #requirement.predicates do
             description = description .. " <INDENT:8> " .. getText(requirement.predicates[j].description) .. " \n "
         end
+
+        description = description .. " <POPRGB> "
     end
 
     tooltip.description = description
