@@ -1,46 +1,8 @@
 local Action = require("Starlit/action/Action")
 local Actions = require("Starlit/action/Actions")
-
----@type umbrella.ItemContainer_Predicate
-local predicateNotBroken = function(item)
-    return not item:isBroken()
-end
-
-
-local myAction = Action.Action{
-    name = "MyAction",
-    time = 500,
-    requiredItems = {
-        prop1 = Action.RequiredItem{
-            types = {"Base.Shovel", "Base.PickAxe"},
-            predicates = {predicateNotBroken},
-            count = 5
-        },
-        prop2 = Action.RequiredItem{
-            tags = {"TakeDirt"}
-        },
-        Action.RequiredItem{
-            predicates = {predicateNotBroken}
-        }
-    },
-    -- requiredObject = Action.requiredObject{
-    --     sprites = {"sprite_name_0_1"},
-    --     predicates = {predicateNotBroken}
-    -- },
-    predicates = {},
-    complete = function(state)
-        print("complete")
-    end,
-    start = function(state)
-        print("start")
-    end,
-    update = function(state)
-        print("update")
-    end,
-    stop = function(state)
-        print("stop")
-    end
-}
+local ActionState = require("Starlit/action/ActionState")
+local PrepareActionAction = require("Starlit/internal/PrepareActionAction")
+local ActionUI = require("Starlit/action/ActionUI")
 
 
 local addWindowAction = Action.Action{
@@ -60,11 +22,14 @@ local addWindowAction = Action.Action{
     requiredObjects = {
         window = Action.RequiredObject{
             predicates = {
-                function (object)
-                    return instanceof(object, "IsoWindow") --[[@cast object IsoWindow]]
-                        and object:isExistInTheWorld()
-                        and object:isSmashed()
-                end
+                Action.Predicate{
+                    evaluate = function(self, object)
+                        return instanceof(object, "IsoWindow") --[[@cast object IsoWindow]]
+                            and object:isExistInTheWorld()
+                            and object:isSmashed()
+                    end,
+                    description = "Is a smashed window"
+                }
             }
         }
     },
@@ -97,15 +62,21 @@ local function onOptionSelected(character, objects)
 end
 
 Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObjects, test)
+    local state, failReasons = ActionState.tryBuildActionState(
+        addWindowAction,
+        getSpecificPlayer(playerNum),
+        worldObjects
+    )
     for i = 1, #worldObjects do
         local object = worldObjects[i]
         if instanceof(object, "IsoWindow") then
-            context:addOption("(DEBUG) Attempt replace window", getSpecificPlayer(playerNum), onOptionSelected, {object})
+            if state then
+                context:addOption("(DEBUG) Replace window", PrepareActionAction.new(state), ISTimedActionQueue.add)
+            elseif failReasons then
+                local option = context:addOption("(DEBUG) Replace window")
+                option.notAvailable = true
+                option.toolTip = ActionUI.buildTooltip(addWindowAction, failReasons)
+            end
         end
     end
 end)
-
-
-DEBUG_TEST_ACTION = function()
-    Actions.tryQueueAction(myAction, getPlayer())
-end

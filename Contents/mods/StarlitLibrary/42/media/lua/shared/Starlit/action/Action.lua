@@ -20,17 +20,23 @@ selfMergeTableMeta = {
 local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 
 
+---@class starlit.Action.Predicate<T>
+---@field evaluate fun(starlit.Action.Predicate, T):boolean
+---@field description string
+---@overload fun(other:starlit.Action.Predicate):starlit.Action.Predicate
+
+
 ---@class starlit.Action.RequiredItemDef
 ---@field types string[] | nil
 ---@field tags string[] | nil
----@field predicates (fun(item:InventoryItem):boolean)[] | nil
+---@field predicates starlit.Action.Predicate<InventoryItem>[] | nil
 ---@field count integer | nil
 ---@field mainInventory boolean | nil
 ---@field mustBeSameType boolean | nil
 
 
 ---@class starlit.Action.RequiredItem : starlit.Action.RequiredItemDef
----@field predicates (fun(item:InventoryItem):boolean)[]
+---@field predicates starlit.Action.Predicate<InventoryItem>[]
 ---@field count integer
 ---@field mainInventory boolean
 ---@field mustBeSameType boolean  # TODO: not implemented
@@ -39,7 +45,7 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 
 ---@class starlit.Action.RequiredObject
 ---@field sprites string[] | nil
----@field predicates (fun(item:IsoObject):boolean)[] | nil
+---@field predicates starlit.Action.Predicate<IsoObject>[] | nil
 
 
 ---@class starlit.ActionDef
@@ -55,7 +61,7 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 ---@field requiredObjects table<any, starlit.Action.RequiredObject> | nil
 ---@field faceObject string | nil
 ---@field walkToObject string | nil
----@field predicates (fun(character:IsoGameCharacter):boolean)[] | nil
+---@field predicates starlit.Action.Predicate<IsoGameCharacter>[] | nil
 ---@field complete fun(state:starlit.ActionState) | nil
 ---@field start fun(state:starlit.ActionState) | nil
 ---@field update fun(state:starlit.ActionState) | nil
@@ -68,12 +74,11 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 ---@field stopOnRun boolean
 ---@field requiredItems table<any, starlit.Action.RequiredItem>
 ---@field requiredObjects table<any, starlit.Action.RequiredObject>
----@field predicates (fun(character:IsoGameCharacter):boolean)[]
+---@field predicates starlit.Action.Predicate<IsoGameCharacter>[]
 ---@field complete fun(state:starlit.ActionState)
 ---@field start fun(state:starlit.ActionState)
 ---@field update fun(state:starlit.ActionState)
 ---@field stop fun(state:starlit.ActionState)
-
 
 local Action = {
     ---@overload fun(def:starlit.ActionDef):starlit.Action
@@ -102,7 +107,27 @@ local Action = {
     ---@nodiscard
     RequiredObject = selfMergeTable{
 
-    }
+    },
+
+    ---@type starlit.Action.Predicate
+    Predicate = selfMergeTable{
+        evaluate = pass,
+        description = "DESCRIPTION MISSING"
+    },
+}
+
+---@type starlit.Action.Predicate<IsoObject>
+Action.PredicateSprite = Action.Predicate{
+    ---@type table<string, boolean>
+    sprites = {},
+    evaluate = function(self, object)
+        local sprite = object:getSprite()
+        if not sprite then
+            return false
+        end
+        return self.sprites[sprite:getName()]
+    end,
+    description = "DESCRIPTION MISSING"
 }
 
 ---@param action starlit.Action

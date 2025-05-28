@@ -65,7 +65,7 @@ function ActionState.tryBuildActionState(action, character, objects)
             if spriteLookup == nil or spriteLookup[object:getSprite():getName()] then
                 local passedAll = true
                 for k = 1, #def.predicates do
-                    if not def.predicates[k](object) then
+                    if not def.predicates[k]:evaluate(object) then
                         passedAll = false
                         break
                     end
@@ -87,7 +87,7 @@ function ActionState.tryBuildActionState(action, character, objects)
     end
 
     for i = 1, #action.predicates do
-        if not action.predicates[i](character) then
+        if not action.predicates[i]:evaluate(character) then
             anyRequirementFailed = true
             table.insert(failedRequirements.predicates, i)
         end
@@ -144,7 +144,7 @@ function ActionState.tryBuildActionState(action, character, objects)
 
                 local passedAll = true
                 for k = 1, #def.predicates do
-                    if not def.predicates[k](item) then
+                    if not def.predicates[k]:evaluate(item) then
                         passedAll = false
                         break
                     end
