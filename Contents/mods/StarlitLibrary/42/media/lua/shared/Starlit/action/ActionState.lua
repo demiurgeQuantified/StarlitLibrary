@@ -271,13 +271,15 @@ end
 ---@return boolean valid Whether the state is still valid.
 ---@nodiscard
 function ActionState.isActionStateStillValid(state)
-    -- TODO: cheaper function that just checks the state still passes its conditions
-    --  e.g. items still in inventory + all predicates pass
-    local objects = {}
-    for _, object in pairs(state.objects) do
-        table.insert(objects, object)
-    end
-    return ActionState.tryBuildActionState(state.def, state.character, objects) ~= nil
+    return ActionState.tryBuildActionState(
+        state.def,
+        state.character,
+        {},
+        {
+            objects = state.objects,
+            items = state.items
+        })
+        ~= nil
 end
 
 return ActionState
