@@ -12,10 +12,12 @@ local ActionState = {}
 ---@field objects table<any, IsoObject>
 ---@field character IsoGameCharacter
 
+---@alias starlit.ActionState.FailReasons {objects: {}, predicates: {}, items: {}}
+
 ---@param action starlit.Action
 ---@param character IsoGameCharacter
 ---@param objects IsoObject[]
----@return starlit.ActionState | nil
+---@return starlit.ActionState | nil state, starlit.ActionState.FailReasons | nil failedRequirements
 function ActionState.tryBuildActionState(action, character, objects)
     if not Action.isComplete(action) then
         if DEBUG then
@@ -28,7 +30,6 @@ function ActionState.tryBuildActionState(action, character, objects)
         return nil
     end
 
-    -- TODO: if this fails, it would be ideal to return *why* the action isn't valid
     -- TODO: being able to pass in a set of items that *must* be used would be useful
     --  e.g. disassemble action, this screwdriver that the player clicked on must be used as prop1
     local state = {
@@ -38,71 +39,82 @@ function ActionState.tryBuildActionState(action, character, objects)
         items = {}
     }
 
-    -- this could probably be cached at time of action creation to prevent wasteful recalculations
-    local numRequiredObjects = 0
-    for _, _ in pairs(action.requiredObjects) do
-        numRequiredObjects = numRequiredObjects + 1
-    end
-
-    if #objects < numRequiredObjects then
-        return nil
-    end
+    local anyRequirementFailed = false
+    local failedRequirements = {
+        objects = {},
+        predicates = {},
+        items = {}
+    }
 
     -- copy the table before changing it so that changes don't propagate out of the function
-    if numRequiredObjects > 0 then
-        objects = copyTable(objects)
+    objects = copyTable(objects)
 
-        for name, def in pairs(action.requiredObjects) do
-            local matchFound = false
-            for i = 1, #objects do
-                local object = objects[i]
+    for name, def in pairs(action.requiredObjects) do
+        local matchFound = false
+        for i = 1, #objects do
+            local object = objects[i]
 
-                local spriteAllowed = true
-                if def.sprites then
-                    local sprite = object:getSprite():getName()
-                    local found = false
-                    for j = 1, #def.sprites do
-                        if sprite == def.sprites[j] then
-                            found = true
-                            break
-                        end
-                    end
-                    if not found then
-                        spriteAllowed = false
-                    end
-                end
-
-                -- true if the sprite matched the list, or there is no sprite list
-                if spriteAllowed then
-                    local passedAll = true
-                    for k = 1, #def.predicates do
-                        if not def.predicates[k](object) then
-                            passedAll = false
-                            break
-                        end
-                    end
-
-                    if passedAll then
-                        matchFound = true
-                        table.remove(objects, i)
-                        state.objects[name] = object
+            local spriteAllowed = true
+            if def.sprites then
+                local sprite = object:getSprite():getName()
+                local found = false
+                for j = 1, #def.sprites do
+                    if sprite == def.sprites[j] then
+                        found = true
                         break
                     end
                 end
+                if not found then
+                    spriteAllowed = false
+                end
             end
 
-            if not matchFound then
-                return nil
+            -- true if the sprite matched the list, or there is no sprite list
+            if spriteAllowed then
+                local passedAll = true
+                for k = 1, #def.predicates do
+                    if not def.predicates[k](object) then
+                        passedAll = false
+                        break
+                    end
+                end
+
+                if passedAll then
+                    matchFound = true
+                    table.remove(objects, i)
+                    state.objects[name] = object
+                    break
+                end
             end
+        end
+
+        if not matchFound then
+            anyRequirementFailed = true
+            table.insert(failedRequirements.objects, name)
         end
     end
 
     for i = 1, #action.predicates do
         if not action.predicates[i](character) then
-            return nil
+            anyRequirementFailed = true
+            table.insert(failedRequirements.predicates, i)
         end
     end
 
+    -- FIXME: an issue is possible where overlapping requirements may cause an unexpected failure
+    --  a requirement that is satisfied by a superset of another could claim every item it needs
+    --  the other requirement would fail, even though the player *does* have a valid set of items
+    --  the solution to this would be to mark every item that could fulfil a requirement
+    --  and resolve which requirement claims each afterwards, prioritising non-overlapping items
+    --  example:
+    --   1 item of any kind required
+    --   1 screwdriver required
+    --  the first requirement could claim my only screwdriver, and then the screwdriver requirement fails,
+    --  even though i have plenty of other items!
+
+
+    -- list of items that have already been claimed by another requirement
+    -- this is stored as an arraylist because it is more efficient to remove from another arraylist
     local claimedItems = ArrayList.new()
 
     local inventory = character:getInventory()
@@ -132,42 +144,48 @@ function ActionState.tryBuildActionState(action, character, objects)
 
         local numItems = itemArray:size()
         if numItems < def.count then
-            return nil
-        end
-
-        for j = 0, numItems - 1 do
-            local item = itemArray:get(j)
-
-            local passedAll = true
-            for k = 1, #def.predicates do
-                if not def.predicates[k](item) then
-                    passedAll = false
-                    break
-                end
-            end
-
-            if passedAll then
-                table.insert(items, item)
-                if #items == def.count then
-                    satisfied = true
-                    break
-                end
-            end
-        end
-
-        if not satisfied then
-            return nil
-        end
-
-        for i = 1, #items do
-            claimedItems:add(items[i])
-        end
-
-        if def.count == 1 then
-            state.items[name] = items[1]
+            anyRequirementFailed = true
+            table.insert(failedRequirements.items, name)
         else
-            state.items[name] = items
+            for j = 0, numItems - 1 do
+                local item = itemArray:get(j)
+
+                local passedAll = true
+                for k = 1, #def.predicates do
+                    if not def.predicates[k](item) then
+                        passedAll = false
+                        break
+                    end
+                end
+
+                if passedAll then
+                    table.insert(items, item)
+                    if #items == def.count then
+                        satisfied = true
+                        break
+                    end
+                end
+            end
+
+            if not satisfied then
+                anyRequirementFailed = true
+                return table.insert(failedRequirements.items, name)
+            else
+                for i = 1, #items do
+                    claimedItems:add(items[i])
+                end
+
+                if def.count == 1 then
+                    state.items[name] = items[1]
+                else
+                    state.items[name] = items
+                end
+            end
         end
+    end
+
+    if anyRequirementFailed then
+        return nil, failedRequirements
     end
 
     return state

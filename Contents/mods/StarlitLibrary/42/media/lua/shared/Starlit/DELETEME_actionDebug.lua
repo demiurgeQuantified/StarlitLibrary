@@ -79,12 +79,28 @@ local addWindowAction = Action.Action{
     end
 }
 
+---@param character IsoGameCharacter
+---@param objects IsoObject
+local function onOptionSelected(character, objects)
+    local failReasons = Actions.tryQueueAction(addWindowAction, character, objects)
+    if failReasons then
+        for i = 1, #failReasons.objects do
+            print("Object requirement not satisfied: " .. failReasons.objects[i])
+        end
+        for i = 1, #failReasons.predicates do
+            print("Predicate requirement not satisfied: " .. failReasons.predicates[i])
+        end
+        for i = 1, #failReasons.items do
+            print("Item requirement not satisfied: " .. failReasons.items[i])
+        end
+    end
+end
 
 Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObjects, test)
     for i = 1, #worldObjects do
         local object = worldObjects[i]
         if instanceof(object, "IsoWindow") then
-            context:addOption("(DEBUG) Attempt replace window", addWindowAction, Actions.tryQueueAction, getSpecificPlayer(playerNum), {object})
+            context:addOption("(DEBUG) Attempt replace window", getSpecificPlayer(playerNum), onOptionSelected, {object})
         end
     end
 end)
