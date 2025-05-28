@@ -64,21 +64,38 @@ local function onOptionSelected(character, objects)
 end
 
 Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObjects, test)
-    local state, failReasons = ActionState.tryBuildActionState(
-        addWindowAction,
-        getSpecificPlayer(playerNum),
-        worldObjects
-    )
-    for i = 1, #worldObjects do
+    local states = {}
+    local failReasons
+
+    for i = 2, #worldObjects do
         local object = worldObjects[i]
         if instanceof(object, "IsoWindow") then
-            if state then
-                context:addOption("(DEBUG) Replace window", PrepareActionAction.new(state), ISTimedActionQueue.add)
-            elseif failReasons then
-                local option = context:addOption("(DEBUG) Replace window")
-                option.notAvailable = true
-                option.toolTip = ActionUI.createFailTooltip(addWindowAction, failReasons)
-            end
+            local state
+            state, failReasons = ActionState.tryBuildActionState(
+                addWindowAction,
+                getSpecificPlayer(playerNum),
+                worldObjects,
+                {
+                    objects = {
+                        window = object
+                    }
+                }
+            )
+            table.insert(states, state)
+        end
+    end
+
+    if #states == 0 then
+        -- only shows failReasons if at least one window was found and none were valid
+        if failReasons then
+            local option = context:addOption("(DEBUG) " .. getText(addWindowAction.name))
+            option.notAvailable = true
+            option.toolTip = ActionUI.createFailTooltip(addWindowAction, failReasons)
+        end
+    else
+        for i = 1, #states do
+            -- IDEA: highlight object when mousing over option
+            context:addOption("(DEBUG) Replace window", PrepareActionAction.new(states[i]), ISTimedActionQueue.add)
         end
     end
 end)
