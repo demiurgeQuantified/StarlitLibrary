@@ -44,6 +44,8 @@ local addWindowAction = Action.Action{
     end
 }
 
+assert(Action.isComplete(addWindowAction))
+
 ---@param character IsoGameCharacter
 ---@param objects IsoObject
 local function onOptionSelected(character, objects)
@@ -75,7 +77,7 @@ Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObject
             elseif failReasons then
                 local option = context:addOption("(DEBUG) Replace window")
                 option.notAvailable = true
-                option.toolTip = ActionUI.buildTooltip(addWindowAction, failReasons)
+                option.toolTip = ActionUI.createFailTooltip(addWindowAction, failReasons)
             end
         end
     end

@@ -1,9 +1,11 @@
 local ActionUI = {}
 
----@param action starlit.Action
----@param failReasons starlit.ActionState.FailReasons
----@return ISToolTip
-ActionUI.buildTooltip = function(action, failReasons)
+---Creates a tooltip for an action describing any failed requirements.
+---@param action starlit.Action The action.
+---@param failReasons starlit.ActionState.FailReasons FailReasons corresponding to the action.
+---@return ISToolTip tooltip The tooltip.
+---@nodiscard
+ActionUI.createFailTooltip = function(action, failReasons)
     local tooltip = ISWorldObjectContextMenu.addToolTip() --[[@as ISToolTip]]
 
     tooltip.name = getText(action.name)

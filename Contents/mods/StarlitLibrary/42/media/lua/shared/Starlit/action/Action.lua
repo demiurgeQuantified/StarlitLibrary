@@ -44,7 +44,6 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 
 
 ---@class starlit.Action.RequiredObject
----@field sprites string[] | nil
 ---@field predicates starlit.Action.Predicate<IsoObject>[] | nil
 
 
@@ -130,8 +129,11 @@ Action.PredicateSprite = Action.Predicate{
     description = "DESCRIPTION MISSING"
 }
 
----@param action starlit.Action
----@return boolean
+---Returns whether an action is complete.
+---An action is considered complete if it has the necessary data to be performed.
+---Incomplete actions cannot be performed, but may be used as bases for other actions.
+---@param action starlit.Action The action.
+---@return boolean complete Whether the action is complete.
 ---@nodiscard
 function Action.isComplete(action)
     if action.name == nil or action.time == nil then
@@ -154,8 +156,11 @@ function Action.isComplete(action)
 end
 
 
----@param requiredItem starlit.Action.RequiredItem
----@return boolean
+---Returns whether a required item is complete.
+---A required item is considered incomplete if it does not contain enough data to pick items.
+---Incomplete RequiredItems are very likely to be an error.
+---@param requiredItem starlit.Action.RequiredItem The item requirement.
+---@return boolean complete Whether the item requirement is complete.
 ---@nodiscard
 function Action.isRequiredItemComplete(requiredItem)
     return (requiredItem.tags ~= nil and #requiredItem.tags > 0)
@@ -163,12 +168,14 @@ function Action.isRequiredItemComplete(requiredItem)
         or (#requiredItem.predicates > 0)
 end
 
----@param requiredObject starlit.Action.RequiredObject
----@return boolean
+---Returns whether a required object is complete.
+---A required object is considered incomplete if it does not have any predicates.
+---Incomplete RequiredObjects are very likely to be an error.
+---@param requiredObject starlit.Action.RequiredObject The object requirement.
+---@return boolean complete Whether the object requirement is complete.
 ---@nodiscard
 function Action.isRequiredObjectComplete(requiredObject)
-    return (#requiredObject.predicates > 0)
-        or (requiredObject.sprites ~= nil and #requiredObject.sprites > 0)
+    return #requiredObject.predicates > 0
 end
 
 

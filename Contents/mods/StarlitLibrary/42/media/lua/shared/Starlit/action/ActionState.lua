@@ -14,10 +14,14 @@ local ActionState = {}
 
 ---@alias starlit.ActionState.FailReasons {objects: {}, predicates: {}, items: {}}
 
----@param action starlit.Action
----@param character IsoGameCharacter
----@param objects IsoObject[]
----@return starlit.ActionState | nil state, starlit.ActionState.FailReasons | nil failedRequirements
+---Creates an action state for a specific action.
+---An action must be complete for an action state to be built for it.
+---@param action starlit.Action The action.
+---@param character IsoGameCharacter The character to perform the action.
+---@param objects IsoObject[] Objects that may be used in the action. (e.g. all objects clicked by the player).
+---@return starlit.ActionState | nil state The created state. Nil if the state could not be created.
+---@return starlit.ActionState.FailReasons | nil failedRequirements Reasons why the state could not be created. Nil if the state was created.
+---@nodiscard
 function ActionState.tryBuildActionState(action, character, objects)
     if not Action.isComplete(action) then
         if DEBUG then
@@ -27,7 +31,7 @@ function ActionState.tryBuildActionState(action, character, objects)
             --  at the time of action creation, we could look up the callstack to see which mod is creating it
             log("Attempting to create state for action %s, but it is incomplete.", "error", action.name)
         end
-        return nil
+        return nil, nil
     end
 
     -- TODO: being able to pass in a set of items that *must* be used would be useful
@@ -183,8 +187,10 @@ function ActionState.tryBuildActionState(action, character, objects)
     return state
 end
 
----@param state starlit.ActionState
----@return boolean
+---Checks if the conditions of an action state are still met.
+---@param state starlit.ActionState The state to check.
+---@return boolean valid Whether the state is still valid.
+---@nodiscard
 function ActionState.isActionStateStillValid(state)
     -- TODO: cheaper function that just checks the state still passes its conditions
     --  e.g. items still in inventory + all predicates pass
