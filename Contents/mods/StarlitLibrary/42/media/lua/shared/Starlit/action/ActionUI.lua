@@ -238,7 +238,6 @@ local function showObjectActions(playerNum, context, worldObjects, test)
                 statesByAction[objectAction] = {}
             end
             table.insert(statesByAction[objectAction], state)
-            table.insert(statesByAction[objectAction], state) -- DELETEME duplicate for submenu merge testing
         elseif failReasons then
             local option = context:addOption(optionName)
             option.notAvailable = true
@@ -248,27 +247,26 @@ local function showObjectActions(playerNum, context, worldObjects, test)
 
     for action, states in pairs(statesByAction) do
         local duplicatePolicy = action.config.duplicatePolicy
-        -- make context local to this scope so we don't propagate changes to other actions
-        local context = context
+        local menu = context
 
         if action.config.subMenu then
-            local option = context:getOptionFromName(action.config.subMenu)
+            local option = menu:getOptionFromName(action.config.subMenu)
             if option then
                 assert(option.subOption ~= nil)
-                context = context:getSubMenu(option.subOption)
+                menu = menu:getSubMenu(option.subOption)
             else
-                context = addSubMenu(context, action.config.subMenu)
+                menu = addSubMenu(menu, action.config.subMenu)
             end
         end
 
         if #states == 1 or duplicatePolicy == "hide" then
-            addStateOption(context, states[1], action.config)
+            addStateOption(menu, states[1], action.config)
         else
             if duplicatePolicy == "submenu" then
-                context = addSubMenu(context, action.action.name)
+                menu = addSubMenu(menu, action.action.name)
             end
             for i = 1, #states do
-                addStateOption(context, states[i], action.config)
+                addStateOption(menu, states[i], action.config)
             end
         end
     end
