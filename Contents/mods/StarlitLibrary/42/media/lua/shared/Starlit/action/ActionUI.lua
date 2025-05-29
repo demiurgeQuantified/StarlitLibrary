@@ -85,6 +85,21 @@ ActionUI.createFailTooltip = function(action, failReasons)
 end
 
 
+---Configuration for showing tooltips for invalid actions.
+---@class starlit.Action.ShowFailConditions
+---
+---If true, a fail tooltip will only be shown if no valid action of the same type was found.
+---@field noSuccesses boolean
+---
+---If true, only one fail will be shown, even if multiple were found.
+---@field onlyOne boolean
+---
+---Lists of conditions that must pass for a fail tooltip to be considered to be shown.
+---For example, you generally don't want to show a tooltip for a world action if the object is invalid,
+---or a tooltip for an item action when the selected item is the wrong type.
+---@field required {objects: any[] | nil, items: any[] | nil, predicates: any[] | nil} | nil
+
+
 ---Args for creating a TooltipConfiguration.
 ---Differs from TooltipConfiguration only in that all fields are marked as nullable.
 ---@class starlit.Action.TooltipConfigurationArgs
@@ -101,11 +116,13 @@ end
 ---'hide' removes all duplicates, leaving only one action left.
 ---@field duplicatePolicy "separate" | "submenu" | "hide" | nil
 ---
----
----@field showFailConditions {noSuccesses: boolean} | nil
+---Conditions for when options for invalid actions should be shown.
+---@field showFailConditions starlit.Action.ShowFailConditions | nil
+
 
 ---Concrete configuration for when and how a tooltip should be displayed.
 ---@class starlit.Action.TooltipConfiguration : starlit.Action.TooltipConfigurationArgs
+---@overload fun(config:starlit.Action.TooltipConfigurationArgs):self
 ---
 ---How to behave when more than one action of this type is available.
 ---'separate' creates a separate option for each action.
@@ -113,15 +130,18 @@ end
 ---'hide' removes all duplicates, leaving only one action left.
 ---@field duplicatePolicy "separate"|"submenu"|"hide"
 ---
----
----@field showFailConditions {noSuccesses: boolean} | nil
----@overload fun(config:starlit.Action.TooltipConfigurationArgs):self
+---Conditions for when options for invalid actions should be shown.
+---@field showFailConditions starlit.Action.ShowFailConditions
 
 
 ---@type starlit.Action.TooltipConfiguration
 ---@diagnostic disable-next-line: assign-type-mismatch
 ActionUI.TooltipConfiguration = SelfMergeTable{
-    duplicatePolicy = "submenu"
+    duplicatePolicy = "submenu",
+    showFailConditions = {
+        noSuccesses = true,
+        onlyOne = true
+    }
 }
 
 
@@ -240,8 +260,8 @@ end
 
 ---@type Callback_OnFillWorldObjectContextMenu
 local function showObjectActions(playerNum, context, worldObjects, test)
-    ---@type {[starlit.ActionUI.ObjectAction]: starlit.ActionState[]}
-    local statesByAction = {}
+    ---@type {[starlit.ActionUI.ObjectAction]: {states: starlit.ActionState[], fails: starlit.ActionState.FailReasons}}
+    local foundActions = {}
 
     local character = getSpecificPlayer(playerNum)
     for i = 1, #objectActions do
@@ -252,21 +272,29 @@ local function showObjectActions(playerNum, context, worldObjects, test)
             worldObjects
         )
 
-        local optionName = objectAction.action.name
+        -- TODO: add objectAs similar to inventory itemAs, if set try each object against that requirement and generate options for each
+        --  this would let us e.g. highlight each window when trying to install glass, and show why that one isn't okay
+
         if state then
-            if not statesByAction[objectAction] then
-                statesByAction[objectAction] = {}
+            if not foundActions[objectAction] then
+                foundActions[objectAction] = {
+                    states = {},
+                    fails = {}
+                }
             end
-            table.insert(statesByAction[objectAction], state)
+            table.insert(foundActions[objectAction].states, state)
         elseif failReasons then
-            local option = context:addOption(optionName)
-            option.notAvailable = true
-            option.toolTip = ActionUI.createFailTooltip(objectAction.action, failReasons)
+            if not foundActions[objectAction] then
+                foundActions[objectAction] = {
+                    states = {},
+                    fails = {}
+                }
+            end
+            table.insert(foundActions[objectAction].fails, failReasons)
         end
     end
 
-    for action, states in pairs(statesByAction) do
-        local duplicatePolicy = action.config.duplicatePolicy
+    for action, found in pairs(foundActions) do
         local menu = context
 
         if action.config.subMenu then
@@ -279,14 +307,34 @@ local function showObjectActions(playerNum, context, worldObjects, test)
             end
         end
 
-        if #states == 1 or duplicatePolicy == "hide" then
-            addStateOption(menu, states[1], action.config)
-        else
-            if duplicatePolicy == "submenu" then
-                menu = addSubMenu(menu, action.action.name)
+        local duplicatePolicy = action.config.duplicatePolicy
+
+        local totalNumber = #found.states + #found.fails
+        if totalNumber > 1 and duplicatePolicy == "submenu" then
+            menu = addSubMenu(menu, action.action.name)
+        end
+
+        local states = found.states
+        if #states > 0 then
+            if #states == 1 or duplicatePolicy == "hide" then
+                addStateOption(menu, states[1], action.config)
+            else
+                for i = 1, #states do
+                    addStateOption(menu, states[i], action.config)
+                end
             end
-            for i = 1, #states do
-                addStateOption(menu, states[i], action.config)
+        end
+
+        if #found.fails > 0
+                and (not action.config.showFailConditions.noSuccesses or #states == 0) then
+            if action.config.showFailConditions.onlyOne then
+                found.fails = {found.fails[1]}
+            end
+
+            for i = 1, #found.fails do
+                local option = menu:addOption(action.action.name)
+                option.notAvailable = true
+                option.toolTip = ActionUI.createFailTooltip(action.action, found.fails[i])
             end
         end
     end

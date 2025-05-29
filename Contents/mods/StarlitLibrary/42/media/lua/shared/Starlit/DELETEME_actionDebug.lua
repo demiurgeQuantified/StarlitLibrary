@@ -101,7 +101,18 @@ assert(Action.isComplete(addWindowAction))
 ActionUI.addObjectAction(
     addWindowAction,
     ActionUI.TooltipConfiguration{
-        highlight = {object = "window"}
+        highlight = {
+            object = "window"
+        },
+        showFailConditions = {
+            noSuccesses = true,
+            onlyOne = false,
+            required = {
+                objects = {
+                    "window"
+                }
+            }
+        }
     }
 )
 ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})
