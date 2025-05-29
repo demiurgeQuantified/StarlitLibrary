@@ -1,7 +1,5 @@
 local Action = require("Starlit/action/Action")
 local Actions = require("Starlit/action/Actions")
-local ActionState = require("Starlit/action/ActionState")
-local PrepareActionAction = require("Starlit/internal/PrepareActionAction")
 local ActionUI = require("Starlit/action/ActionUI")
 
 
@@ -101,5 +99,13 @@ end
 -- end)
 
 
-ActionUI.addObjectAction(addWindowAction, {mustPass = {}})
+ActionUI.addObjectAction(
+    addWindowAction,
+    {
+        mustPass = {},
+        highlight = {
+            object = "window"
+        }
+    }
+)
 ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})

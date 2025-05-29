@@ -1,5 +1,6 @@
 local ActionState = require("Starlit/action/ActionState")
 local Actions = require("Starlit/action/Actions")
+local Colour  = require("Starlit/utils/Colour")
 
 
 local core = getCore()
@@ -83,12 +84,13 @@ ActionUI.createFailTooltip = function(action, failReasons)
 end
 
 
----Conditions to show an action that cannot be performed.
----@class starlit.Action.TooltipConditions
+---Configuration for when and how a tooltip should be displayed.
+---@class starlit.Action.TooltipConfiguration
+---@field highlight {object: string, colour: Starlit.Colour | nil} | nil
 ---@field mustPass {items: string[], objects: string[], predicates: integer[]}
 
 
----@type {action: starlit.Action, tooltipConditions: starlit.Action.TooltipConditions}[]
+---@type {action: starlit.Action, conditions: starlit.Action.TooltipConfiguration}[]
 local objectActions = {}
 
 
@@ -100,9 +102,9 @@ local itemActions = {}
 
 
 ---@param action starlit.Action
----@param tooltipConditions starlit.Action.TooltipConditions
+---@param tooltipConditions starlit.Action.TooltipConfiguration
 ActionUI.addObjectAction = function(action, tooltipConditions)
-    table.insert(objectActions, {action = action, tooltipConditions = tooltipConditions})
+    table.insert(objectActions, {action = action, conditions = tooltipConditions})
 end
 
 
@@ -156,6 +158,24 @@ end
 Events.OnFillInventoryObjectContextMenu.Add(showItemAction)
 
 
+---@type Starlit.Colour
+local defaultHighlightColour = {0.9, 1, 0, 1}
+
+
+---@param highlighted boolean
+---@param object IsoObject
+---@param r number
+---@param g number
+---@param b number
+---@param a number
+local function highlightObjectOnHover(_, _, highlighted, object, r, g, b, a)
+    if highlighted then
+        object:setHighlightColor(r, g, b, a)
+    end
+    object:setHighlighted(highlighted, false)
+end
+
+
 ---@type Callback_OnFillWorldObjectContextMenu
 local function showObjectActions(playerNum, context, worldObjects, test)
     local character = getSpecificPlayer(playerNum)
@@ -169,7 +189,15 @@ local function showObjectActions(playerNum, context, worldObjects, test)
 
         local optionName = getText(objectAction.action.name)
         if state then
-            context:addOption(optionName, state, Actions.queueAction)
+            -- TODO: collect all valid states into a list
+            --  option to either only show one, show them separately or show them in a submenu
+            --  option to only show fails if there are no successes
+            local option = context:addOption(optionName, state, Actions.queueAction)
+            local highlight = objectAction.conditions.highlight
+            if highlight ~= nil then
+                option.onHighlight = highlightObjectOnHover
+                option.onHighlightParams = {state.objects[highlight.object], Colour.getRGBA(highlight.colour or defaultHighlightColour)}
+            end
         elseif failReasons then
             local option = context:addOption(optionName)
             option.notAvailable = true
