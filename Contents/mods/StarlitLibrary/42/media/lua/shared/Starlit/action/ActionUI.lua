@@ -207,6 +207,17 @@ local function addStateOption(context, state, config)
 end
 
 
+---@param context ISContextMenu
+---@param name string
+---@return ISContextMenu subMenu
+local function addSubMenu(context, name)
+    local subMenuOption = context:addOption(name)
+    local subMenu = ISContextMenu:getNew(context)
+    context:addSubMenu(subMenuOption, subMenu)
+    return subMenu
+end
+
+
 ---@type Callback_OnFillWorldObjectContextMenu
 local function showObjectActions(playerNum, context, worldObjects, test)
     ---@type {[starlit.ActionUI.ObjectAction]: starlit.ActionState[]}
@@ -237,15 +248,24 @@ local function showObjectActions(playerNum, context, worldObjects, test)
 
     for action, states in pairs(statesByAction) do
         local duplicatePolicy = action.config.duplicatePolicy
+        -- make context local to this scope so we don't propagate changes to other actions
         local context = context
+
+        if action.config.subMenu then
+            local option = context:getOptionFromName(action.config.subMenu)
+            if option then
+                assert(option.subOption ~= nil)
+                context = context:getSubMenu(option.subOption)
+            else
+                context = addSubMenu(context, action.config.subMenu)
+            end
+        end
+
         if #states == 1 or duplicatePolicy == "hide" then
             addStateOption(context, states[1], action.config)
         else
             if duplicatePolicy == "submenu" then
-                local submenuOption = context:addOption(getText(action.action.name))
-                local submenu = ISContextMenu:getNew(context)
-                context:addSubMenu(submenuOption, submenu)
-                context = submenu
+                context = addSubMenu(context, getText(action.action.name))
             end
             for i = 1, #states do
                 addStateOption(context, states[i], action.config)
