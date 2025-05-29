@@ -164,7 +164,14 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
                     -- remove the requirement so that it isn't checked later
                     requiredObjects[name] = nil
                     state.objects[name] = object
-                    -- FIXME: remove object from objects if present or it could be used for another requirement
+
+                    -- remove from objects if present so that it isn't used for another condition
+                    for i = 1, #objects do
+                        if objects[i] == object then
+                            table.remove(objects, i)
+                            break
+                        end
+                    end
                 else
                     anyRequirementFailed = true
                     table.insert(failedRequirements.objects, name)
