@@ -146,6 +146,9 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
     -- this is stored as an arraylist because it is more efficient to remove from another arraylist
     local claimedItems = ArrayList.new()
 
+    -- copy the table before changing it so that changes don't propagate out of the function
+    objects = copyTable(objects)
+
     -- check forced params first, if they don't match we can return early
     if forceParams then
         -- copy before modifying so we don't propagate changes to the action itself
