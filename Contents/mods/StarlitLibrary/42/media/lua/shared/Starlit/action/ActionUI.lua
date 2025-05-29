@@ -1,6 +1,7 @@
 local ActionState = require("Starlit/action/ActionState")
 local Actions = require("Starlit/action/Actions")
 local Colour  = require("Starlit/utils/Colour")
+local SelfMergeTable = require("Starlit/utils/SelfMergeTable")
 
 
 local core = getCore()
@@ -84,16 +85,12 @@ ActionUI.createFailTooltip = function(action, failReasons)
 end
 
 
---- TODO: use selfMergeTable to set defaults for these
-
----Configuration for when and how a tooltip should be displayed.
----@class starlit.Action.TooltipConfiguration
+---Args for creating a TooltipConfiguration.
+---Differs from TooltipConfiguration only in that all fields are marked as nullable.
+---@class starlit.Action.TooltipConfigurationArgs
 ---
 ---Configures object highlighting when the action's option is selected.
 ---@field highlight {object: string, colour: Starlit.Colour | nil} | nil
----
----Conditions that must pass for a fail tooltip to be shown.  # TODO: not implemented
----@field mustPass {items: string[], objects: string[], predicates: integer[]}
 ---
 ---The translation string of the name of the submenu the action should be added to.  # TODO: not implemented
 ---@field subMenu string | nil
@@ -102,7 +99,30 @@ end
 ---'separate' creates a separate option for each action.
 ---'submenu' merges the options into a submenu.
 ---'hide' removes all duplicates, leaving only one action left.
+---@field duplicatePolicy "separate" | "submenu" | "hide" | nil
+---
+---
+---@field showFailConditions {noSuccesses: boolean} | nil
+
+---Concrete configuration for when and how a tooltip should be displayed.
+---@class starlit.Action.TooltipConfiguration : starlit.Action.TooltipConfigurationArgs
+---
+---How to behave when more than one action of this type is available.
+---'separate' creates a separate option for each action.
+---'submenu' merges the options into a submenu.
+---'hide' removes all duplicates, leaving only one action left.
 ---@field duplicatePolicy "separate"|"submenu"|"hide"
+---
+---
+---@field showFailConditions {noSuccesses: boolean} | nil
+---@overload fun(config:starlit.Action.TooltipConfigurationArgs):self
+
+
+---@type starlit.Action.TooltipConfiguration
+---@diagnostic disable-next-line: assign-type-mismatch
+ActionUI.TooltipConfiguration = SelfMergeTable{
+    duplicatePolicy = "submenu"
+}
 
 
 ---@alias starlit.ActionUI.ObjectAction {action: starlit.Action, config: starlit.Action.TooltipConfiguration}

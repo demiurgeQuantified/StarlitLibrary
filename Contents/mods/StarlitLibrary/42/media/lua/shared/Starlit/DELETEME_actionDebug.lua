@@ -100,12 +100,8 @@ assert(Action.isComplete(addWindowAction))
 
 ActionUI.addObjectAction(
     addWindowAction,
-    {
-        mustPass = {},
-        highlight = {
-            object = "window"
-        },
-        duplicatePolicy = "submenu"
+    ActionUI.TooltipConfiguration{
+        highlight = {object = "window"}
     }
 )
 ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})

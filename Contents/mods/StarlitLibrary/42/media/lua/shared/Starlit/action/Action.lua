@@ -1,34 +1,18 @@
+local SelfMergeTable = require("Starlit/utils/SelfMergeTable")
+
+
 local pass = function() end
-
-
----@type metatable
-local selfMergeTableMeta
-selfMergeTableMeta = {
-    -- when called with a table argument, return both tables merged 
-    ---@param t table
-    ---@param args table
-    __call = function(t, args)
-        local o = copyTable(t)
-        for k, v in pairs(args) do
-            o[k] = v
-        end
-        return setmetatable(o, selfMergeTableMeta)
-    end
-}
-
----@overload fun(table, table): table
-local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 
 
 ---Predicate container class.
 ---@class starlit.Action.Predicate<T>
+---@overload fun(other:self):self
 ---
 ---Evaluator function for the predicate.
----@field evaluate fun(starlit.Action.Predicate, T):boolean
+---@field evaluate fun(self:starlit.Action.Predicate, obj:T):boolean
 ---
 ---Translated string to use as the description of the predicate in UI elements.
 ---@field description string
----@overload fun(other:starlit.Action.Predicate):starlit.Action.Predicate
 
 
 ---RequiredItem args.
@@ -56,6 +40,7 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 
 ---Concrete RequiredItem.
 ---@class starlit.Action.RequiredItem : starlit.Action.RequiredItemDef
+---@overload fun(def:starlit.Action.RequiredItemDef):self
 ---
 ---List of predicates the items must pass to be used.
 ---These are used to implement custom conditions for items.
@@ -70,9 +55,9 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 ---@field mustBeSameType boolean  # TODO: not implemented
 -- common needs for predicates should be made into fields, as they can be optimised into a single predicate
 
-
 ---Represents an object requirement for an action.
 ---@class starlit.Action.RequiredObject
+---@overload fun(args:starlit.Action.RequiredObject):self
 ---
 ---Conditions an object must meet.
 ---@field predicates starlit.Action.Predicate<IsoObject>[]
@@ -150,6 +135,8 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 
 ---Concrete Action.
 ---@class starlit.Action : starlit.ActionDef
+---@overload fun(def:starlit.ActionDef):self
+---
 ---Whether to stop the action if the character begins aiming during it.
 ---@field stopOnAim boolean
 ---
@@ -184,9 +171,9 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 ---@field stop fun(state:starlit.ActionState)
 
 local Action = {
-    ---@overload fun(def:starlit.ActionDef):starlit.Action
-    ---@nodiscard
-    Action = selfMergeTable{
+    ---@type starlit.Action
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    Action = SelfMergeTable{
         stopOnAim = true,
         stopOnWalk = false,
         stopOnRun = true,
@@ -198,22 +185,23 @@ local Action = {
         update = pass,
         stop = pass,
     },
-    ---@overload fun(def:starlit.Action.RequiredItemDef):starlit.Action.RequiredItem
-    ---@nodiscard
-    RequiredItem = selfMergeTable{
+    ---@type starlit.Action.RequiredItem
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    RequiredItem = SelfMergeTable{
         predicates = {},
         count = 1,
         mainInventory = false,
         mustBeSameType = false,
     },
-    ---@overload fun(def:starlit.Action.RequiredObject):starlit.Action.RequiredObject
-    ---@nodiscard
-    RequiredObject = selfMergeTable{
+    ---@type starlit.Action.RequiredObject
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    RequiredObject = SelfMergeTable{
 
     },
 
     ---@type starlit.Action.Predicate
-    Predicate = selfMergeTable{
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    Predicate = SelfMergeTable{
         evaluate = pass,
         description = "DESCRIPTION MISSING"
     },
