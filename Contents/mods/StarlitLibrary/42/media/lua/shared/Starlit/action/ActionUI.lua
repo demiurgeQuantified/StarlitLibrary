@@ -258,6 +258,8 @@ local function addSubMenu(context, name)
 end
 
 
+-- TODO: this function needs to be broken up, it's too big
+
 ---@type Callback_OnFillWorldObjectContextMenu
 local function showObjectActions(playerNum, context, worldObjects, test)
     ---@type {[starlit.ActionUI.ObjectAction]: {states: starlit.ActionState[], fails: starlit.ActionState.FailReasons}}
@@ -307,9 +309,15 @@ local function showObjectActions(playerNum, context, worldObjects, test)
             end
         end
 
+        local showFails = not action.config.showFailConditions.noSuccesses or #found.states == 0
+
+        local totalNumber = #found.states
+        if showFails then
+            totalNumber = totalNumber + #found.fails
+        end
+
         local duplicatePolicy = action.config.duplicatePolicy
 
-        local totalNumber = #found.states + #found.fails
         if totalNumber > 1 and duplicatePolicy == "submenu" then
             menu = addSubMenu(menu, action.action.name)
         end
@@ -325,8 +333,7 @@ local function showObjectActions(playerNum, context, worldObjects, test)
             end
         end
 
-        if #found.fails > 0
-                and (not action.config.showFailConditions.noSuccesses or #states == 0) then
+        if showFails and #found.fails > 0 then
             if action.config.showFailConditions.onlyOne then
                 found.fails = {found.fails[1]}
             end
