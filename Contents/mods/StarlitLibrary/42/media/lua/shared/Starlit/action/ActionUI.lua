@@ -92,11 +92,68 @@ end
 local objectActions = {}
 
 
+---@alias starlit.Action.ItemTooltipConditions {itemAs: string}
+
+
+---@type {action: starlit.Action, conditions: starlit.Action.ItemTooltipConditions}[]
+local itemActions = {}
+
+
 ---@param action starlit.Action
 ---@param tooltipConditions starlit.Action.TooltipConditions
 ActionUI.addObjectAction = function(action, tooltipConditions)
     table.insert(objectActions, {action = action, tooltipConditions = tooltipConditions})
 end
+
+
+---@param action starlit.Action
+---@param tooltipConditions starlit.Action.ItemTooltipConditions
+ActionUI.addItemAction = function(action, tooltipConditions)
+    table.insert(itemActions, {action = action, conditions = tooltipConditions})
+end
+
+
+---@type Callback_OnFillInventoryObjectContextMenu
+local function showItemAction(playerIndex, context, items)
+    local item = items[1]
+    if type(item) == "table" then
+        ---@cast item umbrella.ContextMenuItemStack
+        item = item.items[1]
+    end
+    ---@cast item InventoryItem
+
+    local character = getSpecificPlayer(playerIndex)
+    for i = 1, #itemActions do
+        local itemAction = itemActions[i]
+        local forceParams = {
+            items = {
+                [itemAction.conditions.itemAs] = item
+            }
+        }
+
+        local state, failReasons = ActionState.tryBuildActionState(
+            itemAction.action,
+            character,
+            {},
+            forceParams
+        )
+
+        if failReasons and failReasons.type ~= "forced" then
+            local option = context:addOption(getText(itemAction.action.name))
+            option.notAvailable = true
+            option.toolTip = ActionUI.createFailTooltip(itemAction.action, failReasons)
+        elseif state then
+            context:addOption(
+                getText(itemAction.action.name),
+                state,
+                Actions.queueAction
+            )
+        end
+    end
+end
+
+
+Events.OnFillInventoryObjectContextMenu.Add(showItemAction)
 
 
 ---@type Callback_OnFillWorldObjectContextMenu

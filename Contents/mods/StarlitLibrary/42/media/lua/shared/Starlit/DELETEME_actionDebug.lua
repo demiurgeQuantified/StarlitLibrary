@@ -102,3 +102,4 @@ end
 
 
 ActionUI.addObjectAction(addWindowAction, {mustPass = {}})
+ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})
