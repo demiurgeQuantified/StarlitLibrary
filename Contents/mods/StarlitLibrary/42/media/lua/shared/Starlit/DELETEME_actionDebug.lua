@@ -1,5 +1,4 @@
 local Action = require("Starlit/action/Action")
-local Actions = require("Starlit/action/Actions")
 local ActionUI = require("Starlit/action/ActionUI")
 
 
@@ -43,22 +42,22 @@ local addWindowAction = Action.Action{
 
 assert(Action.isComplete(addWindowAction))
 
----@param character IsoGameCharacter
----@param objects IsoObject
-local function onOptionSelected(character, objects)
-    local failReasons = Actions.tryQueueAction(addWindowAction, character, objects)
-    if failReasons then
-        for i = 1, #failReasons.objects do
-            print("Object requirement not satisfied: " .. failReasons.objects[i])
-        end
-        for i = 1, #failReasons.predicates do
-            print("Predicate requirement not satisfied: " .. failReasons.predicates[i])
-        end
-        for i = 1, #failReasons.items do
-            print("Item requirement not satisfied: " .. failReasons.items[i])
-        end
-    end
-end
+-- ---@param character IsoGameCharacter
+-- ---@param objects IsoObject
+-- local function onOptionSelected(character, objects)
+--     local failReasons = Actions.tryQueueAction(addWindowAction, character, objects)
+--     if failReasons then
+--         for i = 1, #failReasons.objects do
+--             print("Object requirement not satisfied: " .. failReasons.objects[i])
+--         end
+--         for i = 1, #failReasons.predicates do
+--             print("Predicate requirement not satisfied: " .. failReasons.predicates[i])
+--         end
+--         for i = 1, #failReasons.items do
+--             print("Item requirement not satisfied: " .. failReasons.items[i])
+--         end
+--     end
+-- end
 
 
 -- Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObjects, test)
@@ -105,7 +104,8 @@ ActionUI.addObjectAction(
         mustPass = {},
         highlight = {
             object = "window"
-        }
+        },
+        duplicatePolicy = "submenu"
     }
 )
 ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})

@@ -84,13 +84,29 @@ ActionUI.createFailTooltip = function(action, failReasons)
 end
 
 
+--- TODO: use selfMergeTable to set defaults for these
+
 ---Configuration for when and how a tooltip should be displayed.
 ---@class starlit.Action.TooltipConfiguration
+---
+---Configures object highlighting when the action's option is selected.
 ---@field highlight {object: string, colour: Starlit.Colour | nil} | nil
+---
+---Conditions that must pass for a fail tooltip to be shown.  # TODO: not implemented
 ---@field mustPass {items: string[], objects: string[], predicates: integer[]}
+---
+---The translation string of the name of the submenu the action should be added to.  # TODO: not implemented
+---@field subMenu string | nil
+---
+---How to behave when more than one action of this type is available.
+---'separate' creates a separate option for each action.
+---'submenu' merges the options into a submenu.
+---'hide' removes all duplicates, leaving only one action left.
+---@field duplicatePolicy "separate"|"submenu"|"hide"
 
 
----@type {action: starlit.Action, conditions: starlit.Action.TooltipConfiguration}[]
+---@alias starlit.ActionUI.ObjectAction {action: starlit.Action, config: starlit.Action.TooltipConfiguration}
+---@type starlit.ActionUI.ObjectAction[]
 local objectActions = {}
 
 
@@ -104,7 +120,7 @@ local itemActions = {}
 ---@param action starlit.Action
 ---@param tooltipConditions starlit.Action.TooltipConfiguration
 ActionUI.addObjectAction = function(action, tooltipConditions)
-    table.insert(objectActions, {action = action, conditions = tooltipConditions})
+    table.insert(objectActions, {action = action, config = tooltipConditions})
 end
 
 
@@ -176,8 +192,26 @@ local function highlightObjectOnHover(_, _, highlighted, object, r, g, b, a)
 end
 
 
+---@param context ISContextMenu
+---@param state starlit.ActionState
+---@param config starlit.Action.TooltipConfiguration
+---@return unknown? option no typedef for this in umbrella grr
+local function addStateOption(context, state, config)
+    local option = context:addOption(getText(state.def.name), state, Actions.queueAction)
+    local highlight = config.highlight
+    if highlight ~= nil then
+        option.onHighlight = highlightObjectOnHover
+        option.onHighlightParams = {state.objects[highlight.object], Colour.getRGBA(highlight.colour or defaultHighlightColour)}
+    end
+    return option
+end
+
+
 ---@type Callback_OnFillWorldObjectContextMenu
 local function showObjectActions(playerNum, context, worldObjects, test)
+    ---@type {[starlit.ActionUI.ObjectAction]: starlit.ActionState[]}
+    local statesByAction = {}
+
     local character = getSpecificPlayer(playerNum)
     for i = 1, #objectActions do
         local objectAction = objectActions[i]
@@ -189,19 +223,33 @@ local function showObjectActions(playerNum, context, worldObjects, test)
 
         local optionName = getText(objectAction.action.name)
         if state then
-            -- TODO: collect all valid states into a list
-            --  option to either only show one, show them separately or show them in a submenu
-            --  option to only show fails if there are no successes
-            local option = context:addOption(optionName, state, Actions.queueAction)
-            local highlight = objectAction.conditions.highlight
-            if highlight ~= nil then
-                option.onHighlight = highlightObjectOnHover
-                option.onHighlightParams = {state.objects[highlight.object], Colour.getRGBA(highlight.colour or defaultHighlightColour)}
+            if not statesByAction[objectAction] then
+                statesByAction[objectAction] = {}
             end
+            table.insert(statesByAction[objectAction], state)
+            table.insert(statesByAction[objectAction], state) -- DELETEME duplicate for submenu merge testing
         elseif failReasons then
             local option = context:addOption(optionName)
             option.notAvailable = true
             option.toolTip = ActionUI.createFailTooltip(objectAction.action, failReasons)
+        end
+    end
+
+    for action, states in pairs(statesByAction) do
+        local duplicatePolicy = action.config.duplicatePolicy
+        local context = context
+        if #states == 1 or duplicatePolicy == "hide" then
+            addStateOption(context, states[1], action.config)
+        else
+            if duplicatePolicy == "submenu" then
+                local submenuOption = context:addOption(getText(action.action.name))
+                local submenu = ISContextMenu:getNew(context)
+                context:addSubMenu(submenuOption, submenu)
+                context = submenu
+            end
+            for i = 1, #states do
+                addStateOption(context, states[i], action.config)
+            end
         end
     end
 end
