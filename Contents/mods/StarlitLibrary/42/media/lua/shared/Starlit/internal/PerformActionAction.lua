@@ -78,7 +78,7 @@ PerformActionAction.start = function(self)
     end
 
     self:setItemsJobDelta(0)
-    self:setItemsJobType(self.state.def.name and getText(self.state.def.name) or nil)
+    self:setItemsJobType(self.state.def.name)
 
     if self.state.def.animation then
         self:setActionAnim(self.state.def.animation)

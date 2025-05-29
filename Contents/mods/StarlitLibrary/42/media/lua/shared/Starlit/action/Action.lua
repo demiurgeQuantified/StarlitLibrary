@@ -26,7 +26,7 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 ---Evaluator function for the predicate.
 ---@field evaluate fun(starlit.Action.Predicate, T):boolean
 ---
----Translation string to use as the description of the predicate in UI elements.
+---Translated string to use as the description of the predicate in UI elements.
 ---@field description string
 ---@overload fun(other:starlit.Action.Predicate):starlit.Action.Predicate
 
@@ -82,7 +82,7 @@ local selfMergeTable = setmetatable({}, selfMergeTableMeta)
 ---This is the same as Action, but fields are marked as nullable to avoid the type checker reporting false negatives.
 ---@class starlit.ActionDef
 ---
----Translation string to use as the name of the action. Displayed in context menus and tooltips.
+---Translated name of the action. Displayed in context menus and tooltips.
 ---@field name string
 ---
 ---The time it should take to perform the action.

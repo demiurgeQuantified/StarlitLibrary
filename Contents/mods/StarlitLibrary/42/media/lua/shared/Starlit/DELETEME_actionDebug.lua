@@ -3,7 +3,7 @@ local ActionUI = require("Starlit/action/ActionUI")
 
 
 local addWindowAction = Action.Action{
-    name = "IGUI_RepairableWindows_Action_AddWindow",
+    name = getText("IGUI_RepairableWindows_Action_AddWindow"),
     time = 192,
     stopOnAim = true,
     stopOnRun = true,
@@ -24,7 +24,7 @@ local addWindowAction = Action.Action{
                         return instanceof(object, "IsoWindow") --[[@cast object IsoWindow]]
                             and object:isSmashed()
                     end,
-                    description = "IGUI_RepairableWindows_Predicate_IsSmashedWindow"
+                    description = getText("IGUI_RepairableWindows_Predicate_IsSmashedWindow")
                 }
             }
         }

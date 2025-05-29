@@ -27,11 +27,11 @@ ActionUI.createFailTooltip = function(action, failReasons)
         desaturatedBadColour:getB()
     )
 
-    tooltip.name = getText(action.name)
+    tooltip.name = action.name
     local description = "<BHC> "
 
     for i = 1, #failReasons.predicates do
-        description = description .. getText(action.predicates[failReasons.predicates[i]].description) .. "\n "
+        description = description .. action.predicates[failReasons.predicates[i]].description .. "\n "
     end
 
     for i = 1, #failReasons.objects do
@@ -41,7 +41,7 @@ ActionUI.createFailTooltip = function(action, failReasons)
                                   .. "\n <INDENT:8> <PUSHRGB:" .. desaturatedBadColourString .. "> "
 
         for j = 1, #requirement.predicates do
-            description = description .. getText(requirement.predicates[j].description) .. "\n "
+            description = description .. requirement.predicates[j].description .. "\n "
         end
 
         description = description .. " <POPRGB> "
@@ -72,7 +72,7 @@ ActionUI.createFailTooltip = function(action, failReasons)
         end
 
         for j = 1, #requirement.predicates do
-            description = description .. " <INDENT:8> " .. getText(requirement.predicates[j].description) .. " \n "
+            description = description .. " <INDENT:8> " .. requirement.predicates[j].description .. " \n "
         end
 
         description = description .. " <POPRGB> "
@@ -157,12 +157,12 @@ local function showItemAction(playerIndex, context, items)
         )
 
         if failReasons and failReasons.type ~= "forced" then
-            local option = context:addOption(getText(itemAction.action.name))
+            local option = context:addOption(itemAction.action.name)
             option.notAvailable = true
             option.toolTip = ActionUI.createFailTooltip(itemAction.action, failReasons)
         elseif state then
             context:addOption(
-                getText(itemAction.action.name),
+                itemAction.action.name,
                 state,
                 Actions.queueAction
             )
@@ -197,7 +197,7 @@ end
 ---@param config starlit.Action.TooltipConfiguration
 ---@return unknown? option no typedef for this in umbrella grr
 local function addStateOption(context, state, config)
-    local option = context:addOption(getText(state.def.name), state, Actions.queueAction)
+    local option = context:addOption(state.def.name, state, Actions.queueAction)
     local highlight = config.highlight
     if highlight ~= nil then
         option.onHighlight = highlightObjectOnHover
@@ -232,7 +232,7 @@ local function showObjectActions(playerNum, context, worldObjects, test)
             worldObjects
         )
 
-        local optionName = getText(objectAction.action.name)
+        local optionName = objectAction.action.name
         if state then
             if not statesByAction[objectAction] then
                 statesByAction[objectAction] = {}
@@ -265,7 +265,7 @@ local function showObjectActions(playerNum, context, worldObjects, test)
             addStateOption(context, states[1], action.config)
         else
             if duplicatePolicy == "submenu" then
-                context = addSubMenu(context, getText(action.action.name))
+                context = addSubMenu(context, action.action.name)
             end
             for i = 1, #states do
                 addStateOption(context, states[i], action.config)
