@@ -104,6 +104,7 @@ ActionUI.addObjectAction(
         highlight = {
             object = "window"
         },
+        objectAs = "window",
         showFailConditions = {
             noSuccesses = true,
             onlyOne = false,

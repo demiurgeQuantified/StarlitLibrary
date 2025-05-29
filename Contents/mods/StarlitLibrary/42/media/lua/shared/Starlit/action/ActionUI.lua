@@ -118,6 +118,10 @@ end
 ---
 ---Conditions for when options for invalid actions should be shown.
 ---@field showFailConditions starlit.Action.ShowFailConditions | nil
+---
+---If not nil, each object tested will be tested as the action's required object by the same name.
+---This causes more tests overall to be ran, but can generate more helpful tooltips, depending on the kind of action.
+---@field objectAs any
 
 
 ---Concrete configuration for when and how a tooltip should be displayed.
@@ -265,34 +269,54 @@ local function showObjectActions(playerNum, context, worldObjects, test)
     ---@type {[starlit.ActionUI.ObjectAction]: {states: starlit.ActionState[], fails: starlit.ActionState.FailReasons}}
     local foundActions = {}
 
+    local objects = worldObjects[1]:getSquare():getLuaTileObjectList() --[[@as IsoObject[]]
+
     local character = getSpecificPlayer(playerNum)
     for i = 1, #objectActions do
         local objectAction = objectActions[i]
-        local state, failReasons = ActionState.tryBuildActionState(
-            objectAction.action,
-            character,
-            worldObjects
-        )
+        local states = {}
+        local fails = {}
 
-        -- TODO: add objectAs similar to inventory itemAs, if set try each object against that requirement and generate options for each
-        --  this would let us e.g. highlight each window when trying to install glass, and show why that one isn't okay
+        -- repetition here isn't ideal, but function overhead could become really costly here O(x^n)
+        if objectAction.config.objectAs then
+            for j = 1, #objects do
+                local state, failReasons = ActionState.tryBuildActionState(
+                    objectAction.action,
+                    character,
+                    objects,
+                    {
+                        objects = {
+                            [objectAction.config.objectAs] = objects[j]
+                        }
+                    }
+                )
 
-        if state then
-            if not foundActions[objectAction] then
-                foundActions[objectAction] = {
-                    states = {},
-                    fails = {}
-                }
+                if state then
+                    table.insert(states, state)
+                elseif failReasons then
+                    table.insert(fails, failReasons)
+                end
             end
-            table.insert(foundActions[objectAction].states, state)
-        elseif failReasons then
-            if not foundActions[objectAction] then
-                foundActions[objectAction] = {
-                    states = {},
-                    fails = {}
-                }
+        else
+            local state, failReasons = ActionState.tryBuildActionState(
+                objectAction.action,
+                character,
+                objects
+            )
+
+            if state then
+                table.insert(states, state)
+            elseif failReasons then
+                table.insert(fails, failReasons)
             end
-            table.insert(foundActions[objectAction].fails, failReasons)
+        end
+
+
+        if #states > 0 or #fails > 0 then
+            foundActions[objectAction] = {
+                states = states,
+                fails = fails
+            }
         end
     end
 

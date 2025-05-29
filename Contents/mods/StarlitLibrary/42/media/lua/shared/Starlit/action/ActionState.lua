@@ -4,6 +4,12 @@ local log = require("Starlit/debug/StarlitLog")
 local DEBUG = getDebug()
 
 
+-- TODO: it is reasonable to cache the results of tests over the same tick
+-- when adding an object action option using objectAs,
+-- object tests could be ran up to N^2 times even though the results won't change
+-- when considering multiple actions could be testing the same objects/items, it's obviously inefficient
+
+
 local ActionState = {}
 
 ---State of a specific action attempt.
@@ -248,9 +254,6 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
     end
 
     failedRequirements.type = "regular"
-
-    -- copy the table before changing it so that changes don't propagate out of the function
-    objects = copyTable(objects)
 
     for name, requirement in pairs(requiredObjects) do
         local object = ActionState.findObjectMatch(requirement, objects)
