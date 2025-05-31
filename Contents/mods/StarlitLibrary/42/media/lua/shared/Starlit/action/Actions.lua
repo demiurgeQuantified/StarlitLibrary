@@ -15,7 +15,7 @@ end
 ---@param action starlit.Action The action to queue.
 ---@param character IsoGameCharacter The character performing the action.
 ---@param objects IsoObject[] | nil List of objects that may be used in the action.
----@return starlit.ActionState.FailReasons | nil failReasons The reasons why the action cannot be performed. Nil if the action was successfully queued.
+---@return starlit.ActionState.ActionFailReasons | nil failReasons The reasons why the action cannot be performed. Nil if the action was successfully queued.
 function Actions.tryQueueAction(action, character, objects)
     objects = objects or {}
     local state, failReasons = ActionState.tryBuildActionState(

@@ -12,6 +12,10 @@ local DEBUG = getDebug()
 
 local ActionState = {}
 
+-- TODO: merge ActionFailReasons and ActionState into TestResult, add 'success' field
+-- if a requirement succeeds, set the requirement to the passing object, otherwise set it to false orfail details
+-- success field is only true if all requirements passed
+
 ---State of a specific action attempt.
 ---Where an Action defines the kinds of items and objects needed, an ActionState contains the specific items and objects being used in an action.
 ---@class starlit.ActionState
@@ -29,19 +33,21 @@ local ActionState = {}
 ---The character performing the action.
 ---@field character IsoGameCharacter
 
----@alias starlit.ActionState.FailReasons {objects: any[], predicates: integer[], items: any[], type: string}
+---@alias starlit.ActionState.ItemFailReasons {validType: boolean, predicates: {[any]: boolean}}
+---@alias starlit.ActionState.ObjectFailReasons {predicates: {[any]: boolean}}
+---@alias starlit.ActionState.ActionFailReasons {objects: {[any]: starlit.ActionState.ObjectFailReasons | boolean}, predicates: integer[], items: {[any]: starlit.ActionState.ItemFailReasons | boolean}, type: string}
 ---@alias starlit.ActionState.ForceParams {objects: {[any]: IsoObject} | nil, items: {[any]: InventoryItem|InventoryItem[]} | nil}
 
 ---Checks a list of objects against an object requirement.
----To check only one object, pass a table with that object as the only element. (The cost of constructing a table is far less than the function overhead that would be incurred if this delegated each check to a single-check function.)
+---To check only one object, pass a table with that object as the only element.
 ---@param requirement starlit.Action.RequiredObject The object requirement to check against.
 ---@param objects IsoObject[] Objects to check. The first found match (if any) will be removed from the list.
 ---@return IsoObject | nil match The first matching object found, or nil if there was no match.
 function ActionState.findObjectMatch(requirement, objects)
     for i = 1, #objects do
         local object = objects[i]
-        for k = 1, #requirement.predicates do
-            if not requirement.predicates[k]:evaluate(object) then
+        for j = 1, #requirement.predicates do
+            if not requirement.predicates[j]:evaluate(object) then
                 return nil
             end
         end
@@ -50,10 +56,79 @@ function ActionState.findObjectMatch(requirement, objects)
     end
 end
 
+
+---@param requirement starlit.Action.RequiredObject
+---@param object IsoObject
+---@return boolean pass, starlit.ActionState.ObjectFailReasons details
+function ActionState.testObjectDetailed(requirement, object)
+    local result = {
+        predicates = {}
+    }
+    local noFailures = true
+
+    for i = 1, #requirement.predicates do
+        local passed = requirement.predicates[i]:evaluate(object)
+        result.predicates[i] = passed
+        if not passed then
+            noFailures = false
+        end
+    end
+
+    return noFailures, result
+end
+
+
+---@param requirement starlit.Action.RequiredItem
+---@param item InventoryItem
+---@return boolean pass, starlit.ActionState.ItemFailReasons details
+function ActionState.testItemDetailed(requirement, item)
+    local result = {
+        validType = false,
+        predicates = {}
+    }
+    local noFailures = true
+
+    -- check if the item type is valid
+    if requirement.types then
+        local type = item:getFullType()
+        for i = 1, #requirement.types do
+            if type == requirement.types[i] then
+                result.validType = true
+                break
+            end
+        end
+    elseif requirement.tags then
+        for i = 1, #requirement.tags do
+            if item:hasTag(requirement.tags[i]) then
+                result.validType = true
+                break
+            end
+        end
+    else
+        result.validType = true
+    end
+
+    if not result.validType then
+        noFailures = false
+    end
+
+    -- check that it passes all predicates
+    for i = 1, #requirement.predicates do
+        local passed = requirement.predicates[i]:evaluate(item)
+        result.predicates[i] = passed
+        if not passed then
+            noFailures = false
+        end
+    end
+
+    return noFailures, result
+end
+
+
 ---Checks all items in a container against an object requirement.
 ---@param requirement starlit.Action.RequiredItem The item requirement to check against.
 ---@param itemArray ArrayList List of items to check.
----@return InventoryItem | InventoryItem[] | nil
+---@return InventoryItem | InventoryItem[] | nil item The first matching item found, if any.
 ---@nodiscard
 function ActionState.findItemMatch(requirement, itemArray)
     ---@type InventoryItem[]
@@ -116,7 +191,7 @@ end
 ---@param objects IsoObject[] Objects that may be used in the action. (e.g. all objects clicked by the player).
 ---@param forceParams starlit.ActionState.ForceParams | nil Items and objects that must be used in the action. If they cannot be used, the function will return early. failedRequirements will only detail why these items were inappropriate.
 ---@return starlit.ActionState | nil state The created state. Nil if the state could not be created.
----@return starlit.ActionState.FailReasons | nil failedRequirements Reasons why the state could not be created. Nil if the state was created.
+---@return starlit.ActionState.ActionFailReasons | nil failedRequirements Reasons why the state could not be created. Nil if the state was created.
 ---@nodiscard
 function ActionState.tryBuildActionState(action, character, objects, forceParams)
     if not Action.isComplete(action) then
@@ -168,69 +243,33 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
         if forceParams.objects then
             for name, object in pairs(forceParams.objects) do
                 -- we don't assume passed objects exist as they might be coming from isActionStateStillValid
-                if object:isExistInTheWorld()
-                    and ActionState.findObjectMatch(requiredObjects[name], {object}) ~= nil then
-                    -- remove the requirement so that it isn't checked later
-                    requiredObjects[name] = nil
-                    state.objects[name] = object
+                if object:isExistInTheWorld() then
+                    local pass, failDetails = ActionState.testObjectDetailed(requiredObjects[name], object)
+                    if pass then
+                        -- remove the requirement so that it isn't checked later
+                        requiredObjects[name] = nil
+                        state.objects[name] = object
 
-                    -- remove from objects if present so that it isn't used for another condition
-                    for i = 1, #objects do
-                        if objects[i] == object then
-                            table.remove(objects, i)
-                            break
+                        -- remove from objects if present so that it isn't used for another condition
+                        for i = 1, #objects do
+                            if objects[i] == object then
+                                table.remove(objects, i)
+                                break
+                            end
                         end
+                    else
+                        anyRequirementFailed = true
+                        failedRequirements.objects[name] = failDetails
                     end
-                else
-                    anyRequirementFailed = true
-                    table.insert(failedRequirements.objects, name)
                 end
             end
         end
 
         if forceParams.items then
             for name, item in pairs(forceParams.items) do
-                local requirement = requiredItems[name]
-
-                ---@type {[string]: boolean}
-                local types = {}
-                if requirement.types then
-                    for i = 1, #requirement.types do
-                        types[requirement.types[i]] = true
-                    end
-                end
-
-                ---@type umbrella.ItemContainer_Predicate
-                local function predicateTypeOrTags(item)
-                    if types[item:getFullType()] then
-                        return true
-                    end
-                    if requirement.tags then
-                        for i = 1, #requirement.tags do
-                            if item:hasTag(requirement.tags[i]) then
-                                return true
-                            end
-                        end
-                    end
-                    return false
-                end
-
-                local itemList = ArrayList.new()
-                if type(item) == "table" then
-                    ---@cast item InventoryItem[]
-                    for i = 1, #item do
-                        local item = item[i]
-                        if predicateTypeOrTags(item) then
-                            itemList:add(item)
-                        end
-                    end
-                else
-                    if predicateTypeOrTags(item) then
-                        itemList:add(item)
-                    end
-                end
-
-                if ActionState.findItemMatch(requiredItems[name], itemList) ~= nil then
+                -- FIXME: this doesn't support a table of items
+                local pass, failDetails = ActionState.testItemDetailed(requiredItems[name], item)
+                if pass then
                     requiredItems[name] = nil
                     state.items[name] = item
                     if type(item) == "table" then
@@ -242,7 +281,7 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
                     end
                 else
                     anyRequirementFailed = true
-                    table.insert(failedRequirements.items, name)
+                    failedRequirements.items[name] = failDetails
                 end
             end
         end
@@ -261,14 +300,14 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
             state.objects[name] = object
         else
             anyRequirementFailed = true
-            table.insert(failedRequirements.objects, name)
+            failedRequirements.objects[name] = false
         end
     end
 
     for i = 1, #action.predicates do
         if not action.predicates[i]:evaluate(character) then
             anyRequirementFailed = true
-            table.insert(failedRequirements.predicates, i)
+            failedRequirements.predicates[i] = false
         end
     end
 
@@ -305,7 +344,7 @@ function ActionState.tryBuildActionState(action, character, objects, forceParams
             end
         else
             anyRequirementFailed = true
-            table.insert(failedRequirements.items, name)
+            failedRequirements.items[name] = false
         end
     end
 

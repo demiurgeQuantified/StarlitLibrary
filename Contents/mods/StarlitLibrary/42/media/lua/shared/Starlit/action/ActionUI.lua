@@ -9,9 +9,12 @@ local core = getCore()
 
 local ActionUI = {}
 
+
+-- TODO: break up this function, it's too complex
+
 ---Creates a tooltip for an action describing any failed requirements.
 ---@param action starlit.Action The action.
----@param failReasons starlit.ActionState.FailReasons FailReasons corresponding to the action.
+---@param failReasons starlit.ActionState.ActionFailReasons FailReasons corresponding to the action.
 ---@return ISToolTip tooltip The tooltip.
 ---@nodiscard
 ActionUI.createFailTooltip = function(action, failReasons)
@@ -32,48 +35,62 @@ ActionUI.createFailTooltip = function(action, failReasons)
     local description = "<BHC> "
 
     for i = 1, #failReasons.predicates do
-        description = description .. action.predicates[failReasons.predicates[i]].description .. "\n "
+        if failReasons.predicates[i] == false then
+            description = description .. action.predicates[i].description .. "\n "
+        end
     end
 
-    for i = 1, #failReasons.objects do
-        local requirement = action.requiredObjects[failReasons.objects[i]]
+    for object, details in pairs(failReasons.objects) do
+        local genericFailure = details == false
+
+        local requirement = action.requiredObjects[object]
         description = description .. " <INDENT:0> "
                                   .. getText("IGUI_StarlitLibrary_Action_Object")
                                   .. "\n <INDENT:8> <PUSHRGB:" .. desaturatedBadColourString .. "> "
 
         for j = 1, #requirement.predicates do
-            description = description .. requirement.predicates[j].description .. "\n "
+            if genericFailure or details.predicates[j] == false then
+                description = description .. requirement.predicates[j].description .. "\n "
+            end
         end
 
         description = description .. " <POPRGB> "
     end
 
-    for i = 1, #failReasons.items do
-        local requirement = action.requiredItems[failReasons.items[i]]
+    -- TODO: optionally show passed conditions
+
+    for item, details in pairs(failReasons.items) do
+        -- if details is false, there are no details given on how the check failed, just that it did
+        local genericFailure = details == false
+        local requirement = action.requiredItems[item]
         description = description .. " <INDENT:0> "
                                   .. getText("IGUI_StarlitLibrary_Action_Item")
                                   .. " <PUSHRGB:" .. desaturatedBadColourString .. "> \n"
 
-        if requirement.types then
-            description = description .. " <INDENT:8> "
-                                      .. getText("IGUI_StarlitLibrary_Action_ItemTypeList")
-                                      .. "\n <INDENT:16> "
+        if genericFailure or details.validType == false then
+            if requirement.types then
+                description = description .. " <INDENT:8> "
+                                          .. getText("IGUI_StarlitLibrary_Action_ItemTypeList")
+                                          .. "\n <INDENT:16> "
 
-            local itemNames = {}
-            for j = 1, #requirement.types do
-                itemNames[j] = getItemNameFromFullType(requirement.types[j])
+                local itemNames = {}
+                for j = 1, #requirement.types do
+                    itemNames[j] = getItemNameFromFullType(requirement.types[j])
+                end
+                description = description .. table.concat(itemNames, ", ")
+            elseif requirement.tags then
+                local tagNames = {}
+                for j = 1, #requirement.tags do
+                    tagNames[j] = getText("IGUI_StarlitLibrary_TagDescription_" .. requirement.tags[j])
+                end
+                description = description .. table.concat(tagNames, "\n")
             end
-            description = description .. table.concat(itemNames, ", ")
-        elseif requirement.tags then
-            local tagNames = {}
-            for j = 1, #requirement.tags do
-                tagNames[j] = getText("IGUI_StarlitLibrary_TagDescription_" .. requirement.tags[j])
-            end
-            description = description .. table.concat(tagNames, "\n")
         end
 
         for j = 1, #requirement.predicates do
-            description = description .. " <INDENT:8> " .. requirement.predicates[j].description .. " \n "
+            if genericFailure or details.predicates[j] == false then
+                description = description .. " <INDENT:8> " .. requirement.predicates[j].description .. " \n "
+            end
         end
 
         description = description .. " <POPRGB> "
@@ -266,7 +283,7 @@ end
 
 ---@type Callback_OnFillWorldObjectContextMenu
 local function showObjectActions(playerNum, context, worldObjects, test)
-    ---@type {[starlit.ActionUI.ObjectAction]: {states: starlit.ActionState[], fails: starlit.ActionState.FailReasons}}
+    ---@type {[starlit.ActionUI.ObjectAction]: {states: starlit.ActionState[], fails: starlit.ActionState.ActionFailReasons}}
     local foundActions = {}
 
     local objects = worldObjects[1]:getSquare():getLuaTileObjectList() --[[@as IsoObject[]]

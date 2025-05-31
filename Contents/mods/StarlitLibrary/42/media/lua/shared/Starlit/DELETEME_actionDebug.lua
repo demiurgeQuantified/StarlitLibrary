@@ -21,16 +21,31 @@ local addWindowAction = Action.Action{
             predicates = {
                 Action.Predicate{
                     evaluate = function(self, object)
-                        return instanceof(object, "IsoWindow") --[[@cast object IsoWindow]]
-                            and object:isSmashed()
+                        return instanceof(object, "IsoWindow")
                     end,
-                    description = getText("IGUI_RepairableWindows_Predicate_IsSmashedWindow")
+                    description = getText("IGUI_RepairableWindows_Predicate_IsWindow")
+                },
+                Action.Predicate{
+                    evaluate = function(self, object)
+                        -- we have to check this twice because we don't short circuit anymore :()
+                        return instanceof(object, "IsoWindow")
+                               and object--[[@as IsoWindow]]:isSmashed()
+                    end,
+                    description = getText("IGUI_RepairableWindows_Predicate_IsSmashed")
                 }
             }
         }
     },
     faceObject = "window",
     walkToObject = "window",
+    -- predicates = {
+    --     Action.Predicate{
+    --         evaluate = function()
+    --             return false
+    --         end,
+    --         description = "Always false"
+    --     }
+    -- },
     complete = function(state)
         local window = state.objects.window
         ---@cast window IsoWindow
@@ -116,4 +131,4 @@ ActionUI.addObjectAction(
         }
     }
 )
-ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})
+-- ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})

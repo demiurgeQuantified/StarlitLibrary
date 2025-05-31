@@ -155,7 +155,7 @@ local pass = function() end
 ---The objects picked will be stored under <b>state.objects</b> with the same key ('name') as in this table.
 ---@field requiredObjects table<any, starlit.Action.RequiredObject>
 ---
----List of predicates that must be met to perform the action.
+---List of predicates that must be met to perform the action.  # TODO: it would be helpful for these to be named
 ---@field predicates starlit.Action.Predicate<IsoGameCharacter>[]
 ---
 ---Function called upon completion of the action.
