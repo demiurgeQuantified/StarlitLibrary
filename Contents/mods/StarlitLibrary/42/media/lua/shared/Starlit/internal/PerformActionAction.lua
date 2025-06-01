@@ -57,7 +57,7 @@ PerformActionAction.cleanup = function(self)
 end
 
 PerformActionAction.stop = function(self)
-    self.state.def.stop(self.state)
+    self.state.def.abort(self.state)
     self:cleanup()
     ISBaseTimedAction.stop(self)
 end

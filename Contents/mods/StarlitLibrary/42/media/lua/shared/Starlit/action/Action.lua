@@ -130,7 +130,7 @@ local pass = function() end
 ---@field update fun(state:starlit.ActionState) | nil
 ---
 ---Function called when the action is stopped before it is successfully completed.
----@field stop fun(state:starlit.ActionState) | nil
+---@field abort fun(state:starlit.ActionState) | nil
 
 
 ---Concrete Action.
@@ -168,7 +168,7 @@ local pass = function() end
 ---@field update fun(state:starlit.ActionState)
 ---
 ---Function called when the action is stopped before it is successfully completed.
----@field stop fun(state:starlit.ActionState)
+---@field abort fun(state:starlit.ActionState)
 
 local Action = {
     ---@type starlit.Action
