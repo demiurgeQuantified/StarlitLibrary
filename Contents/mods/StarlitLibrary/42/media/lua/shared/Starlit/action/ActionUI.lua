@@ -138,7 +138,7 @@ end
 ---Configures object highlighting when the action's option is selected.
 ---@field highlight {object: string, colour: Starlit.Colour | nil} | nil
 ---
----The translation string of the name of the submenu the action should be added to.  # TODO: not implemented
+---The translation string of the name of the submenu the action should be added to.
 ---@field subMenu string | nil
 ---
 ---How to behave when more than one action of this type is available.
