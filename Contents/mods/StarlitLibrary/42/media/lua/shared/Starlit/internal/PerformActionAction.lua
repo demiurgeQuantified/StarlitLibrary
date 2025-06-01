@@ -5,7 +5,7 @@ local ActionState = require("Starlit/action/ActionState")
 local PerformActionAction = ISBaseTimedAction:derive("starlit.PerformActionAction")
 
 PerformActionAction.isValid = function(self)
-    return ActionState.isActionStateStillValid(self.state)
+    return ActionState.stillValid(self.state)
 end
 
 PerformActionAction.update = function(self)
@@ -69,7 +69,7 @@ PerformActionAction.perform = function(self)
 end
 
 PerformActionAction.start = function(self)
-    if not ActionState.isActionStateStillValid(self.state) then
+    if not ActionState.stillValid(self.state) then
         -- TODO: in some situations we may want to build a new state instead of cancelling
         -- e.g. if i queued the action for later, even if i lost the item i was going to use for it
         -- i may still have a valid one

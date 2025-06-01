@@ -1,4 +1,5 @@
 local ActionState = require("Starlit/action/ActionState")
+local ActionTest = require("Starlit/action/ActionTest")
 local Actions = require("Starlit/action/Actions")
 local Colour  = require("Starlit/utils/Colour")
 local SelfMergeTable = require("Starlit/utils/SelfMergeTable")
@@ -12,12 +13,12 @@ local ActionUI = {}
 
 -- TODO: break up this function, it's too complex
 
----Creates a tooltip for an action describing any failed requirements.
+---Creates a tooltip for an action describing any requirements.
 ---@param action starlit.Action The action.
----@param failReasons starlit.ActionState.ActionFailReasons FailReasons corresponding to the action.
+---@param testResult starlit.ActionTest.Result Result of the action test.
 ---@return ISToolTip tooltip The tooltip.
 ---@nodiscard
-ActionUI.createFailTooltip = function(action, failReasons)
+ActionUI.createTooltip = function(action, testResult)
     local tooltip = ISWorldObjectContextMenu.addToolTip() --[[@as ISToolTip]]
 
     -- we don't cache this because the player can change it midgame and that's annoying to catch
@@ -34,67 +35,80 @@ ActionUI.createFailTooltip = function(action, failReasons)
     tooltip.name = action.name
     local description = "<BHC> "
 
-    for i = 1, #failReasons.predicates do
-        if failReasons.predicates[i] == false then
+    for i = 1, #testResult.predicates do
+        if testResult.predicates[i] == false then
             description = description .. action.predicates[i].description .. "\n "
         end
     end
 
-    for object, details in pairs(failReasons.objects) do
-        local genericFailure = details == false
+    for name, result in pairs(testResult.objects) do
+        if not instanceof(result, "IsoObject") then
+            ---@cast result -IsoObject
+            local genericFailure = result == false
 
-        local requirement = action.requiredObjects[object]
-        description = description .. " <INDENT:0> "
-                                  .. getText("IGUI_StarlitLibrary_Action_Object")
-                                  .. "\n <INDENT:8> <PUSHRGB:" .. desaturatedBadColourString .. "> "
+            local requirement = action.requiredObjects[name]
+            description = description .. " <INDENT:0> "
+                                    .. getText("IGUI_StarlitLibrary_Action_Object")
+                                    .. "\n <INDENT:8> <PUSHRGB:" .. desaturatedBadColourString .. "> "
 
-        for j = 1, #requirement.predicates do
-            if genericFailure or details.predicates[j] == false then
-                description = description .. requirement.predicates[j].description .. "\n "
+            for j = 1, #requirement.predicates do
+                if genericFailure or result.predicates[j] == false then
+                    description = description .. requirement.predicates[j].description .. "\n "
+                end
             end
-        end
 
-        description = description .. " <POPRGB> "
+            description = description .. " <POPRGB> "
+        end
     end
 
     -- TODO: optionally show passed conditions
 
-    for item, details in pairs(failReasons.items) do
-        -- if details is false, there are no details given on how the check failed, just that it did
-        local genericFailure = details == false
-        local requirement = action.requiredItems[item]
-        description = description .. " <INDENT:0> "
-                                  .. getText("IGUI_StarlitLibrary_Action_Item")
-                                  .. " <PUSHRGB:" .. desaturatedBadColourString .. "> \n"
-
-        if genericFailure or details.validType == false then
-            if requirement.types then
-                description = description .. " <INDENT:8> "
-                                          .. getText("IGUI_StarlitLibrary_Action_ItemTypeList")
-                                          .. "\n <INDENT:16> "
-
-                local itemNames = {}
-                for j = 1, #requirement.types do
-                    itemNames[j] = getItemNameFromFullType(requirement.types[j])
-                end
-                description = description .. table.concat(itemNames, ", ")
-            elseif requirement.tags then
-                local tagNames = {}
-                for j = 1, #requirement.tags do
-                    tagNames[j] = getText("IGUI_StarlitLibrary_TagDescription_" .. requirement.tags[j])
-                end
-                description = description .. table.concat(tagNames, "\n")
-            end
+    for name, result in pairs(testResult.items) do
+        if type(result) == "table" then
+            result = result[1]
         end
+        ---@cast result -InventoryItem[], +InventoryItem, -starlit.ActionTest.ItemResult[], +starlit.ActionTest.ItemResult
 
-        for j = 1, #requirement.predicates do
-            if genericFailure or details.predicates[j] == false then
-                description = description .. " <INDENT:8> " .. requirement.predicates[j].description .. " \n "
+        if not instanceof(result, "InventoryItem") then
+            ---@cast result -InventoryItem
+            -- if details is false, there are no details given on how the check failed, just that it did
+            local genericFailure = result == false
+            local requirement = action.requiredItems[name]
+            description = description .. " <INDENT:0> "
+                                    .. getText("IGUI_StarlitLibrary_Action_Item")
+                                    .. " <PUSHRGB:" .. desaturatedBadColourString .. "> \n"
+
+            if genericFailure or result.validType == false then
+                if requirement.types then
+                    description = description .. " <INDENT:8> "
+                                            .. getText("IGUI_StarlitLibrary_Action_ItemTypeList")
+                                            .. "\n <INDENT:16> "
+
+                    local itemNames = {}
+                    for j = 1, #requirement.types do
+                        itemNames[j] = getItemNameFromFullType(requirement.types[j])
+                    end
+                    description = description .. table.concat(itemNames, ", ") .. "\n"
+                elseif requirement.tags then
+                    local tagNames = {}
+                    for j = 1, #requirement.tags do
+                        tagNames[j] = getText("IGUI_StarlitLibrary_TagDescription_" .. requirement.tags[j])
+                    end
+                    description = description .. table.concat(tagNames, "\n") .. "\n"
+                end
             end
-        end
 
-        description = description .. " <POPRGB> "
+            for j = 1, #requirement.predicates do
+                if genericFailure or result.predicates[j] == false then
+                    description = description .. " <INDENT:8> " .. requirement.predicates[j].description .. " \n "
+                end
+            end
+
+            description = description .. " <POPRGB> "
+        end
     end
+
+    -- FIXME: this looks bad when it doesn't end with a newline
 
     tooltip.description = description
 
@@ -210,21 +224,21 @@ local function showItemAction(playerIndex, context, items)
             }
         }
 
-        local state, failReasons = ActionState.tryBuildActionState(
+        local result = ActionTest.test(
             itemAction.action,
             character,
             {},
             forceParams
         )
 
-        if failReasons and failReasons.type ~= "forced" then
+        if not result.success then
             local option = context:addOption(itemAction.action.name)
             option.notAvailable = true
-            option.toolTip = ActionUI.createFailTooltip(itemAction.action, failReasons)
-        elseif state then
+            option.toolTip = ActionUI.createTooltip(itemAction.action, result)
+        else
             context:addOption(
                 itemAction.action.name,
-                state,
+                ActionState.fromTestResult(result),
                 Actions.queueAction
             )
         end
@@ -254,15 +268,15 @@ end
 
 
 ---@param context ISContextMenu
----@param state starlit.ActionState
+---@param testResult starlit.ActionTest.Result
 ---@param config starlit.Action.TooltipConfiguration
 ---@return unknown? option no typedef for this in umbrella grr
-local function addStateOption(context, state, config)
-    local option = context:addOption(state.def.name, state, Actions.queueAction)
+local function addStateOption(context, testResult, config)
+    local option = context:addOption(testResult.action.name, ActionState.fromTestResult(testResult), Actions.queueAction)
     local highlight = config.highlight
     if highlight ~= nil then
         option.onHighlight = highlightObjectOnHover
-        option.onHighlightParams = {state.objects[highlight.object], Colour.getRGBA(highlight.colour or defaultHighlightColour)}
+        option.onHighlightParams = {testResult.objects[highlight.object], Colour.getRGBA(highlight.colour or defaultHighlightColour)}
     end
     return option
 end
@@ -283,21 +297,21 @@ end
 
 ---@type Callback_OnFillWorldObjectContextMenu
 local function showObjectActions(playerNum, context, worldObjects, test)
-    ---@type {[starlit.ActionUI.ObjectAction]: {states: starlit.ActionState[], fails: starlit.ActionState.ActionFailReasons}}
-    local foundActions = {}
+    ---@type {[starlit.ActionUI.ObjectAction]: {successes: starlit.ActionTest.Result[], fails: starlit.ActionTest.Result[]}}
+    local testResults = {}
 
     local objects = worldObjects[1]:getSquare():getLuaTileObjectList() --[[@as IsoObject[]]
 
     local character = getSpecificPlayer(playerNum)
     for i = 1, #objectActions do
         local objectAction = objectActions[i]
-        local states = {}
+        local successes = {}
         local fails = {}
 
         -- repetition here isn't ideal, but function overhead could become really costly here O(x^n)
         if objectAction.config.objectAs then
             for j = 1, #objects do
-                local state, failReasons = ActionState.tryBuildActionState(
+                local result = ActionTest.test(
                     objectAction.action,
                     character,
                     objects,
@@ -308,36 +322,36 @@ local function showObjectActions(playerNum, context, worldObjects, test)
                     }
                 )
 
-                if state then
-                    table.insert(states, state)
-                elseif failReasons then
-                    table.insert(fails, failReasons)
+                if result.success then
+                    table.insert(successes, result)
+                else
+                    table.insert(fails, result)
                 end
             end
         else
-            local state, failReasons = ActionState.tryBuildActionState(
+            local result = ActionTest.test(
                 objectAction.action,
                 character,
                 objects
             )
 
-            if state then
-                table.insert(states, state)
-            elseif failReasons then
-                table.insert(fails, failReasons)
+            if result.success then
+                table.insert(successes, result)
+            else
+                table.insert(fails, result)
             end
         end
 
 
-        if #states > 0 or #fails > 0 then
-            foundActions[objectAction] = {
-                states = states,
+        if #successes > 0 or #fails > 0 then
+            testResults[objectAction] = {
+                successes = successes,
                 fails = fails
             }
         end
     end
 
-    for action, found in pairs(foundActions) do
+    for action, results in pairs(testResults) do
         local menu = context
 
         if action.config.subMenu then
@@ -350,11 +364,11 @@ local function showObjectActions(playerNum, context, worldObjects, test)
             end
         end
 
-        local showFails = not action.config.showFailConditions.noSuccesses or #found.states == 0
+        local showFails = not action.config.showFailConditions.noSuccesses or #results.successes == 0
 
-        local totalNumber = #found.states
+        local totalNumber = #results.successes
         if showFails then
-            totalNumber = totalNumber + #found.fails
+            totalNumber = totalNumber + #results.fails
         end
 
         local duplicatePolicy = action.config.duplicatePolicy
@@ -363,26 +377,26 @@ local function showObjectActions(playerNum, context, worldObjects, test)
             menu = addSubMenu(menu, action.action.name)
         end
 
-        local states = found.states
-        if #states > 0 then
-            if #states == 1 or duplicatePolicy == "hide" then
-                addStateOption(menu, states[1], action.config)
+        local successes = results.successes
+        if #successes > 0 then
+            if #successes == 1 or duplicatePolicy == "hide" then
+                addStateOption(menu, successes[1], action.config)
             else
-                for i = 1, #states do
-                    addStateOption(menu, states[i], action.config)
+                for i = 1, #successes do
+                    addStateOption(menu, successes[i], action.config)
                 end
             end
         end
 
-        if showFails and #found.fails > 0 then
+        if showFails and #results.fails > 0 then
             if action.config.showFailConditions.onlyOne then
-                found.fails = {found.fails[1]}
+                results.fails = {results.fails[1]}
             end
 
-            for i = 1, #found.fails do
+            for i = 1, #results.fails do
                 local option = menu:addOption(action.action.name)
                 option.notAvailable = true
-                option.toolTip = ActionUI.createFailTooltip(action.action, found.fails[i])
+                option.toolTip = ActionUI.createTooltip(action.action, results.fails[i])
             end
         end
     end
