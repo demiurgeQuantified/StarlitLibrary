@@ -236,55 +236,53 @@ function ActionTest.test(action, character, objects, forceParams)
 
         if forceParams.objects then
             for name, object in pairs(forceParams.objects) do
+                -- remove from objects if present so that it isn't used for another condition
+                for i = 1, #objects do
+                    if objects[i] == object then
+                        table.remove(objects, i)
+                        break
+                    end
+                end
                 -- we don't assume passed objects exist as they might be coming from ActionState.stillValid
                 if object:isExistInTheWorld() then
                     local testResult = ActionTest.testObjectDetailed(requiredObjects[name], object)
                     if testResult.success then
                         result.objects[name] = object
-
-                        -- remove the requirement so that it isn't double checked later
-                        requiredObjects[name] = nil
-
-                        -- remove from objects if present so that it isn't used for another condition
-                        for i = 1, #objects do
-                            if objects[i] == object then
-                                table.remove(objects, i)
-                                break
-                            end
-                        end
                     else
                         result.success = false
                         result.objects[name] = testResult
                     end
+
+                    -- remove the requirement so that it isn't double checked later
+                    requiredObjects[name] = nil
                 end
             end
         end
 
         if forceParams.items then
             for name, item in pairs(forceParams.items) do
+                -- make sure the forced items won't be used for another requirement
+                if type(item) == "table" then
+                    for i = 1, #item do
+                        claimedItems:add(item[i])
+                    end
+                else
+                    claimedItems:add(item)
+                end
+
                 -- FIXME: this doesn't support a table of items
                 local testResult = ActionTest.testItemDetailed(requiredItems[name], item)
+
                 if testResult.success then
-                    requiredItems[name] = nil
                     result.items[name] = {item}
-                    if type(item) == "table" then
-                        for i = 1, #item do
-                            claimedItems:add(item[i])
-                        end
-                    else
-                        claimedItems:add(item)
-                    end
                 else
                     result.success = false
                     result.items[name] = {testResult}
                 end
-            end
-        end
 
-        if not result.success then
-            -- return early if any forcedparam did not match
-            -- TODO: we may want to rethink this now as it results in an incomplete tooltip
-            return result
+                -- remove the requirement so that it isn't double checked later
+                requiredItems[name] = nil
+            end
         end
     end
 

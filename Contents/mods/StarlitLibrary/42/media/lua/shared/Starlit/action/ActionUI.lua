@@ -155,9 +155,6 @@ ActionUI.createTooltip = function(action, testResult)
 
     tooltip.name = action.name
 
-    -- TODO: when we return early because of ForceParams not being met, we don't have any data for
-    -- other requirements to display
-
     local description = ""
 
     for i = 1, #action.predicates do
