@@ -143,8 +143,6 @@ end
 local ActionUI = {}
 
 
--- TODO: delay tooltip creation until mouseover, it's getting expensive
-
 ---Creates a tooltip for an action describing any requirements.
 ---@param action starlit.Action The action.
 ---@param testResult starlit.ActionTest.Result Result of the action test.
@@ -321,7 +319,7 @@ local defaultHighlightColour = {0.9, 1, 0, 1}
 ---@param g number
 ---@param b number
 ---@param a number
-local function highlightObjectOnHover(_, _, highlighted, object, r, g, b, a)
+local function highlightObjectOnSelect(_, _, highlighted, object, r, g, b, a)
     if highlighted then
         object:setHighlightColor(r, g, b, a)
     end
@@ -331,16 +329,40 @@ end
 
 ---@param option unknown?
 ---@param highlight starlit.Action.HighlightParams
----@param testResult starlit.ActionTest.Result 
+---@param testResult starlit.ActionTest.Result
+---@return boolean success Whether a mouseover object highlight was added.
 local function addMouseoverObjectHighlight(option, highlight, testResult)
     if highlight ~= nil then
         local highlightObject = testResult.objects[highlight.object]
         if instanceof(highlightObject, "IsoObject") then
-            option.onHighlight = highlightObjectOnHover
+            option.onHighlight = highlightObjectOnSelect
             option.onHighlightParams = {
                 highlightObject,
                 Colour.getRGBA(highlight.colour or defaultHighlightColour)
             }
+            return true
+        end
+    end
+    return false
+end
+
+
+---@param option unknown?
+---@param context ISContextMenu
+---@param highlighted boolean
+---@param action starlit.ActionUI.ObjectAction
+---@param fail starlit.ActionTest.Result
+local function addTooltipOnSelect(option, context, highlighted, action, fail)
+    if highlighted then
+        option.toolTip = ActionUI.createTooltip(action.action, fail)
+        if action.config.highlight ~= nil then
+            local doHighlight = addMouseoverObjectHighlight(option, action.config.highlight, fail)
+            if doHighlight then
+                option:onHighlight(context, highlighted, unpack(option.onHighlightParams))
+            end
+        else
+            option.onHighlight = nil
+            option.onHighlightParams = nil
         end
     end
 end
@@ -522,10 +544,10 @@ local function addObjectActionOptions(playerNum, context, worldObjects, test)
                 local fail = results.fails[i]
                 local option = menu:addOption(action.action.name)
                 option.notAvailable = true
-                option.toolTip = ActionUI.createTooltip(action.action, fail)
-                if action.config.highlight ~= nil then
-                    addMouseoverObjectHighlight(option, action.config.highlight, fail)
-                end
+                -- we delay creation of the tooltip until the player actually selects the option
+                -- this honestly doesn't save as much performance as i hoped it would but it's still helpful
+                option.onHighlight = addTooltipOnSelect
+                option.onHighlightParams = {action, fail}
             end
         end
     end

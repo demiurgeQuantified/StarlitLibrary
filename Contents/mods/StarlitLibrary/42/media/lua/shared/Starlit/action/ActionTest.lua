@@ -28,6 +28,9 @@
 ---@field predicates table<any, boolean>
 
 
+-- TODO: add testedItem/testedObject fields to these, always return a result even when successful
+--  this would allow us to e.g. highlight an object that partially matched
+
 ---@alias starlit.ActionTest.ItemResult {success: boolean, validType: boolean, predicates: {[any]: boolean}}
 ---@alias starlit.ActionTest.ObjectResult {success: boolean, predicates: {[any]: boolean}}
 ---@alias starlit.ActionTest.ForceParams {objects: {[any]: IsoObject} | nil, items: {[any]: InventoryItem|InventoryItem[]} | nil}
