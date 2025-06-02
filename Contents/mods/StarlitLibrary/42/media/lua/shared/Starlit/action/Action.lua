@@ -55,6 +55,7 @@ local pass = function() end
 ---@field mustBeSameType boolean  # TODO: not implemented
 -- common needs for predicates should be made into fields, as they can be optimised into a single predicate
 
+
 ---Represents an object requirement for an action.
 ---@class starlit.Action.RequiredObject
 ---@overload fun(args:starlit.Action.RequiredObject):self
@@ -170,6 +171,7 @@ local pass = function() end
 ---Function called when the action is stopped before it is successfully completed.
 ---@field abort fun(state:starlit.ActionState)
 
+
 local Action = {
     ---@type starlit.Action
     ---@diagnostic disable-next-line: assign-type-mismatch
@@ -207,6 +209,7 @@ local Action = {
     },
 }
 
+
 ---@type starlit.Action.Predicate<IsoObject>
 Action.PredicateSprite = Action.Predicate{
     ---@type table<string, boolean>
@@ -220,6 +223,7 @@ Action.PredicateSprite = Action.Predicate{
     end,
     description = "DESCRIPTION MISSING"
 }
+
 
 ---Returns whether an action is complete.
 ---An action is considered complete if it has the necessary data to be performed.
@@ -259,6 +263,7 @@ function Action.isRequiredItemComplete(requiredItem)
         or (requiredItem.types ~= nil and #requiredItem.types > 0)
         or (#requiredItem.predicates > 0)
 end
+
 
 ---Returns whether a required object is complete.
 ---A required object is considered incomplete if it does not have any predicates.

@@ -234,10 +234,6 @@ function ActionTest.test(action, character, objects, forceParams)
         requiredObjects = copyTable(action.requiredObjects)
         requiredItems = copyTable(action.requiredItems)
 
-        -- IDEA: we could return more detailed fail info for these
-        --  so we could have a tooltip say 'you can't use this hammer because it's broken'
-        --  instead of 'you need a hammer'
-
         if forceParams.objects then
             for name, object in pairs(forceParams.objects) do
                 -- we don't assume passed objects exist as they might be coming from ActionState.stillValid

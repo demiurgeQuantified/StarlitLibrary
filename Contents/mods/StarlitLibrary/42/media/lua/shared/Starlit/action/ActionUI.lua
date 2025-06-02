@@ -293,52 +293,47 @@ local function addSubMenu(context, name)
 end
 
 
--- TODO: this function needs to be broken up, it's too big
-
----@type Callback_OnFillWorldObjectContextMenu
-local function showObjectActions(playerNum, context, worldObjects, test)
-    ---@type {[starlit.ActionUI.ObjectAction]: {successes: starlit.ActionTest.Result[], fails: starlit.ActionTest.Result[]}}
+---@param character IsoGameCharacter
+---@param objects IsoObject[]
+---@return {[starlit.ActionUI.ObjectAction]: {successes: starlit.ActionTest.Result[], fails: starlit.ActionTest.Result[]}}
+local function findActions(character, objects)
     local testResults = {}
 
-    local objects = worldObjects[1]:getSquare():getLuaTileObjectList() --[[@as IsoObject[]]
-
-    local character = getSpecificPlayer(playerNum)
     for i = 1, #objectActions do
         local objectAction = objectActions[i]
         local successes = {}
         local fails = {}
 
-        -- repetition here isn't ideal, but function overhead could become really costly here O(x^n)
-        if objectAction.config.objectAs then
-            for j = 1, #objects do
-                local result = ActionTest.test(
-                    objectAction.action,
-                    character,
-                    objects,
-                    {
-                        objects = {
-                            [objectAction.config.objectAs] = objects[j]
-                        }
-                    }
-                )
+        -- if true, we test every object as the objectAs
+        -- if false, we just do one test with all objects
+        local testAllObjects = objectAction.config.objectAs ~= nil
 
-                if result.success then
-                    table.insert(successes, result)
-                else
-                    table.insert(fails, result)
-                end
+        for j = 1, #objects do
+            local forceParams = nil
+            if testAllObjects then
+                forceParams = {
+                    objects = {
+                        [objectAction.config.objectAs] = objects[j]
+                    }
+                }
             end
-        else
+
+
             local result = ActionTest.test(
                 objectAction.action,
                 character,
-                objects
+                objects,
+                forceParams
             )
 
             if result.success then
                 table.insert(successes, result)
             else
                 table.insert(fails, result)
+            end
+
+            if not testAllObjects then
+                break
             end
         end
 
@@ -350,6 +345,17 @@ local function showObjectActions(playerNum, context, worldObjects, test)
             }
         end
     end
+
+    return testResults
+end
+
+
+---@type Callback_OnFillWorldObjectContextMenu
+local function addObjectActionOptions(playerNum, context, worldObjects, test)
+    local testResults = findActions(
+        getSpecificPlayer(playerNum),
+        worldObjects[1]:getSquare():getLuaTileObjectList() --[[@as IsoObject[]]
+    )
 
     for action, results in pairs(testResults) do
         local menu = context
@@ -402,6 +408,6 @@ local function showObjectActions(playerNum, context, worldObjects, test)
     end
 end
 
-Events.OnFillWorldObjectContextMenu.Add(showObjectActions)
+Events.OnFillWorldObjectContextMenu.Add(addObjectActionOptions)
 
 return ActionUI

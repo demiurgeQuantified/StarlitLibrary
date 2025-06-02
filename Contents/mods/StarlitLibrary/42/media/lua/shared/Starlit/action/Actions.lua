@@ -5,11 +5,13 @@ local PrepareActionAction = require("Starlit/internal/PrepareActionAction")
 
 local Actions = {}
 
+
 ---Queues an action from an existing state.
 ---@param state starlit.ActionState The state to queue.
 function Actions.queueAction(state)
     ISTimedActionQueue.add(PrepareActionAction.new(state))
 end
+
 
 ---Attempts to queue an action.
 ---If the character is not currently able to perform the action, does not queue an action.
