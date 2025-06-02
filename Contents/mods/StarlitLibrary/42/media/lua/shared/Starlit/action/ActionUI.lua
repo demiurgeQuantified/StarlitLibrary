@@ -8,10 +8,142 @@ local SelfMergeTable = require("Starlit/utils/SelfMergeTable")
 local core = getCore()
 
 
+-- what a horrible function name
+---@return string
+local function pushDesaturatedBadColour()
+    local badColour = ColorInfo.new():set(core:getBadHighlitedColor())
+    badColour:desaturate(0.3)
+
+    return string.format(
+        " <PUSHRGB:%f,%f,%f> ",
+        badColour:getR(),
+        badColour:getG(),
+        badColour:getB()
+    )
+end
+
+
+---@return string
+local function pushDesaturatedGoodColour()
+    local goodColour = ColorInfo.new():set(core:getGoodHighlitedColor())
+    goodColour:desaturate(0.3)
+
+    return string.format(
+        " <PUSHRGB:%f,%f,%f> ",
+        goodColour:getR(),
+        goodColour:getG(),
+        goodColour:getB()
+    )
+end
+
+
+---@param requiredObjects table<any, starlit.Action.RequiredObject>
+---@param objects table<any, starlit.ActionTest.ObjectResult | IsoObject | false>
+---@return string
+---@nodiscard
+local function buildObjectsString(requiredObjects, objects)
+    local result = ""
+
+    for name, requirement in pairs(requiredObjects) do
+        local objectResult = objects[name]
+        if objectResult ~= nil then
+            local success = instanceof(objectResult, "IsoObject")
+            local genericFailure = objectResult == false
+
+            result = result .. (success and " <GHC> " or " <BHC> ")
+                                      .. " <INDENT:0> "
+                                      .. getText("IGUI_StarlitLibrary_Action_Object")
+                                      .. "\n <INDENT:8> "
+
+            for i = 1, #requirement.predicates do
+                if success or (not genericFailure and objectResult.predicates[i] == true) then
+                    result = result .. pushDesaturatedGoodColour()
+                else
+                    result = result .. pushDesaturatedBadColour()
+                end
+                result = result .. requirement.predicates[i].description .. " <POPRGB> \n"
+            end
+
+            result = result .. " <POPRGB> "
+        end
+    end
+
+    return result
+end
+
+
+---@param requiredItems table<any, starlit.Action.RequiredItem>
+---@param items table<any, starlit.ActionTest.ItemResult[] | InventoryItem[] | false>
+---@return string
+---@nodiscard
+local function buildItemsString(requiredItems, items)
+    local pushDesaturatedGoodColour = pushDesaturatedGoodColour()
+    local pushDesaturatedBadColour = pushDesaturatedBadColour()
+    local result = ""
+
+    for name, requirement in pairs(requiredItems) do
+        -- TODO: work out some solution for item count
+        local itemResult = items[name]
+        if type(itemResult) == "table" then
+            itemResult = itemResult[1]
+        end
+        ---@cast itemResult -InventoryItem[], +InventoryItem, -starlit.ActionTest.ItemResult[], +starlit.ActionTest.ItemResult
+
+        -- if details is an InventoryItem then all checks passed
+        local success = instanceof(itemResult, "InventoryItem")
+        -- if details is false, there are no details given on how the check failed, just that it did
+        local genericFailure = itemResult == false
+        if itemResult ~= nil then
+            result = result .. (success and " <GHC> " or " <BHC> ")
+                                      .. " <INDENT:0> "
+                                      .. getText("IGUI_StarlitLibrary_Action_Item")
+                                      .. " \n"
+
+            if requirement.types or requirement.tags then
+                if success or (not genericFailure and itemResult.validType == true) then
+                    result = result .. pushDesaturatedGoodColour
+                else
+                    result = result .. pushDesaturatedBadColour
+                end
+
+                if requirement.types then
+                    result = result .. " <INDENT:8> "
+                                              .. getText("IGUI_StarlitLibrary_Action_ItemTypeList")
+                                              .. "\n <INDENT:16> "
+
+                    local itemNames = {}
+                    for j = 1, #requirement.types do
+                        itemNames[j] = getItemNameFromFullType(requirement.types[j])
+                    end
+                    result = result .. table.concat(itemNames, ", ") .. " <POPGRB> \n"
+                else
+                    local tagNames = {}
+                    for j = 1, #requirement.tags do
+                        tagNames[j] = getText("IGUI_StarlitLibrary_TagDescription_" .. requirement.tags[j])
+                    end
+                    result = result .. table.concat(tagNames, "\n") .. " <POPRGB> \n"
+                end
+            end
+
+            for i = 1, #requirement.predicates do
+                if success or (not genericFailure and itemResult.predicates[i] == true) then
+                    result = result .. pushDesaturatedGoodColour
+                else
+                    result = result .. pushDesaturatedBadColour
+                end
+                result = result .. " <INDENT:8> " .. requirement.predicates[i].description .. " <POPRGB> \n"
+            end
+        end
+    end
+
+    return result
+end
+
+
 local ActionUI = {}
 
 
--- TODO: break up this function, it's too complex
+-- TODO: delay tooltip creation until mouseover, it's getting expensive
 
 ---Creates a tooltip for an action describing any requirements.
 ---@param action starlit.Action The action.
@@ -21,94 +153,21 @@ local ActionUI = {}
 ActionUI.createTooltip = function(action, testResult)
     local tooltip = ISWorldObjectContextMenu.addToolTip() --[[@as ISToolTip]]
 
-    -- we don't cache this because the player can change it midgame and that's annoying to catch
-    local desaturatedBadColour = ColorInfo.new():set(core:getBadHighlitedColor())
-    desaturatedBadColour:desaturate(0.3)
-
-    local desaturatedBadColourString = string.format(
-        "%f,%f,%f",
-        desaturatedBadColour:getR(),
-        desaturatedBadColour:getG(),
-        desaturatedBadColour:getB()
-    )
-
     tooltip.name = action.name
-    local description = "<BHC> "
 
-    for i = 1, #testResult.predicates do
-        if testResult.predicates[i] == false then
-            description = description .. action.predicates[i].description .. "\n "
+    local description = ""
+
+    for i = 1, #action.predicates do
+        if testResult.predicates[i] == true then
+            description = description .. " <GHC> "
+        else
+            description = description .. " <BHC> "
         end
+        description = description .. action.predicates[i].description .. "\n"
     end
 
-    for name, result in pairs(testResult.objects) do
-        if not instanceof(result, "IsoObject") then
-            ---@cast result -IsoObject
-            local genericFailure = result == false
-
-            local requirement = action.requiredObjects[name]
-            description = description .. " <INDENT:0> "
-                                    .. getText("IGUI_StarlitLibrary_Action_Object")
-                                    .. "\n <INDENT:8> <PUSHRGB:" .. desaturatedBadColourString .. "> "
-
-            for j = 1, #requirement.predicates do
-                if genericFailure or result.predicates[j] == false then
-                    description = description .. requirement.predicates[j].description .. "\n "
-                end
-            end
-
-            description = description .. " <POPRGB> "
-        end
-    end
-
-    -- TODO: optionally show passed conditions
-
-    for name, result in pairs(testResult.items) do
-        if type(result) == "table" then
-            result = result[1]
-        end
-        ---@cast result -InventoryItem[], +InventoryItem, -starlit.ActionTest.ItemResult[], +starlit.ActionTest.ItemResult
-
-        if not instanceof(result, "InventoryItem") then
-            ---@cast result -InventoryItem
-            -- if details is false, there are no details given on how the check failed, just that it did
-            local genericFailure = result == false
-            local requirement = action.requiredItems[name]
-            description = description .. " <INDENT:0> "
-                                    .. getText("IGUI_StarlitLibrary_Action_Item")
-                                    .. " <PUSHRGB:" .. desaturatedBadColourString .. "> \n"
-
-            if genericFailure or result.validType == false then
-                if requirement.types then
-                    description = description .. " <INDENT:8> "
-                                            .. getText("IGUI_StarlitLibrary_Action_ItemTypeList")
-                                            .. "\n <INDENT:16> "
-
-                    local itemNames = {}
-                    for j = 1, #requirement.types do
-                        itemNames[j] = getItemNameFromFullType(requirement.types[j])
-                    end
-                    description = description .. table.concat(itemNames, ", ") .. "\n"
-                elseif requirement.tags then
-                    local tagNames = {}
-                    for j = 1, #requirement.tags do
-                        tagNames[j] = getText("IGUI_StarlitLibrary_TagDescription_" .. requirement.tags[j])
-                    end
-                    description = description .. table.concat(tagNames, "\n") .. "\n"
-                end
-            end
-
-            for j = 1, #requirement.predicates do
-                if genericFailure or result.predicates[j] == false then
-                    description = description .. " <INDENT:8> " .. requirement.predicates[j].description .. " \n "
-                end
-            end
-
-            description = description .. " <POPRGB> "
-        end
-    end
-
-    -- FIXME: this looks bad when it doesn't end with a newline
+    description = description .. buildObjectsString(action.requiredObjects, testResult.objects)
+                              .. buildItemsString(action.requiredItems, testResult.items)
 
     tooltip.description = description
 
