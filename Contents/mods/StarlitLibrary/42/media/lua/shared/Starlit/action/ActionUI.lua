@@ -155,6 +155,9 @@ ActionUI.createTooltip = function(action, testResult)
 
     tooltip.name = action.name
 
+    -- TODO: when we return early because of ForceParams not being met, we don't have any data for
+    -- other requirements to display
+
     local description = ""
 
     for i = 1, #action.predicates do
@@ -186,8 +189,11 @@ end
 ---
 ---Lists of conditions that must pass for a fail tooltip to be considered to be shown.
 ---For example, you generally don't want to show a tooltip for a world action if the object is invalid,
----or a tooltip for an item action when the selected item is the wrong type.
----@field required {objects: any[] | nil, items: any[] | nil, predicates: any[] | nil} | nil
+---or a tooltip for an item action when the selected item is the wrong type.  # TODO: allow specifying subconditions (item predicates etc) that must be met
+---@field required {objects: table<any, true> | nil, items: table<any, true> | nil, predicates: table<any, true> | nil} | nil
+
+
+---@alias starlit.Action.HighlightParams {object: string, colour: Starlit.Colour | nil}
 
 
 ---Args for creating a TooltipConfiguration.
@@ -195,7 +201,7 @@ end
 ---@class starlit.Action.TooltipConfigurationArgs
 ---
 ---Configures object highlighting when the action's option is selected.
----@field highlight {object: string, colour: Starlit.Colour | nil} | nil
+---@field highlight starlit.Action.HighlightParams | nil
 ---
 ---The translation string of the name of the submenu the action should be added to.
 ---@field subMenu string | nil
@@ -326,16 +332,31 @@ local function highlightObjectOnHover(_, _, highlighted, object, r, g, b, a)
 end
 
 
+---@param option unknown?
+---@param highlight starlit.Action.HighlightParams
+---@param testResult starlit.ActionTest.Result 
+local function addMouseoverObjectHighlight(option, highlight, testResult)
+    if highlight ~= nil then
+        local highlightObject = testResult.objects[highlight.object]
+        if instanceof(highlightObject, "IsoObject") then
+            option.onHighlight = highlightObjectOnHover
+            option.onHighlightParams = {
+                highlightObject,
+                Colour.getRGBA(highlight.colour or defaultHighlightColour)
+            }
+        end
+    end
+end
+
+
 ---@param context ISContextMenu
 ---@param testResult starlit.ActionTest.Result
 ---@param config starlit.Action.TooltipConfiguration
 ---@return unknown? option no typedef for this in umbrella grr
 local function addStateOption(context, testResult, config)
     local option = context:addOption(testResult.action.name, ActionState.fromTestResult(testResult), Actions.queueAction)
-    local highlight = config.highlight
-    if highlight ~= nil then
-        option.onHighlight = highlightObjectOnHover
-        option.onHighlightParams = {testResult.objects[highlight.object], Colour.getRGBA(highlight.colour or defaultHighlightColour)}
+    if config.highlight ~= nil then
+        addMouseoverObjectHighlight(option, config.highlight, testResult)
     end
     return option
 end
@@ -419,7 +440,56 @@ local function addObjectActionOptions(playerNum, context, worldObjects, test)
     for action, results in pairs(testResults) do
         local menu = context
 
-        if action.config.subMenu then
+        local showFails = not action.config.showFailConditions.noSuccesses or #results.successes == 0
+
+        -- remove fails that don't meet the requirements for a tooltip
+        local required = action.config.showFailConditions.required
+        if required then
+            -- loop backwards so we can remove elements safely
+            for i = #results.fails, 1, -1  do
+                local fail = results.fails[i]
+                -- inner repeat loop lets break act like continue for the numeric loop
+                -- this code is too complex without it
+                repeat
+                    if required.items then
+                        -- pairs loop because in the future we should be able to specify subrequirements
+                        --  e.g. item must pass type check but not durability check
+                        for name, _ in pairs(required.items) do
+                            local testResult = fail.items[name]
+                            if testResult == false or not instanceof(fail.items[name][1], "InventoryItem") then
+                                table.remove(results.fails, i)
+                                break
+                            end
+                        end
+                    end
+
+                    if required.objects then
+                        for name, _ in pairs(required.objects) do
+                            if not instanceof(fail.objects[name], "IsoObject") then
+                                table.remove(results.fails, i)
+                                break
+                            end
+                        end
+                    end
+
+                    if required.predicates then
+                        for name, _ in pairs(required.predicates) do
+                            if fail.predicates[name] == false then
+                                table.remove(results.fails, i)
+                                break
+                            end
+                        end
+                    end
+                until true
+            end
+        end
+
+        local totalNumber = #results.successes
+        if showFails then
+            totalNumber = totalNumber + #results.fails
+        end
+
+        if action.config.subMenu and totalNumber > 0 then
             local option = menu:getOptionFromName(action.config.subMenu)
             if option then
                 assert(option.subOption ~= nil)
@@ -427,13 +497,6 @@ local function addObjectActionOptions(playerNum, context, worldObjects, test)
             else
                 menu = addSubMenu(menu, action.config.subMenu)
             end
-        end
-
-        local showFails = not action.config.showFailConditions.noSuccesses or #results.successes == 0
-
-        local totalNumber = #results.successes
-        if showFails then
-            totalNumber = totalNumber + #results.fails
         end
 
         local duplicatePolicy = action.config.duplicatePolicy
@@ -459,9 +522,13 @@ local function addObjectActionOptions(playerNum, context, worldObjects, test)
             end
 
             for i = 1, #results.fails do
+                local fail = results.fails[i]
                 local option = menu:addOption(action.action.name)
                 option.notAvailable = true
-                option.toolTip = ActionUI.createTooltip(action.action, results.fails[i])
+                option.toolTip = ActionUI.createTooltip(action.action, fail)
+                if action.config.highlight ~= nil then
+                    addMouseoverObjectHighlight(option, action.config.highlight, fail)
+                end
             end
         end
     end

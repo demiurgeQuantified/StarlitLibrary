@@ -125,7 +125,7 @@ ActionUI.addObjectAction(
             onlyOne = false,
             required = {
                 objects = {
-                    "window"
+                    ["window"] = true
                 }
             }
         }
