@@ -27,7 +27,7 @@ local addWindowAction = Action.Action{
                 },
                 Action.Predicate{
                     evaluate = function(self, object)
-                        -- we have to check this twice because we don't short circuit anymore :()
+                        -- we have to check instanceof twice because we don't short circuit anymore :(
                         return instanceof(object, "IsoWindow")
                                and object--[[@as IsoWindow]]:isSmashed()
                     end,
@@ -57,78 +57,25 @@ local addWindowAction = Action.Action{
 
 assert(Action.isComplete(addWindowAction))
 
--- ---@param character IsoGameCharacter
--- ---@param objects IsoObject
--- local function onOptionSelected(character, objects)
---     local failReasons = Actions.tryQueueAction(addWindowAction, character, objects)
---     if failReasons then
---         for i = 1, #failReasons.objects do
---             print("Object requirement not satisfied: " .. failReasons.objects[i])
---         end
---         for i = 1, #failReasons.predicates do
---             print("Predicate requirement not satisfied: " .. failReasons.predicates[i])
---         end
---         for i = 1, #failReasons.items do
---             print("Item requirement not satisfied: " .. failReasons.items[i])
---         end
---     end
--- end
 
-
--- Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObjects, test)
---     local states = {}
---     local failReasons
-
---     for i = 2, #worldObjects do
---         local object = worldObjects[i]
---         if instanceof(object, "IsoWindow") then
---             local state
---             state, failReasons = ActionState.tryBuildActionState(
---                 addWindowAction,
---                 getSpecificPlayer(playerNum),
---                 worldObjects,
---                 {
---                     objects = {
---                         window = object
---                     }
---                 }
---             )
---             table.insert(states, state)
---         end
---     end
-
---     if #states == 0 then
---         -- only shows failReasons if at least one window was found and none were valid
---         if failReasons and failReasons.type ~= "forced" then
---             local option = context:addOption("(DEBUG) " .. getText(addWindowAction.name))
---             option.notAvailable = true
---             option.toolTip = ActionUI.createFailTooltip(addWindowAction, failReasons)
---         end
---     else
---         for i = 1, #states do
---             -- IDEA: highlight object when mousing over option
---             context:addOption("(DEBUG) " .. getText(addWindowAction.name), PrepareActionAction.new(states[i]), ISTimedActionQueue.add)
---         end
---     end
--- end)
-
-
-ActionUI.addObjectAction(
-    addWindowAction,
-    ActionUI.TooltipConfiguration{
-        highlight = {
-            object = "window"
-        },
-        objectAs = "window",
-        showFailConditions = {
-            noSuccesses = true,
-            onlyOne = false,
-            required = {
-                objects = {
-                    ["window"] = true
+for i = 1, 500 do
+    ActionUI.addObjectAction(
+        addWindowAction,
+        ActionUI.TooltipConfiguration{
+            highlight = {
+                object = "window"
+            },
+            objectAs = "window",
+            showFailConditions = {
+                noSuccesses = true,
+                onlyOne = false,
+                required = {
+                    objects = {
+                        ["window"] = true
+                    }
                 }
             }
         }
-    }
-)
+    )
+end
 -- ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})

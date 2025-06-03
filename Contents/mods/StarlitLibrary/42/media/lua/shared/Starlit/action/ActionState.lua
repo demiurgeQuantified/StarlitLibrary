@@ -16,7 +16,7 @@
 ---@field objects table<any, IsoObject>
 
 
-local ActionTest = require("Starlit/action/ActionTest")
+local ActionTester = require("Starlit/action/ActionTester")
 
 
 local ActionState = {}
@@ -27,9 +27,8 @@ local ActionState = {}
 ---@return boolean valid Whether the state is still valid.
 ---@nodiscard
 function ActionState.stillValid(state)
-    return ActionTest.test(
+    return ActionTester.new(state.character):test(
         state.def,
-        state.character,
         {},
         {
             objects = state.objects,

@@ -1,5 +1,5 @@
 local ActionState = require("Starlit/action/ActionState")
-local ActionTest = require("Starlit/action/ActionTest")
+local ActionTester = require("Starlit/action/ActionTester")
 local Actions = require("Starlit/action/Actions")
 local Colour  = require("Starlit/utils/Colour")
 local SelfMergeTable = require("Starlit/utils/SelfMergeTable")
@@ -275,7 +275,8 @@ local function showItemAction(playerIndex, context, items)
     end
     ---@cast item InventoryItem
 
-    local character = getSpecificPlayer(playerIndex)
+    local tester = ActionTester.new(getSpecificPlayer(playerIndex))
+
     for i = 1, #itemActions do
         local itemAction = itemActions[i]
         local forceParams = {
@@ -284,9 +285,8 @@ local function showItemAction(playerIndex, context, items)
             }
         }
 
-        local result = ActionTest.test(
+        local result = tester:test(
             itemAction.action,
-            character,
             {},
             forceParams
         )
@@ -397,6 +397,7 @@ end
 ---@return {[starlit.ActionUI.ObjectAction]: {successes: starlit.ActionTest.Result[], fails: starlit.ActionTest.Result[]}}
 local function findActions(character, objects)
     local testResults = {}
+    local tester = ActionTester.new(character)
 
     for i = 1, #objectActions do
         local objectAction = objectActions[i]
@@ -418,9 +419,8 @@ local function findActions(character, objects)
             end
 
 
-            local result = ActionTest.test(
+            local result = tester:test(
                 objectAction.action,
-                character,
                 objects,
                 forceParams
             )

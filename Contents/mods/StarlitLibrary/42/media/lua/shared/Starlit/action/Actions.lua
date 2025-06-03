@@ -1,5 +1,5 @@
 local ActionState = require("Starlit/action/ActionState")
-local ActionTest = require("Starlit/action/ActionTest")
+local ActionTester = require("Starlit/action/ActionTester")
 local PrepareActionAction = require("Starlit/internal/PrepareActionAction")
 
 
@@ -22,9 +22,8 @@ end
 ---@nodiscard
 function Actions.tryQueueAction(action, character, objects)
     objects = objects or {}
-    local result = ActionTest.test(
+    local result = ActionTester.new(character):test(
         action,
-        character,
         objects
     )
 
