@@ -5,9 +5,11 @@ local PerformActionAction = require("Starlit/internal/PerformActionAction")
 ---@field state starlit.ActionState
 local PrepareActionAction = ISBaseTimedAction:derive("starlit.PrepareActionAction")
 
+
 PrepareActionAction.isValid = function(self)
     return true
 end
+
 
 ---@param slot "primary"|"secondary"
 ---@param model string | nil
@@ -59,6 +61,7 @@ PrepareActionAction.setHandModel = function(self, slot, model)
     end
 end
 
+
 PrepareActionAction.perform = function(self)
     self:beginAddingActions()
 
@@ -105,8 +108,10 @@ PrepareActionAction.perform = function(self)
     ISBaseTimedAction.perform(self)
 end
 
+
 ---@param state starlit.ActionState
 ---@return starlit.PrepareActionAction
+---@nodiscard
 PrepareActionAction.new = function(state)
     local o = ISBaseTimedAction:new(state.character)
 
@@ -118,5 +123,6 @@ PrepareActionAction.new = function(state)
 
     return o
 end
+
 
 return PrepareActionAction

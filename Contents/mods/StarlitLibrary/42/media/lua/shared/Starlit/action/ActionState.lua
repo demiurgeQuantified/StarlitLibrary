@@ -27,14 +27,20 @@ local ActionState = {}
 ---@return boolean valid Whether the state is still valid.
 ---@nodiscard
 function ActionState.stillValid(state)
-    return ActionTester.new(state.character):test(
-        state.def,
-        {},
-        {
-            objects = state.objects,
-            items = state.items
-        })
-        ~= nil
+    local forceParams = {
+        objects = state.objects,
+        items = {}
+    }
+
+    for name, item in pairs(state.items) do
+        if type(item) ~= "table" then
+            item = {item}
+        end
+        forceParams.items[name] = item
+    end
+
+    return ActionTester.new(state.character)
+        :test(state.def, {}, forceParams) ~= nil
 end
 
 
@@ -51,16 +57,23 @@ function ActionState.fromTestResult(testResult)
     local actionState = {
         def = testResult.action,
         character = testResult.character,
-        objects = testResult.objects --[[@as table<any, IsoObject>]],
+        objects = {},
         items = {}
     }
 
+    for name, result in pairs(testResult.objects) do
+        actionState.objects[name] = result.object
+    end
+
     for name, result in pairs(testResult.items) do
-        ---@cast result InventoryItem[]
         if #result == 1 then
-            actionState.items[name] = result[1]
+            actionState.items[name] = result[1].item
         else
-            actionState.items[name] = result
+            local items = {}
+            for i = 1, #result do
+                items[i] = result[i].item
+            end
+            actionState.items[name] = items
         end
     end
 
