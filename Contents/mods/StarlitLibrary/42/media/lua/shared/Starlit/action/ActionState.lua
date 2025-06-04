@@ -40,7 +40,7 @@ end
 
 ---Creates an ActionState from a test result.
 ---The test must be successful to be valid for this function.
----@param testResult starlit.ActionTest.Result Successful test result.
+---@param testResult starlit.ActionTester.Result Successful test result.
 ---@return starlit.ActionState state The created state.
 ---@nodiscard
 function ActionState.fromTestResult(testResult)

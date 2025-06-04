@@ -41,7 +41,7 @@ end
 
 
 ---@param requiredObjects table<any, starlit.Action.RequiredObject>
----@param objects table<any, starlit.ActionTest.ObjectResult>
+---@param objects table<any, starlit.ActionTester.ObjectResult>
 ---@return string
 ---@nodiscard
 local function buildObjectsString(requiredObjects, objects)
@@ -73,7 +73,7 @@ end
 
 
 ---@param requiredItems table<any, starlit.Action.RequiredItem>
----@param items table<any, starlit.ActionTest.ItemResult[]>
+---@param items table<any, starlit.ActionTester.ItemResult[]>
 ---@return string
 ---@nodiscard
 local function buildItemsString(requiredItems, items)
@@ -87,7 +87,7 @@ local function buildItemsString(requiredItems, items)
         if type(itemResult) == "table" then
             itemResult = itemResult[1]
         end
-        ---@cast itemResult -InventoryItem[], +InventoryItem, -starlit.ActionTest.ItemResult[], +starlit.ActionTest.ItemResult
+        ---@cast itemResult -InventoryItem[], +InventoryItem, -starlit.ActionTester.ItemResult[], +starlit.ActionTester.ItemResult
 
         if itemResult ~= nil then
             result = result .. (itemResult.success and " <GHC> " or " <BHC> ")
@@ -141,7 +141,7 @@ local ActionUI = {}
 
 ---Creates a tooltip for an action describing any requirements.
 ---@param action starlit.Action The action.
----@param testResult starlit.ActionTest.Result Result of the action test.
+---@param testResult starlit.ActionTester.Result Result of the action test.
 ---@return ISToolTip tooltip The tooltip.
 ---@nodiscard
 ActionUI.createTooltip = function(action, testResult)
@@ -325,7 +325,7 @@ end
 
 ---@param option unknown?
 ---@param highlight starlit.Action.HighlightParams
----@param testResult starlit.ActionTest.Result
+---@param testResult starlit.ActionTester.Result
 ---@return boolean success Whether a mouseover object highlight was added.
 local function addMouseoverObjectHighlight(option, highlight, testResult)
     if highlight ~= nil then
@@ -347,7 +347,7 @@ end
 ---@param context ISContextMenu
 ---@param highlighted boolean
 ---@param action starlit.ActionUI.ObjectAction
----@param fail starlit.ActionTest.Result
+---@param fail starlit.ActionTester.Result
 local function addTooltipOnSelect(option, context, highlighted, action, fail)
     if highlighted then
         option.toolTip = ActionUI.createTooltip(action.action, fail)
@@ -365,7 +365,7 @@ end
 
 
 ---@param context ISContextMenu
----@param testResult starlit.ActionTest.Result
+---@param testResult starlit.ActionTester.Result
 ---@param config starlit.Action.TooltipConfiguration
 ---@return unknown? option no typedef for this in umbrella grr
 local function addStateOption(context, testResult, config)
@@ -390,7 +390,7 @@ end
 
 ---@param character IsoGameCharacter
 ---@param objects IsoObject[]
----@return {[starlit.ActionUI.ObjectAction]: {successes: starlit.ActionTest.Result[], fails: starlit.ActionTest.Result[]}}
+---@return {[starlit.ActionUI.ObjectAction]: {successes: starlit.ActionTester.Result[], fails: starlit.ActionTester.Result[]}}
 local function findActions(character, objects)
     local testResults = {}
     local tester = ActionTester.new(character)

@@ -18,7 +18,7 @@ end
 ---@param action starlit.Action The action to queue.
 ---@param character IsoGameCharacter The character performing the action.
 ---@param objects IsoObject[] | nil List of objects that may be used in the action.
----@return starlit.ActionTest.Result testResult The reasons why the action cannot be performed.
+---@return starlit.ActionTester.Result testResult The reasons why the action cannot be performed.
 ---@nodiscard
 function Actions.tryQueueAction(action, character, objects)
     objects = objects or {}

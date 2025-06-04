@@ -5,7 +5,7 @@
 
 
 ---Result from an action test.
----@class starlit.ActionTest.Result
+---@class starlit.ActionTester.Result
 ---
 ---Whether the test was a success.
 ---@field success boolean
@@ -18,19 +18,19 @@
 ---
 ---The items that were picked for the action, by name of the item requirement.
 ---If the value is a ItemTestResult or false, no item was picked.
----@field items table<any, starlit.ActionTest.ItemResult[]>
+---@field items table<any, starlit.ActionTester.ItemResult[]>
 ---
 ---The objects that were picked for the action, by name of the object requirement.
 ---If the value is an ObjectTestResult or false, no object was picked.
----@field objects table<any, starlit.ActionTest.ObjectResult>
+---@field objects table<any, starlit.ActionTester.ObjectResult>
 ---
 ---The results of each predicate test by name.
 ---@field predicates table<any, boolean>
 
 
----@alias starlit.ActionTest.ItemResult {item: InventoryItem | nil, success: boolean, validType: boolean, predicates: {[any]: boolean}}
----@alias starlit.ActionTest.ObjectResult {object: IsoObject | nil, success: boolean, predicates: {[any]: boolean}}
----@alias starlit.ActionTest.ForceParams {objects: {[any]: IsoObject} | nil, items: {[any]: InventoryItem|InventoryItem[]} | nil}
+---@alias starlit.ActionTester.ItemResult {item: InventoryItem | nil, success: boolean, validType: boolean, predicates: {[any]: boolean}}
+---@alias starlit.ActionTester.ObjectResult {object: IsoObject | nil, success: boolean, predicates: {[any]: boolean}}
+---@alias starlit.ActionTester.ForceParams {objects: {[any]: IsoObject} | nil, items: {[any]: InventoryItem|InventoryItem[]} | nil}
 
 
 local Action = require("Starlit/action/Action")
@@ -109,7 +109,6 @@ local function buildItemTagMap(typeMap)
     return tagMap
 end
 
--- #region ActionTester
 
 ---Responsible for testing if a character can perform an action.
 ---ActionTester objects should have short lifetimes, generally within the function that creates them.
@@ -125,77 +124,35 @@ end
 local ActionTester = {}
 ActionTester.__index = ActionTester
 
-
----Creates an ActionTester for a specific character.
----@param character IsoGameCharacter The character.
----@return starlit.ActionTester tester
----@nodiscard
-function ActionTester.new(character)
-    local o = {
-        character = character,
-        items = getAllItemsInContainerRecurse(character:getInventory())
-    }
-    o.itemsByType = buildItemTypeMap(o.items)
-    o.itemsByTag = buildItemTagMap(o.itemsByType)
-    setmetatable(o, ActionTester)
-
-    return o
-end
+-- #region private
 
 
----Tests if an action is valid.
----An action must be complete for an action state to be built for it.
----@param action starlit.Action The action.
----@param objects IsoObject[] Objects that may be used in the action. (e.g. all objects clicked by the player).
----@param forceParams starlit.ActionTest.ForceParams | nil Items and objects that must be used in the action. If they cannot be used, the function will return early. failedRequirements will only detail why these items were inappropriate.
----@return starlit.ActionTest.Result result The result of the test.
----@nodiscard
-function ActionTester:test(action, objects, forceParams)
-    if not Action.isComplete(action) then
-        if DEBUG then
-            -- TODO: print this error even outside of debug mode
-            --  this is disabled currently because the error will always blame starlit library,
-            --  when it's the mod that created the action at fault.
-            --  at the time of action creation, we could look up the callstack to see which mod is creating it
-            log("Attempting to test for action %s, but it is incomplete.", "error", action.name)
-        end
-        return nil
-    end
-
-    ---@type starlit.ActionTest.Result
-    local result = {
-        action = action,
-        character = self.character,
-        items = {},
-        objects = {},
-        predicates = {},
-        success = true
-    }
-
-    local requiredObjects = action.requiredObjects
-    local requiredItems = action.requiredItems
-
-    --- lookup table of items that have already been claimed by a requirement
-    --- we don't just remove them from the list because it's too expensive lol
-    ---@type table<InventoryItem, boolean>
-    local claimedItems = {}
-
+---@param requiredObjects table<any, starlit.Action.RequiredObject>
+---@param result starlit.ActionTester.Result
+---@param objects IsoObject[]
+---@param forcedObjects table<any, IsoObject> | nil
+function ActionTester:_testObjectRequirements(requiredObjects, result, objects, forcedObjects)
     ---@type table<IsoObject, boolean>
     local claimedObjects = {}
 
+    if forcedObjects then
+        for _, object in pairs(forcedObjects) do
+            claimedObjects[object] = true
+        end
+    end
+
     for name, requirement in pairs(requiredObjects) do
-        -- copy the upvalue to a local so we can change it later without propagating the change
+        -- copy the argument to a local so we can change it later without propagating the change to later iterations
         local objects = objects
 
-        local forcedObject = forceParams and forceParams.objects and forceParams.objects[name]
+        local forcedObject = forcedObjects and forcedObjects[name]
         if forcedObject then
             -- override the object list with just the forced object
             objects = {forcedObject}
-            claimedObjects[forcedObject] = true
         end
 
         local shortCircuit = false
-        ---@type starlit.ActionTest.ObjectResult
+        ---@type starlit.ActionTester.ObjectResult
         local testResult = {
             object = objects[1],
             success = false,
@@ -247,13 +204,21 @@ function ActionTester:test(action, objects, forceParams)
         end
         result.objects[name] = testResult
     end
+end
 
-    for i = 1, #action.predicates do
-        if not action.predicates[i]:evaluate(self.character) then
-            result.success = false
-            result.predicates[i] = false
-        else
-            result.predicates[i] = true
+
+---@param requiredItems table<any, starlit.Action.RequiredItem>
+---@param result starlit.ActionTester.Result
+---@param forcedItems table<any, InventoryItem[]> | nil
+function ActionTester:_testItemRequirements(requiredItems, result, forcedItems)
+    ---@type {[InventoryItem]: boolean}
+    local claimedItems = {}
+
+    if forcedItems then
+        for _, items in pairs(forcedItems) do
+            for i = 1, #items do
+                claimedItems[items[i]] = true
+            end
         end
     end
 
@@ -261,13 +226,9 @@ function ActionTester:test(action, objects, forceParams)
         ---@type InventoryItem[]
         local items = nil
 
-        local forcedItem = forceParams and forceParams.items and forceParams.items[name]
+        local forcedItem = forcedItems and forcedItems[name]
         if forcedItem then
-            if type(forcedItem) == "table" then
-                items = forcedItem
-            else
-                items = {forcedItem}
-            end
+            items = forcedItem
         elseif requirement.types then
             items = table.newarray()
             for i = 1, #requirement.types do
@@ -292,7 +253,7 @@ function ActionTester:test(action, objects, forceParams)
             items = self.items
         end
 
-        ---@type starlit.ActionTest.ItemResult[]
+        ---@type starlit.ActionTester.ItemResult[]
         local itemResults = {}
         for i = 1, requirement.count do
             itemResults[i] = {
@@ -342,9 +303,8 @@ function ActionTester:test(action, objects, forceParams)
                         --  even if we aren't short circuiting generally
                         break
                     end
-                end
-
-                if claimedItems[item] then
+                elseif claimedItems[item] then
+                    -- elseif because forced items will always be claimed
                     break
                 end
 
@@ -384,10 +344,83 @@ function ActionTester:test(action, objects, forceParams)
             result.success = false
         end
     end
+end
+
+
+-- #endregion
+-- #region public
+
+
+---Tests if an action is valid.
+---An action must be complete for an action state to be built for it.
+---@param action starlit.Action The action.
+---@param objects IsoObject[] Objects that may be used in the action. (e.g. all objects clicked by the player).
+---@param forceParams starlit.ActionTester.ForceParams | nil Items and objects that must be used in the action. If they cannot be used, the function will return early. failedRequirements will only detail why these items were inappropriate.
+---@return starlit.ActionTester.Result result The result of the test.
+---@nodiscard
+function ActionTester:test(action, objects, forceParams)
+    if not Action.isComplete(action) then
+        if DEBUG then
+            -- TODO: print this error even outside of debug mode
+            --  this is disabled currently because the error will always blame starlit library,
+            --  when it's the mod that created the action at fault.
+            --  at the time of action creation, we could look up the callstack to see which mod is creating it
+            log("Attempting to test for action %s, but it is incomplete.", "error", action.name)
+        end
+        return nil
+    end
+
+    ---@type starlit.ActionTester.Result
+    local result = {
+        action = action,
+        character = self.character,
+        items = {},
+        objects = {},
+        predicates = {},
+        success = true
+    }
+
+    self:_testObjectRequirements(
+        action.requiredObjects,
+        result,
+        objects,
+        forceParams and forceParams.objects or nil
+    )
+
+    for i = 1, #action.predicates do
+        if not action.predicates[i]:evaluate(self.character) then
+            result.success = false
+            result.predicates[i] = false
+        else
+            result.predicates[i] = true
+        end
+    end
+
+    self:_testItemRequirements(
+        action.requiredItems,
+        result,
+        forceParams and forceParams.items or nil
+    )
 
     return result
 end
 
+
+---Creates an ActionTester for a specific character.
+---@param character IsoGameCharacter The character.
+---@return starlit.ActionTester tester
+---@nodiscard
+function ActionTester.new(character)
+    local o = {
+        character = character,
+        items = getAllItemsInContainerRecurse(character:getInventory())
+    }
+    o.itemsByType = buildItemTypeMap(o.items)
+    o.itemsByTag = buildItemTagMap(o.itemsByType)
+    setmetatable(o, ActionTester)
+
+    return o
+end
 
 return ActionTester
 -- #endregion
