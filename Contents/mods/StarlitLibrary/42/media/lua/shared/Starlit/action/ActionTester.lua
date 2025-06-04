@@ -268,7 +268,6 @@ function ActionTester:test(action, objects, forceParams)
             else
                 items = {forcedItem}
             end
-            -- TODO: check types/tags
         elseif requirement.types then
             items = table.newarray()
             for i = 1, #requirement.types do
@@ -316,6 +315,35 @@ function ActionTester:test(action, objects, forceParams)
 
             -- break acts as continue in this scope
             repeat
+                -- if the item isn't forced, then it is already the right type/tags
+                if forcedItem then
+                    if requirement.tags then
+                        itemResult.validType = false
+                        for j = 1, #requirement.tags do
+                            if item:hasTag(requirement.tags[j]) then
+                                itemResult.validType = true
+                                break
+                            end
+                        end
+                    elseif requirement.types then
+                        itemResult.validType = false
+                        local type = item:getFullType()
+                        -- it would be optimal to build a lookup table of these in cases where there are multiple forced items
+                        for j = 1, #requirement.types do
+                            if type == requirement.types[j] then
+                                itemResult.validType = true
+                                break
+                            end
+                        end
+                    end
+
+                    if not itemResult.validType then
+                        -- we don't want to do further tests on items that aren't the right type,
+                        --  even if we aren't short circuiting generally
+                        break
+                    end
+                end
+
                 if claimedItems[item] then
                     break
                 end
