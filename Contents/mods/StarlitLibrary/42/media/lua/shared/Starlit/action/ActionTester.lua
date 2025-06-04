@@ -30,7 +30,7 @@
 
 ---@alias starlit.ActionTester.ItemResult {item: InventoryItem | nil, success: boolean, validType: boolean, predicates: {[any]: boolean}}
 ---@alias starlit.ActionTester.ObjectResult {object: IsoObject | nil, success: boolean, predicates: {[any]: boolean}}
----@alias starlit.ActionTester.ForceParams {objects: {[any]: IsoObject} | nil, items: {[any]: InventoryItem|InventoryItem[]} | nil}
+---@alias starlit.ActionTester.ForceParams {objects: {[any]: IsoObject} | nil, items: {[any]: InventoryItem[]} | nil}
 
 
 local Action = require("Starlit/action/Action")

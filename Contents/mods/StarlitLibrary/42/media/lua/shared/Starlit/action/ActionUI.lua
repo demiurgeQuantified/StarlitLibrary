@@ -277,7 +277,7 @@ local function showItemAction(playerIndex, context, items)
         local itemAction = itemActions[i]
         local forceParams = {
             items = {
-                [itemAction.conditions.itemAs] = item
+                [itemAction.conditions.itemAs] = {item}
             }
         }
 
