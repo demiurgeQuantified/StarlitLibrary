@@ -11,7 +11,15 @@ local addWindowAction = Action.Action{
     requiredItems = {
         glass = Action.RequiredItem{
             types = {"Base.GlassPanel"},
-            mainInventory = true
+            mainInventory = true,
+            -- predicates = {
+            --     Action.Predicate{
+            --         evaluate = function()
+            --             return false
+            --         end,
+            --         description = "Always false"
+            --     }
+            -- },
         }
     },
     primaryItem = "EMPTY",

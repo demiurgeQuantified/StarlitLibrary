@@ -37,8 +37,11 @@ local function pushDesaturatedGoodColour()
 end
 
 
+-- TODO: if the item/object was forced, it should say 'Selected item/object:' instead of "Any item/object:"
+
+
 ---@param requiredObjects table<any, starlit.Action.RequiredObject>
----@param objects table<any, starlit.ActionTest.ObjectResult | IsoObject | false>
+---@param objects table<any, starlit.ActionTest.ObjectResult>
 ---@return string
 ---@nodiscard
 local function buildObjectsString(requiredObjects, objects)
@@ -47,16 +50,13 @@ local function buildObjectsString(requiredObjects, objects)
     for name, requirement in pairs(requiredObjects) do
         local objectResult = objects[name]
         if objectResult ~= nil then
-            local success = instanceof(objectResult, "IsoObject")
-            local genericFailure = objectResult == false
-
-            result = result .. (success and " <GHC> " or " <BHC> ")
-                                      .. " <INDENT:0> "
-                                      .. getText("IGUI_StarlitLibrary_Action_Object")
-                                      .. "\n <INDENT:8> "
+            result = result .. (objectResult.success and " <GHC> " or " <BHC> ")
+                            .. " <INDENT:0> "
+                            .. getText("IGUI_StarlitLibrary_Action_Object")
+                            .. "\n <INDENT:8> "
 
             for i = 1, #requirement.predicates do
-                if success or (not genericFailure and objectResult.predicates[i] == true) then
+                if objectResult.predicates[i] == true then
                     result = result .. pushDesaturatedGoodColour()
                 else
                     result = result .. pushDesaturatedBadColour()
@@ -73,7 +73,7 @@ end
 
 
 ---@param requiredItems table<any, starlit.Action.RequiredItem>
----@param items table<any, starlit.ActionTest.ItemResult[] | InventoryItem[] | false>
+---@param items table<any, starlit.ActionTest.ItemResult[]>
 ---@return string
 ---@nodiscard
 local function buildItemsString(requiredItems, items)
@@ -89,18 +89,14 @@ local function buildItemsString(requiredItems, items)
         end
         ---@cast itemResult -InventoryItem[], +InventoryItem, -starlit.ActionTest.ItemResult[], +starlit.ActionTest.ItemResult
 
-        -- if details is an InventoryItem then all checks passed
-        local success = instanceof(itemResult, "InventoryItem")
-        -- if details is false, there are no details given on how the check failed, just that it did
-        local genericFailure = itemResult == false
         if itemResult ~= nil then
-            result = result .. (success and " <GHC> " or " <BHC> ")
-                                      .. " <INDENT:0> "
-                                      .. getText("IGUI_StarlitLibrary_Action_Item")
-                                      .. " \n"
+            result = result .. (itemResult.success and " <GHC> " or " <BHC> ")
+                            .. " <INDENT:0> "
+                            .. getText("IGUI_StarlitLibrary_Action_Item")
+                            .. " \n"
 
             if requirement.types or requirement.tags then
-                if success or (not genericFailure and itemResult.validType == true) then
+                if itemResult.validType == true then
                     result = result .. pushDesaturatedGoodColour
                 else
                     result = result .. pushDesaturatedBadColour
@@ -126,7 +122,7 @@ local function buildItemsString(requiredItems, items)
             end
 
             for i = 1, #requirement.predicates do
-                if success or (not genericFailure and itemResult.predicates[i] == true) then
+                if itemResult.predicates[i] == true then
                     result = result .. pushDesaturatedGoodColour
                 else
                     result = result .. pushDesaturatedBadColour
@@ -333,8 +329,8 @@ end
 ---@return boolean success Whether a mouseover object highlight was added.
 local function addMouseoverObjectHighlight(option, highlight, testResult)
     if highlight ~= nil then
-        local highlightObject = testResult.objects[highlight.object]
-        if instanceof(highlightObject, "IsoObject") then
+        local highlightObject = testResult.objects[highlight.object].object
+        if highlightObject then
             option.onHighlight = highlightObjectOnSelect
             option.onHighlightParams = {
                 highlightObject,
@@ -475,7 +471,8 @@ local function addObjectActionOptions(playerNum, context, worldObjects, test)
                         --  e.g. item must pass type check but not durability check
                         for name, _ in pairs(required.items) do
                             local testResult = fail.items[name]
-                            if testResult == false or not instanceof(fail.items[name][1], "InventoryItem") then
+                            -- because we add successes in order, last slot success means full success
+                            if testResult[#testResult].success then
                                 table.remove(results.fails, i)
                                 break
                             end
@@ -484,7 +481,7 @@ local function addObjectActionOptions(playerNum, context, worldObjects, test)
 
                     if required.objects then
                         for name, _ in pairs(required.objects) do
-                            if not instanceof(fail.objects[name], "IsoObject") then
+                            if not fail.objects[name].success then
                                 table.remove(results.fails, i)
                                 break
                             end

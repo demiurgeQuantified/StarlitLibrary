@@ -2,11 +2,6 @@
 --  when adding an object action option using objectAs,
 --  object tests could be ran up to N^2 times even though the results won't change
 --  when considering multiple actions could be testing the same objects/items, it's obviously inefficient
---
---  maybe item tests could store the set of *all usable items* that met the criteria, and we find the 
---  subset of every set (creating them if they aren't already cached) specified by a requirement
---  this would be done with ArrayLists instead of Sets because they aren't exposed, which isn't that fast
---  but may still be faster than the alternative, given that it at least moves most of the calculations to java
 
 
 ---Result from an action test.
@@ -23,23 +18,18 @@
 ---
 ---The items that were picked for the action, by name of the item requirement.
 ---If the value is a ItemTestResult or false, no item was picked.
----@field items table<any, InventoryItem[] | starlit.ActionTest.ItemResult[] | false>
+---@field items table<any, starlit.ActionTest.ItemResult[]>
 ---
 ---The objects that were picked for the action, by name of the object requirement.
 ---If the value is an ObjectTestResult or false, no object was picked.
----@field objects table<any, IsoObject | starlit.ActionTest.ObjectResult | false>
+---@field objects table<any, starlit.ActionTest.ObjectResult>
 ---
 ---The results of each predicate test by name.
 ---@field predicates table<any, boolean>
 
 
--- TODO: add testedItem/testedObject fields to these, always return a result even when successful
---  this would allow us to e.g. highlight an object that partially matched
---  complication is we need to work out what to return when an object wasn't specified
---  all false?
-
----@alias starlit.ActionTest.ItemResult {success: boolean, validType: boolean, predicates: {[any]: boolean}}
----@alias starlit.ActionTest.ObjectResult {success: boolean, predicates: {[any]: boolean}}
+---@alias starlit.ActionTest.ItemResult {item: InventoryItem | nil, success: boolean, validType: boolean, predicates: {[any]: boolean}}
+---@alias starlit.ActionTest.ObjectResult {object: IsoObject | nil, success: boolean, predicates: {[any]: boolean}}
 ---@alias starlit.ActionTest.ForceParams {objects: {[any]: IsoObject} | nil, items: {[any]: InventoryItem|InventoryItem[]} | nil}
 
 
@@ -119,6 +109,7 @@ local function buildItemTagMap(typeMap)
     return tagMap
 end
 
+-- #region ActionTester
 
 ---Responsible for testing if a character can perform an action.
 ---ActionTester objects should have short lifetimes, generally within the function that creates them.
@@ -203,6 +194,14 @@ function ActionTester:test(action, objects, forceParams)
             claimedObjects[forcedObject] = true
         end
 
+        local shortCircuit = false
+        ---@type starlit.ActionTest.ObjectResult
+        local testResult = {
+            object = objects[1],
+            success = false,
+            predicates = {}
+        }
+
         for i = 1, #objects do
             local object = objects[i]
             local matches = true
@@ -214,21 +213,39 @@ function ActionTester:test(action, objects, forceParams)
             for j = 1, #requirement.predicates do
                 if not requirement.predicates[j]:evaluate(object) then
                     matches = false
-                    break
+                    if shortCircuit then
+                        break
+                    end
+                    testResult.predicates[j] = false
+                elseif not shortCircuit then
+                    testResult.predicates[j] = true
                 end
             end
 
             if matches then
-                result.objects[name] = object
+                -- construct a new test result with all conditions true
+                testResult = {
+                    object = object,
+                    success = true,
+                    predicates = {}
+                }
+                for j = 1, #requirement.predicates do
+                    testResult.predicates[j] = true
+                end
+
                 claimedObjects[object] = true
                 break
             end
+
+            -- after one run, we start short circuiting
+            -- we don't want to build detailed fail data for every single object
+            shortCircuit = true
         end
 
-        if not result.objects[name] then
+        if not testResult.success then
             result.success = false
-            result.objects[name] = false
         end
+        result.objects[name] = testResult
     end
 
     for i = 1, #action.predicates do
@@ -251,7 +268,7 @@ function ActionTester:test(action, objects, forceParams)
             else
                 items = {forcedItem}
             end
-            -- FIXME: we don't get detailed fail reasons for forced items anymore
+            -- TODO: check types/tags
         elseif requirement.types then
             items = table.newarray()
             for i = 1, #requirement.types do
@@ -276,46 +293,73 @@ function ActionTester:test(action, objects, forceParams)
             items = self.items
         end
 
-        local matches = {}
+        ---@type starlit.ActionTest.ItemResult[]
+        local itemResults = {}
+        for i = 1, requirement.count do
+            itemResults[i] = {
+                item = nil,
+                success = false,
+                predicates = {},
+                validType = false,
+            }
+        end
+
+        local matchesFound = 0
         for i = 1, #items do
+            local item = items[i]
+            local itemResult = itemResults[matchesFound + 1]
+            itemResult.validType = true
+            itemResult.item = item
+            itemResult.success = true
+
+            local shortCircuit = false
+
             -- break acts as continue in this scope
             repeat
-                local item = items[i]
-
                 if claimedItems[item] then
                     break
                 end
 
                 for j = 1, #requirement.predicates do
                     if not requirement.predicates[j]:evaluate(item) then
-                        break
+                        if shortCircuit then
+                            break
+                        end
+                        itemResult.predicates[j] = false
+                        itemResult.success = false
+                    else
+                        itemResult.predicates[j] = true
                     end
                 end
 
-                matches[#matches + 1] = item
+                if itemResult.success then
+                    matchesFound = matchesFound + 1
+                    -- if we found a match, we want to do a full test on the next one
+                    --  so that we have full data for each item slot
+                    shortCircuit = false
+                else
+                    shortCircuit = true
+                end
             until true
 
-            if #matches == requirement.count then
+            if matchesFound == requirement.count then
                 break
             end
         end
 
-        if #matches == requirement.count then
-            result.items[name] = matches
-            for i = 1, #matches do
-                claimedItems[matches[i]] = true
-            end
-        else
+        result.items[name] = itemResults
+        for i = 1, matchesFound do
+            claimedItems[itemResults[i].item] = true
+        end
+
+        if matchesFound ~= requirement.count then
             result.success = false
-            result.items[name] = false
         end
     end
-
-    -- TODO: for tooltips we could do a full check on the first applicable item/object,
-    --  and then shortcircuiting checks afterwards
 
     return result
 end
 
 
 return ActionTester
+-- #endregion
