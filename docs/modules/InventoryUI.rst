@@ -1,0 +1,116 @@
+InventoryUI
+===========
+::
+
+   local InventoryUI = require("Starlit/client/ui/InventoryUI")
+
+The InventoryUI module contains utilities related to the character inventory UI. Currently it only contains utilities for item tooltips.
+
+.. lua:module:: InventoryUI
+
+Events
+------
+
+.. lua:data:: onFillItemTooltip LuaEvent
+
+   Triggered whenever an inventory item's tooltip is being rendered. The Layout passed from this event is needed for most tooltip functions.
+
+   :param ObjectTooltip tooltip: The tooltip being filled.
+   :param Layout layout: The tooltip layout being filled.
+   :param InventoryItem item: The item the tooltip is being filled for.
+
+Functions
+---------
+
+.. lua:function:: addTooltipLabel(layout: Layout, label: string, colour: Starlit.Colour | nil) -> element: LayoutItem
+   
+   Adds a label to a tooltip layout.
+   
+   :param Layout layout: The tooltip layout
+   :param label string: The text to display as a label.
+   :param Starlit.Colour | nil colour: The colour of the text.
+   :return LayoutItem element: The created tooltip element.
+
+.. lua:function:: addTooltipKeyValue(layout: Layout, key: string, value: string, keyColour: Starlit.Colour | nil, valueColour: Starlit.Colour | nil) -> element: LayoutItem
+
+   Adds a key/value pair to a tooltip layout.
+
+   :param Layout layout: The tooltip layout.
+   :param string key: Key text.
+   :param string value: Value text.
+   :param Starlit.Colour | nil keyColour: Key colour.
+   :param Starlit.Colour | nil valueColour: Value colour.
+   :return LayoutItem element: The created tooltip element.
+
+.. lua:function:: addTooltipBar(layout: Layout, label: string, amount: number, labelColour: Starlit.Colour | nil, barColour: Starlit.Colour | nil) -> element: LayoutItem
+
+   Adds a progress bar to a tooltip layout.
+
+   :param Layout layout: The tooltip layout.
+   :param string label: Label text.
+   :param number amount: How filled the bar should be, between 0 and 1.
+   :param Starlit.Colour | nil labelColour: Label colour.
+   :param Starlit.Colour | nil barColour: Colour of the filled part of the bar. Defaults to lerping between the user's good colour and bad colour by the amount.
+   :return LayoutItem element: The created tooltip element.
+
+.. lua:function:: addTooltipInteger(layout: Layout, label: string, value: integer, highGood: boolean, labelColour: Starlit.Colour | nil) -> element: LayoutItem
+
+   Adds an integer key/value to a tooltip layout.
+   Positive values will be rendered with a plus.
+   The value will be coloured in the user's good colour or bad colour depending on the value of highGood.
+   If you just want a number shown without the plus or colouration, convert your number to a string and use addTooltipKeyValue.
+
+   :param Layout layout: The tooltip layout.
+   :param string label: Label text.
+   :param integer value: The integer value to show.
+   :param boolean highGood: If true, values above zero are shown in green and values below zero are shown in red. If false, the opposite is true.
+   :param Starlit.Colour | nil labelColour: Label colour.
+   :return LayoutItem element: The created tooltip element.
+
+.. lua:function:: removeTooltipElement(layout: Layout, label: string) -> item: LayoutItem | nil
+
+   Finds and returns a layout element from its label. Useful to find elements added by Vanilla or other mods.
+
+   :param Layout layout: The tooltip layout.
+   :param label string: The string label of the element.
+   :return LayoutItem | nil element: The layout item.
+
+   .. note::
+      It is best practice to use ``getText()`` for the label to ensure your code works in all game languages.
+      Most Vanilla tooltip labels add ":" to the end of the translated string; you will need to replicate this to catch them.
+
+Examples
+--------
+A basic example of using the ``OnFillItemTooltip`` event to populate a specific item's tooltip:
+::
+   
+   --Require the InventoryUI module so we can use it.
+   local InventoryUI = require("Starlit/client/ui/InventoryUI")
+
+   --Create the event listener.
+   --If your IDE supports LuaCATS annotations, the following line tells it the function is an event listener.
+   ---@type Starlit.InventoryUI.Callback_OnFillItemTooltip
+   local function addAppleTooltip(tooltip, layout, item)
+      --Only run our code if the item is an apple
+      if item:getFullType() ~= "Base.Apple" then
+         return
+      end
+
+      --Adds the text 'Apple.' to every apple's tooltip.
+      InventoryUI.addTooltipLabel(layout, "Apple.")
+
+      --Adds the key-value pair "Grown at: Sweet Apple Acres" to every apple's tooltip.
+      InventoryUI.addTooltipKeyValue(layout, "Grown at:", "Sweet Apple Acres")
+
+      --Adds a half-full progress bar for sweetness to every apple's tooltip.
+      InventoryUI.addTooltipBar(layout, "Sweetness:", 0.5)
+
+      --Adds a bites taken counter to every apple's tooltip, with the value 1.
+      InventoryUI.addTooltipInteger(layout, "Bites taken:", 1, false)
+
+      --Removes the Vanilla encumbrance tooltip.
+      InventoryUI.removeTooltipElement(layout, getText("Tooltip_item_Weight") + ":")
+   end
+
+   --Add the event listener to the event, so that it will be called when the event is triggered.
+   InventoryUI.onFillItemTooltip:addListener(addAppleTooltip)
