@@ -2,7 +2,7 @@ version=1
 id=3378285185
 title=Starlit Library
 description=[h2]Starlit Library is a dependency for other mods to use, it doesn't do anything on its own. As an end user, you don't have any reason to install this unless a mod you use requires it.[/h2]
-description=Developers: see the GitHub wiki for documentation.
+description=Developers: see the [url=https://demiurgequantified.github.io/StarlitLibrary/]docs[/url] for more information.
 description=[code]Anyone can use Starlit Library as a dependency, but do NOT copy the files into your mod. You cannot redistribute any part of the library without express permission.[/code]
 description=
 description=[url=https://github.com/demiurgeQuantified/StarlitLibrary]View on GitHub[/url]
