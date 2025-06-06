@@ -16,12 +16,10 @@
 ---The character that was tested.
 ---@field character IsoGameCharacter
 ---
----The items that were picked for the action, by name of the item requirement.
----If the value is a ItemTestResult or false, no item was picked.
+---The results of each item requirement, by name of the item requirement.
 ---@field items table<any, starlit.ActionTester.ItemResult[]>
 ---
----The objects that were picked for the action, by name of the object requirement.
----If the value is an ObjectTestResult or false, no object was picked.
+---The results of each object requirement, by name of the object requirement.
 ---@field objects table<any, starlit.ActionTester.ObjectResult>
 ---
 ---The results of each predicate test by name.
