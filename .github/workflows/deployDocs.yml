@@ -20,14 +20,12 @@ jobs:
         with:
           python-version: '3.13'
           cache: 'pip'
+          cache-dependency-path: 'StarlitLibrary/docs/requirements.txt'
       
-      - name: Install sphinx packages
-        run: |
-          pip install sphinx
-          pip install sphinx-lua-ls
-          pip install sphinx-rtd-theme
+      - name: Install dependencies
+        run: pip install -r StarlitLibrary/docs/requirements.txt
       
-      - name: Build website
+      - name: Build website with Sphinx
         run: |
           cd StarlitLibrary/docs
           sphinx-build -M html . _build
