@@ -140,7 +140,7 @@ local function buildItemsString(requiredItems, items)
                     for j = 1, #requirement.tags do
                         tagNames[j] = getText("IGUI_StarlitLibrary_TagDescription_" .. requirement.tags[j])
                     end
-                    result = result .. table.concat(tagNames, "\n") .. " <POPRGB> \n"
+                    result = result .. " <INDENT:8> " .. table.concat(tagNames, "\n") .. " <POPRGB> \n"
                 end
             end
 
