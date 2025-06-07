@@ -227,21 +227,6 @@ local Action = {
 }
 
 
----@type starlit.Action.Predicate<IsoObject>
-Action.PredicateSprite = Action.Predicate{
-    ---@type table<string, boolean>
-    sprites = {},
-    evaluate = function(self, object)
-        local sprite = object:getSprite()
-        if not sprite then
-            return false
-        end
-        return self.sprites[sprite:getName()]
-    end,
-    description = "DESCRIPTION MISSING"
-}
-
-
 ---Returns whether an action is complete.
 ---An action is considered complete if it has the necessary data to be performed.
 ---Incomplete actions cannot be performed, but may be used as bases for other actions.
