@@ -27,7 +27,7 @@ local pass = function() end
 ---
 ---List of predicates the items must pass to be used.
 ---These are used to implement custom conditions for items.
----@field predicates starlit.Action.Predicate<InventoryItem>[] | nil
+---@field predicates table<any, starlit.Action.Predicate<InventoryItem>> | nil
 ---
 ---Number of items required.
 ---@field count integer | nil
@@ -45,7 +45,7 @@ local pass = function() end
 ---
 ---List of predicates the items must pass to be used.
 ---These are used to implement custom conditions for items.
----@field predicates starlit.Action.Predicate<InventoryItem>[]
+---@field predicates table<any, starlit.Action.Predicate<InventoryItem>>
 ---
 ---Number of items required.
 ---@field count integer
@@ -63,7 +63,7 @@ local pass = function() end
 ---@overload fun(args:starlit.Action.RequiredObject):self
 ---
 ---Conditions an object must meet.
----@field predicates starlit.Action.Predicate<IsoObject>[]
+---@field predicates table<any, starlit.Action.Predicate<IsoObject>>
 
 
 ---Action args.
@@ -124,7 +124,7 @@ local pass = function() end
 ---@field requiredSkills table<Perk, integer> | nil
 ---
 ---List of predicates that must be met to perform the action.
----@field predicates starlit.Action.Predicate<IsoGameCharacter>[] | nil
+---@field predicates table<any, starlit.Action.Predicate<IsoGameCharacter>> | nil
 ---
 ---Function called upon completion of the action.
 ---@field complete fun(state:starlit.ActionState) | nil
@@ -164,8 +164,8 @@ local pass = function() end
 ---Minimum skills required to perform the action.
 ---@field requiredSkills table<Perk, integer>
 ---
----List of predicates that must be met to perform the action.  # TODO: it would be helpful for these to be named
----@field predicates starlit.Action.Predicate<IsoGameCharacter>[]
+---List of predicates that must be met to perform the action.
+---@field predicates table<any, starlit.Action.Predicate<IsoGameCharacter>>
 ---
 ---Function called upon completion of the action.
 ---@field complete fun(state:starlit.ActionState)
@@ -268,9 +268,15 @@ end
 ---@return boolean complete Whether the item requirement is complete.
 ---@nodiscard
 function Action.isRequiredItemComplete(requiredItem)
-    return (requiredItem.tags ~= nil and #requiredItem.tags > 0)
-        or (requiredItem.types ~= nil and #requiredItem.types > 0)
-        or (#requiredItem.predicates > 0)
+    if (requiredItem.tags ~= nil and #requiredItem.tags > 0)
+            or (requiredItem.types ~= nil and #requiredItem.types > 0) then
+        return true
+    end
+    -- return true if any predicates
+    for _, _ in pairs(requiredItem.predicates) do
+        return true
+    end
+    return false
 end
 
 
@@ -281,7 +287,11 @@ end
 ---@return boolean complete Whether the object requirement is complete.
 ---@nodiscard
 function Action.isRequiredObjectComplete(requiredObject)
-    return #requiredObject.predicates > 0
+    -- returns true if there are any predicates
+    for _, _ in pairs(requiredObject.predicates) do
+        return true
+    end
+    return false
 end
 
 

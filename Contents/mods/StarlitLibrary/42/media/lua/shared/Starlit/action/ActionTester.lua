@@ -146,7 +146,7 @@ function ActionTester:_testObjectRequirements(requiredObjects, result, objects, 
         -- copy the argument to a local so we can change it later without propagating the change to later iterations
         local objects = objects
 
-        local forcedObject = forcedObjects and forcedObjects[name]
+        local forcedObject = forcedObjects and forcedObjects[name] --[[@as IsoObject | nil]]
         if forcedObject then
             -- override the object list with just the forced object
             objects = {forcedObject}
@@ -168,15 +168,15 @@ function ActionTester:_testObjectRequirements(requiredObjects, result, objects, 
                 matches = false
             end
 
-            for j = 1, #requirement.predicates do
-                if not requirement.predicates[j]:evaluate(object) then
+            for name, predicate in pairs(requirement.predicates) do
+                if not predicate:evaluate(object) then
                     matches = false
                     if shortCircuit then
                         break
                     end
-                    testResult.predicates[j] = false
+                    testResult.predicates[name] = false
                 elseif not shortCircuit then
-                    testResult.predicates[j] = true
+                    testResult.predicates[name] = true
                 end
             end
 
@@ -187,8 +187,8 @@ function ActionTester:_testObjectRequirements(requiredObjects, result, objects, 
                     success = true,
                     predicates = {}
                 }
-                for j = 1, #requirement.predicates do
-                    testResult.predicates[j] = true
+                for name, _ in pairs(requirement.predicates) do
+                    testResult.predicates[name] = true
                 end
 
                 claimedObjects[object] = true
@@ -312,15 +312,15 @@ function ActionTester:_testItemRequirements(requiredItems, result, forcedItems)
                     break
                 end
 
-                for j = 1, #requirement.predicates do
-                    if not requirement.predicates[j]:evaluate(item) then
+                for name, predicate in pairs(requirement.predicates) do
+                    if not predicate:evaluate(item) then
                         itemResult.success = false
                         if shortCircuit then
                             break
                         end
-                        itemResult.predicates[j] = false
+                        itemResult.predicates[name] = false
                     else
-                        itemResult.predicates[j] = true
+                        itemResult.predicates[name] = true
                     end
                 end
 
@@ -415,12 +415,12 @@ function ActionTester:test(action, objects, forceParams)
         forceParams and forceParams.objects or nil
     )
 
-    for i = 1, #action.predicates do
-        if action.predicates[i]:evaluate(self.character) then
-            result.predicates[i] = true
+    for name, predicate in pairs(action.predicates) do
+        if predicate:evaluate(self.character) then
+            result.predicates[name] = true
         else
             result.success = false
-            result.predicates[i] = false
+            result.predicates[name] = false
         end
     end
 

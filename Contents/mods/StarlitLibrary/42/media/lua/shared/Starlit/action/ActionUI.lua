@@ -55,13 +55,13 @@ local function buildObjectsString(requiredObjects, objects)
                             .. getText("IGUI_StarlitLibrary_Action_Object")
                             .. "\n <INDENT:8> "
 
-            for i = 1, #requirement.predicates do
-                if objectResult.predicates[i] == true then
+            for name, predicate in pairs(requirement.predicates) do
+                if objectResult.predicates[name] == true then
                     result = result .. pushDesaturatedGoodColour()
                 else
                     result = result .. pushDesaturatedBadColour()
                 end
-                result = result .. requirement.predicates[i].description .. " <POPRGB> \n"
+                result = result .. predicate.description .. " <POPRGB> \n"
             end
 
             result = result .. " <POPRGB> "
@@ -144,13 +144,13 @@ local function buildItemsString(requiredItems, items)
                 end
             end
 
-            for i = 1, #requirement.predicates do
-                if showResult.predicates[i] == true then
+            for name, predicate in pairs(requirement.predicates) do
+                if showResult.predicates[name] == true then
                     result = result .. pushDesaturatedGoodColour
                 else
                     result = result .. pushDesaturatedBadColour
                 end
-                result = result .. " <INDENT:8> " .. requirement.predicates[i].description .. " <POPRGB> \n"
+                result = result .. " <INDENT:8> " .. predicate.description .. " <POPRGB> \n"
             end
         end
     end
@@ -202,13 +202,13 @@ ActionUI.createTooltip = function(action, testResult)
 
     local description = ""
 
-    for i = 1, #action.predicates do
-        if testResult.predicates[i] == true then
+    for name, predicate in pairs(action.predicates) do
+        if testResult.predicates[name] == true then
             description = description .. " <GHC> "
         else
             description = description .. " <BHC> "
         end
-        description = description .. action.predicates[i].description .. "\n"
+        description = description .. predicate.description .. "\n"
     end
 
     description = description .. buildObjectsString(action.requiredObjects, testResult.objects)
