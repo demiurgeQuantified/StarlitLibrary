@@ -9,4 +9,6 @@ IGUI_EN = {
     IGUI_StarlitLibrary_Action_ItemTypeList = "One of:",
     IGUI_StarlitLibrary_Action_RequiredUses = "At least %1 uses remaining",
     IGUI_StarlitLibrary_Action_ItemConsumed = "(Consumed)",
+
+    IGUI_StarlitLibrary_Predicate_NotBroken = "Is not broken",
 }
