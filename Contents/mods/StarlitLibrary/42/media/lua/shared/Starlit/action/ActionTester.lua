@@ -24,6 +24,9 @@
 ---
 ---The results of each predicate test by name.
 ---@field predicates table<any, boolean>
+---
+---The results of each skill check by the Perk tested.
+---@field skills table<Perk, boolean>
 
 
 ---@alias starlit.ActionTester.ItemResult {item: InventoryItem | nil, success: boolean, validType: boolean, predicates: {[any]: boolean}}
@@ -375,6 +378,7 @@ function ActionTester:test(action, objects, forceParams)
         items = {},
         objects = {},
         predicates = {},
+        skills = {},
         success = true
     }
 
@@ -386,11 +390,20 @@ function ActionTester:test(action, objects, forceParams)
     )
 
     for i = 1, #action.predicates do
-        if not action.predicates[i]:evaluate(self.character) then
+        if action.predicates[i]:evaluate(self.character) then
+            result.predicates[i] = true
+        else
             result.success = false
             result.predicates[i] = false
+        end
+    end
+
+    for perk, minLevel in pairs(action.requiredSkills) do
+        if self.character:getPerkLevel(perk) >= minLevel then
+            result.skills[perk] = true
         else
-            result.predicates[i] = true
+            result.success = false
+            result.skills[perk] = false
         end
     end
 

@@ -118,6 +118,9 @@ local pass = function() end
 ---If nil, the player will perform the action in their current position.
 ---@field walkToObject string | nil
 ---
+---Minimum skills required to perform the action.
+---@field requiredSkills table<Perk, integer> | nil
+---
 ---List of predicates that must be met to perform the action.
 ---@field predicates starlit.Action.Predicate<IsoGameCharacter>[] | nil
 ---
@@ -156,6 +159,9 @@ local pass = function() end
 ---The objects picked will be stored under <b>state.objects</b> with the same key ('name') as in this table.
 ---@field requiredObjects table<any, starlit.Action.RequiredObject>
 ---
+---Minimum skills required to perform the action.
+---@field requiredSkills table<Perk, integer>
+---
 ---List of predicates that must be met to perform the action.  # TODO: it would be helpful for these to be named
 ---@field predicates starlit.Action.Predicate<IsoGameCharacter>[]
 ---
@@ -181,6 +187,7 @@ local Action = {
         stopOnRun = true,
         requiredItems = {},
         requiredObjects = {},
+        requiredSkills = {},
         predicates = {},
         start = pass,
         complete = pass,

@@ -68,6 +68,8 @@ local function buildObjectsString(requiredObjects, objects)
         end
     end
 
+    result = result .. " <INDENT:0> "
+
     return result
 end
 
@@ -132,6 +134,34 @@ local function buildItemsString(requiredItems, items)
         end
     end
 
+    result = result .. " <INDENT:0> "
+
+    return result
+end
+
+
+---@param requiredSkills table<Perk, integer>
+---@param testResult starlit.ActionTester.Result
+---@return string
+---@nodiscard
+local function buildSkillsString(requiredSkills, testResult)
+    local result = ""
+
+    for perk, passed in pairs(testResult.skills) do
+        if passed then
+            result = result .. " <GHC> "
+        else
+            result = result .. " <BHC> "
+        end
+
+        result = result .. getText("IGUI_Skill")
+                        .. string.format(
+                            ": %s %d/%d\n",
+                            perk:getName(),
+                            testResult.character:getPerkLevel(perk),
+                            requiredSkills[perk])
+    end
+
     return result
 end
 
@@ -162,6 +192,7 @@ ActionUI.createTooltip = function(action, testResult)
 
     description = description .. buildObjectsString(action.requiredObjects, testResult.objects)
                               .. buildItemsString(action.requiredItems, testResult.items)
+                              .. buildSkillsString(action.requiredSkills, testResult)
 
     tooltip.description = description
 
