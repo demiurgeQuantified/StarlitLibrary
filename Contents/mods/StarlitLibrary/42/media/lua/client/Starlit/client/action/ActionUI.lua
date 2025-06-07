@@ -286,10 +286,6 @@ end
 ---@field showFailConditions starlit.Action.ShowFailConditions
 
 
--- TODO: allow the user to provide a 'createTooltip' function that creates the tooltip when the action is valid
--- API for a tooltip is probably never going to be flexible enough so just let them do it
-
-
 ---@type starlit.Action.TooltipConfiguration
 ---@diagnostic disable-next-line: assign-type-mismatch
 ActionUI.TooltipConfiguration = SelfMergeTable{

@@ -83,7 +83,7 @@ local pass = function() end
 ---48 time units are equivalent to 1 real second.
 ---@field time integer
 ---
----The animation the character should play during the action.  # TODO: not tested
+---The animation the character should play during the action.
 ---@field animation string | nil
 ---
 ---Whether to stop the action if the character begins aiming during it.
