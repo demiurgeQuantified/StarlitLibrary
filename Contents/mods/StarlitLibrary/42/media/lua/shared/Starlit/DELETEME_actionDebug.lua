@@ -1,5 +1,4 @@
 local Action = require("Starlit/action/Action")
-local ActionUI = require("Starlit/action/ActionUI")
 
 
 local addWindowAction = Action.Action{
@@ -22,6 +21,12 @@ local addWindowAction = Action.Action{
             --         description = "Always false"
             --     }
             -- },
+        },
+        weldingRods = Action.RequiredItem{
+            types = {"Base.WeldingRods"},
+            mainInventory = true,
+            uses = 5,
+            consumed = true
         }
     },
     primaryItem = "EMPTY",
@@ -69,24 +74,4 @@ local addWindowAction = Action.Action{
 assert(Action.isComplete(addWindowAction))
 
 
--- for i = 1, 500 do
-    ActionUI.addObjectAction(
-        addWindowAction,
-        ActionUI.TooltipConfiguration{
-            highlight = {
-                object = "window"
-            },
-            objectAs = "window",
-            showFailConditions = {
-                noSuccesses = true,
-                onlyOne = false,
-                required = {
-                    objects = {
-                        ["window"] = true
-                    }
-                }
-            }
-        }
-    )
--- end
-ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})
+return addWindowAction
