@@ -267,6 +267,9 @@ end
 ---If not nil, each object tested will be tested as the action's required object by the same name.
 ---This causes more tests overall to be ran, but can generate more helpful tooltips, depending on the kind of action.
 ---@field objectAs any
+---
+---If not nil, this function will be called to retrieve text for a tooltip when the action is valid.
+---@field getTooltipText (fun(state:starlit.ActionState):text:string) | nil
 
 
 ---Concrete configuration for when and how a tooltip should be displayed.
@@ -430,11 +433,21 @@ end
 ---@param testResult starlit.ActionTester.Result
 ---@param config starlit.Action.TooltipConfiguration
 ---@return unknown? option no typedef for this in umbrella grr
-local function addStateOption(context, testResult, config)
-    local option = context:addOption(testResult.action.name, ActionState.fromTestResult(testResult), Actions.queueAction)
+local function addActionOption(context, testResult, config)
+    local state = ActionState.fromTestResult(testResult)
+    local option = context:addOption(testResult.action.name, state, Actions.queueAction)
+
     if config.highlight ~= nil then
         addMouseoverObjectHighlight(option, config.highlight, testResult)
     end
+
+    if config.getTooltipText ~= nil then
+        local tooltip = ISWorldObjectContextMenu.addToolTip() --[[@as ISToolTip]]
+        tooltip.name = testResult.action.name
+        tooltip.description = config.getTooltipText(state)
+        option.toolTip = tooltip
+    end
+
     return option
 end
 
@@ -586,10 +599,10 @@ local function addObjectActionOptions(playerNum, context, worldObjects, test)
         local successes = results.successes
         if #successes > 0 then
             if #successes == 1 or duplicatePolicy == "hide" then
-                addStateOption(menu, successes[1], action.config)
+                addActionOption(menu, successes[1], action.config)
             else
                 for i = 1, #successes do
-                    addStateOption(menu, successes[i], action.config)
+                    addActionOption(menu, successes[i], action.config)
                 end
             end
         end
