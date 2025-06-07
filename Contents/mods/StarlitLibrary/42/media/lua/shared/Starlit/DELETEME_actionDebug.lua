@@ -12,6 +12,8 @@ local addWindowAction = Action.Action{
         glass = Action.RequiredItem{
             types = {"Base.GlassPanel"},
             mainInventory = true,
+            count = 1,
+            consumed = true
             -- predicates = {
             --     Action.Predicate{
             --         evaluate = function()
@@ -36,8 +38,8 @@ local addWindowAction = Action.Action{
                 Action.Predicate{
                     evaluate = function(self, object)
                         -- we have to check instanceof twice because we don't short circuit anymore :(
-                        return instanceof(object, "IsoWindow")
-                               and object--[[@as IsoWindow]]:isSmashed()
+                        return instanceof(object, "IsoWindow") ---@cast object IsoWindow
+                               and object:isSmashed()
                     end,
                     description = getText("IGUI_RepairableWindows_Predicate_IsSmashed")
                 }
@@ -54,19 +56,20 @@ local addWindowAction = Action.Action{
     --         description = "Always false"
     --     }
     -- },
+    requiredSkills = {
+        [Perks.Woodwork] = 2
+    },
     complete = function(state)
-        local window = state.objects.window
-        ---@cast window IsoWindow
+        local window = state.objects.window --[[@as IsoWindow]]
         window:setGlassRemoved(false)
         window:setSmashed(false)
-        state.character:getInventory():Remove(state.items.glass)
     end
 }
 
 assert(Action.isComplete(addWindowAction))
 
 
-for i = 1, 500 do
+-- for i = 1, 500 do
     ActionUI.addObjectAction(
         addWindowAction,
         ActionUI.TooltipConfiguration{
@@ -85,5 +88,5 @@ for i = 1, 500 do
             }
         }
     )
-end
--- ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})
+-- end
+ActionUI.addItemAction(addWindowAction, {itemAs = "glass"})

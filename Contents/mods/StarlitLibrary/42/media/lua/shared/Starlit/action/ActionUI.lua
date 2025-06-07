@@ -152,6 +152,12 @@ local function buildItemsString(requiredItems, items)
                 end
                 result = result .. " <INDENT:8> " .. predicate.description .. " <POPRGB> \n"
             end
+
+            if requirement.consumed then
+                result = result .. " <INDENT:8> <PUSHRGB:1,1,1> "
+                                .. getText("IGUI_StarlitLibrary_Action_ItemConsumed")
+                                .. " <POPRGB> \n"
+            end
         end
     end
 

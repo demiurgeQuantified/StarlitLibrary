@@ -37,6 +37,9 @@ local pass = function() end
 ---
 ---How many uses of the item are required. If specified, this overrides <b>count</b> completely.
 ---@field uses integer | nil
+---
+---Whether the item will be consumed after the action is complete.
+---@field consumed boolean | nil
 
 
 ---Concrete RequiredItem.
@@ -55,6 +58,9 @@ local pass = function() end
 ---
 ---How many uses of the item are required. If specified, this overrides <b>count</b> completely.
 ---@field uses integer
+---
+---Whether the item will be consumed after the action is complete.
+---@field consumed boolean
 -- common needs for predicates should be made into fields, as they can be optimised this way
 
 
@@ -203,7 +209,8 @@ local Action = {
         predicates = {},
         count = 1,
         mainInventory = false,
-        uses = 0
+        uses = 0,
+        consumed = false
     },
     ---@type starlit.Action.RequiredObject
     ---@diagnostic disable-next-line: assign-type-mismatch

@@ -65,6 +65,28 @@ end
 PerformActionAction.perform = function(self)
     self.state.def.complete(self.state)
     self:cleanup()
+
+    for name, requirement in pairs(self.state.def.requiredItems) do
+        if requirement.consumed then
+            local items = self.state.items[name]
+            if requirement.uses > 0 then
+                ---@cast items InventoryItem[]
+                for i = 1, #items do
+                    items[i]:Use()
+                end
+            elseif requirement.count > 1 then
+                ---@cast items InventoryItem[]
+                local inventory = self.state.character:getInventory()
+                for i = 1, #items do
+                    inventory:Remove(items[i])
+                end
+            else
+                ---@cast items InventoryItem
+                self.state.character:getInventory():Remove(items)
+            end
+        end
+    end
+
     ISBaseTimedAction.perform(self)
 end
 
