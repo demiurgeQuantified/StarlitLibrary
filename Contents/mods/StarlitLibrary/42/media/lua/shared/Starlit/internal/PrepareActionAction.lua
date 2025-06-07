@@ -65,8 +65,8 @@ end
 PrepareActionAction.perform = function(self)
     self:beginAddingActions()
 
-    if self.state.def.walkToObject then
-        local object = self.state.objects[self.state.def.walkToObject]
+    if self.state.action.walkToObject then
+        local object = self.state.objects[self.state.action.walkToObject]
 
         local square
         if instanceof(object, "IsoDoor") or instanceof(object, "IsoWindow") then
@@ -90,7 +90,7 @@ PrepareActionAction.perform = function(self)
         )
     end
 
-    for name, itemDef in pairs(self.state.def.requiredItems) do
+    for name, itemDef in pairs(self.state.action.requiredItems) do
         if itemDef.mainInventory then
             local items = self.state.items[name]
             if type(items) == "table" then
@@ -110,8 +110,8 @@ PrepareActionAction.perform = function(self)
         end
     end
 
-    self:setHandModel("primary", self.state.def.primaryItem)
-    self:setHandModel("secondary", self.state.def.secondaryItem)
+    self:setHandModel("primary", self.state.action.primaryItem)
+    self:setHandModel("secondary", self.state.action.secondaryItem)
 
     ISTimedActionQueue.add(PerformActionAction.new(self.state))
 

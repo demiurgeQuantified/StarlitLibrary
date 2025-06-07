@@ -11,15 +11,15 @@ end
 PerformActionAction.update = function(self)
     self:setItemsJobDelta(self:getJobDelta())
 
-    self.state.def.update(self.state)
+    self.state.action.update(self.state)
     ISBaseTimedAction.update(self)
 end
 
 PerformActionAction.waitToStart = function(self)
-    if not self.state.def.faceObject then
+    if not self.state.action.faceObject then
         return false
     end
-    self.character:faceThisObject(self.state.objects[self.state.def.faceObject])
+    self.character:faceThisObject(self.state.objects[self.state.action.faceObject])
     return self.character:shouldBeTurning()
 end
 
@@ -57,16 +57,16 @@ PerformActionAction.cleanup = function(self)
 end
 
 PerformActionAction.stop = function(self)
-    self.state.def.abort(self.state)
+    self.state.action.abort(self.state)
     self:cleanup()
     ISBaseTimedAction.stop(self)
 end
 
 PerformActionAction.perform = function(self)
-    self.state.def.complete(self.state)
+    self.state.action.complete(self.state)
     self:cleanup()
 
-    for name, requirement in pairs(self.state.def.requiredItems) do
+    for name, requirement in pairs(self.state.action.requiredItems) do
         if requirement.consumed then
             local items = self.state.items[name]
             if requirement.uses > 0 then
@@ -100,13 +100,13 @@ PerformActionAction.start = function(self)
     end
 
     self:setItemsJobDelta(0)
-    self:setItemsJobType(self.state.def.name)
+    self:setItemsJobType(self.state.action.name)
 
-    if self.state.def.animation then
-        self:setActionAnim(self.state.def.animation)
+    if self.state.action.animation then
+        self:setActionAnim(self.state.action.animation)
     end
 
-    self.state.def.start(self.state)
+    self.state.action.start(self.state)
 
     ISBaseTimedAction.start(self)
 end
@@ -116,14 +116,14 @@ end
 PerformActionAction.new = function(state)
     local o = ISBaseTimedAction:new(state.character)
     setmetatable(o, PerformActionAction) ---@cast o starlit.PerformActionAction
-    o.Type = state.def.name
+    o.Type = state.action.name
 
     o.state = state
 
-    o.maxTime = state.def.time
-    o.stopOnAim = state.def.stopOnAim
-    o.stopOnWalk = state.def.stopOnWalk
-    o.stopOnRun = state.def.stopOnRun
+    o.maxTime = state.action.time
+    o.stopOnAim = state.action.stopOnAim
+    o.stopOnWalk = state.action.stopOnWalk
+    o.stopOnRun = state.action.stopOnRun
 
     if state.character:isTimedActionInstant() then
         o.maxTime = 0

@@ -3,7 +3,7 @@
 ---@class starlit.ActionState
 ---
 ---The Action this ActionState corresponds to.
----@field def starlit.Action
+---@field action starlit.Action
 ---
 ---The character performing the action.
 ---@field character IsoGameCharacter
@@ -40,7 +40,7 @@ function ActionState.stillValid(state)
     end
 
     return ActionTester.new(state.character)
-        :test(state.def, {}, forceParams) ~= nil
+        :test(state.action, {}, forceParams) ~= nil
 end
 
 
@@ -55,7 +55,7 @@ function ActionState.fromTestResult(testResult)
 
     ---@type starlit.ActionState
     local actionState = {
-        def = testResult.action,
+        action = testResult.action,
         character = testResult.character,
         objects = {},
         items = {}
