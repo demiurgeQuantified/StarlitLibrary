@@ -132,6 +132,9 @@ local pass = function() end
 ---List of predicates that must be met to perform the action.
 ---@field predicates table<any, starlit.Action.Predicate<IsoGameCharacter>> | nil
 ---
+---Animation variables to set at the start of the action. They will be cleared at the end of the action.
+---@field animationVariables table<string, boolean | number | string> | nil
+---
 ---Function called upon completion of the action.
 ---@field complete fun(state:starlit.ActionState) | nil
 ---
@@ -173,6 +176,9 @@ local pass = function() end
 ---List of predicates that must be met to perform the action.
 ---@field predicates table<any, starlit.Action.Predicate<IsoGameCharacter>>
 ---
+---Animation variables to set at the start of the action. They will be cleared at the end of the action.
+---@field animationVariables table<string, boolean | number | string>
+---
 ---Function called upon completion of the action.
 ---@field complete fun(state:starlit.ActionState)
 ---
@@ -197,6 +203,7 @@ local Action = {
         requiredObjects = {},
         requiredSkills = {},
         predicates = {},
+        animationVariables = {},
         start = pass,
         complete = pass,
         update = pass,

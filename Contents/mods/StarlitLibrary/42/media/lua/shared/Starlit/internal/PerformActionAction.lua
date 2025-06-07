@@ -54,6 +54,9 @@ end
 PerformActionAction.cleanup = function(self)
     self:setItemsJobDelta(0)
     self:setItemsJobType(nil)
+    for variable, _ in pairs(self.state.action.animationVariables) do
+        self.state.character:clearVariable(variable)
+    end
 end
 
 PerformActionAction.stop = function(self)
@@ -104,6 +107,10 @@ PerformActionAction.start = function(self)
 
     if self.state.action.animation then
         self:setActionAnim(self.state.action.animation)
+    end
+
+    for variable, value in pairs(self.state.action.animationVariables) do
+        self.state.character:setVariable(variable, value)
     end
 
     self.state.action.start(self.state)
