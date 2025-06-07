@@ -242,8 +242,8 @@ function ActionTester:_testItemRequirements(requiredItems, result, forcedItems)
             end
         elseif requirement.tags then
             items = table.newarray()
-            for i = 1, #requirement.types do
-                local tagItems = self.itemsByTag[requirement.types[i]]
+            for i = 1, #requirement.tags do
+                local tagItems = self.itemsByTag[requirement.tags[i]]
                 if tagItems then
                     for j = 1, #tagItems do
                         items[#items + 1] = tagItems[j]
