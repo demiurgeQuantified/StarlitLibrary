@@ -11,4 +11,6 @@ IGUI_EN = {
     IGUI_StarlitLibrary_Action_ItemConsumed = "(Consumed)",
 
     IGUI_StarlitLibrary_Predicate_NotBroken = "Is not broken",
+
+    IGUI_StarlitLibrary_TagDescription_Crowbar = "Can be used to pry",
 }
