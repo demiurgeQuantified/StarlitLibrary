@@ -1,6 +1,25 @@
 local TimedActionUtils = require("Starlit/timedActions/TimedActionUtils")
 local PerformActionAction = require("Starlit/internal/PerformActionAction")
 
+
+---@param state starlit.ActionState
+---@param slot "primary" | "secondary"
+---@return InventoryItem | nil
+---@nodiscard
+local function getDesiredItemInSlot(state, slot)
+    local itemName = slot == "primary" and state.action.primaryItem or state.action.secondaryItem
+    local item = state.items[itemName]
+    if not item then
+        return nil
+    end
+    if type(item) == "table" then
+        ---@cast item InventoryItem[]
+        return item[1]
+    end
+    return item
+end
+
+
 ---@class starlit.PrepareActionAction : ISBaseTimedAction
 ---@field state starlit.ActionState
 local PrepareActionAction = ISBaseTimedAction:derive("starlit.PrepareActionAction")
@@ -24,10 +43,18 @@ PrepareActionAction.setHandModel = function(self, slot, model)
         local equippedItem
         if slot == "primary" then
             equippedItem = self.character:getPrimaryHandItem()
+            -- the item will be moved into the correct slot by the action to equip it, no need to do anything
+            if equippedItem == getDesiredItemInSlot(self.state, "secondary") then
+                return
+            end
         else
             equippedItem = self.character:getSecondaryHandItem()
             if equippedItem == self.character:getPrimaryHandItem() then
                 -- we don't unequip anything if the secondary item is being two-handed (we consider this a primary item)
+                return
+            end
+            -- the item will be moved into the correct slot by the action to equip it, no need to do anything
+            if equippedItem == getDesiredItemInSlot(self.state, "primary") then
                 return
             end
         end
@@ -43,12 +70,8 @@ PrepareActionAction.setHandModel = function(self, slot, model)
         return
     end
 
-    local item = self.state.items[model]
+    local item = getDesiredItemInSlot(self.state, slot)
     if item then
-        -- if it's an item identifier, equip that item
-        if type(item) == "table" then
-            item = item[1]
-        end
         TimedActionUtils.transferAndEquip(self.character, item, slot)
     else
         -- otherwise set as string model
