@@ -92,10 +92,21 @@ PrepareActionAction.perform = function(self)
 
     for name, itemDef in pairs(self.state.def.requiredItems) do
         if itemDef.mainInventory then
-            TimedActionUtils.transfer(
-                self.character,
-                self.state.items[name]
-            )
+            local items = self.state.items[name]
+            if type(items) == "table" then
+                ---@cast items InventoryItem[]
+                for i = 1, #items do
+                    TimedActionUtils.transfer(
+                        self.character,
+                        items[i]
+                    )
+                end
+            else
+                TimedActionUtils.transfer(
+                    self.character,
+                    items
+                )
+            end
         end
     end
 

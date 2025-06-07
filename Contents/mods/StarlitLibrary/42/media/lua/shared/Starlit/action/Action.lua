@@ -34,8 +34,9 @@ local pass = function() end
 ---
 ---Whether the item should be moved from any containers into the player's main inventory before performing the action.
 ---@field mainInventory boolean | nil
----@field uses integer | nil  # TODO: not implemented
----@field mustBeSameType boolean | nil  # TODO: not implemented
+---
+---How many uses of the item are required. If specified, this overrides <b>count</b> completely.
+---@field uses integer | nil
 
 
 ---Concrete RequiredItem.
@@ -51,9 +52,10 @@ local pass = function() end
 ---
 ---Whether the item should be moved from any containers into the player's main inventory before performing the action.
 ---@field mainInventory boolean
----@field uses integer | nil  # TODO: not implemented
----@field mustBeSameType boolean  # TODO: not implemented
--- common needs for predicates should be made into fields, as they can be optimised into a single predicate
+---
+---How many uses of the item are required. If specified, this overrides <b>count</b> completely.
+---@field uses integer
+-- common needs for predicates should be made into fields, as they can be optimised this way
 
 
 ---Represents an object requirement for an action.
@@ -200,7 +202,7 @@ local Action = {
         predicates = {},
         count = 1,
         mainInventory = false,
-        mustBeSameType = false,
+        uses = 0
     },
     ---@type starlit.Action.RequiredObject
     ---@diagnostic disable-next-line: assign-type-mismatch

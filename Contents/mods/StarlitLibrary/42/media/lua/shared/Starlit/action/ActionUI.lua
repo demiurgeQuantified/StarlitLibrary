@@ -84,27 +84,48 @@ local function buildItemsString(requiredItems, items)
     local result = ""
 
     for name, requirement in pairs(requiredItems) do
-        -- TODO: work out some solution for item count
         local itemResult = items[name]
-        if type(itemResult) == "table" then
-            itemResult = itemResult[1]
+
+        local numFound = 0
+        -- we want to show the first failure as that will be the only detailed one
+        ---@type starlit.ActionTester.ItemResult
+        local showResult
+        for i = 1, #itemResult do
+            if not itemResult[i].success then
+                showResult = itemResult[i]
+                break
+            end
+            numFound = numFound + 1
         end
-        ---@cast itemResult -InventoryItem[], +InventoryItem, -starlit.ActionTester.ItemResult[], +starlit.ActionTester.ItemResult
+        -- if there were no failures, just show the first one
+        if not showResult then
+            showResult = itemResult[1]
+        end
 
         if itemResult ~= nil then
-            result = result .. (itemResult.success and " <GHC> " or " <BHC> ")
+            local itemText
+            if requirement.uses > 0 then
+                itemText = getText("IGUI_StarlitLibrary_Action_ItemUses", requirement.uses, numFound)
+            elseif requirement.count > 1 then
+                itemText = getText("IGUI_StarlitLibrary_Action_Items", requirement.count, numFound)
+            else
+                itemText = getText("IGUI_StarlitLibrary_Action_Item")
+            end
+
+            result = result .. (showResult.success and " <GHC> " or " <BHC> ")
                             .. " <INDENT:0> "
-                            .. getText("IGUI_StarlitLibrary_Action_Item")
+                            .. itemText
                             .. " \n"
 
             if requirement.types or requirement.tags then
-                if itemResult.validType == true then
+                if showResult.validType == true then
                     result = result .. pushDesaturatedGoodColour
                 else
                     result = result .. pushDesaturatedBadColour
                 end
 
                 if requirement.types then
+                    -- TODO: when only one item type is needed, the 'One of:' header seems unnecessary
                     result = result .. " <INDENT:8> "
                                               .. getText("IGUI_StarlitLibrary_Action_ItemTypeList")
                                               .. "\n <INDENT:16> "
@@ -124,7 +145,7 @@ local function buildItemsString(requiredItems, items)
             end
 
             for i = 1, #requirement.predicates do
-                if itemResult.predicates[i] == true then
+                if showResult.predicates[i] == true then
                     result = result .. pushDesaturatedGoodColour
                 else
                     result = result .. pushDesaturatedBadColour
@@ -254,6 +275,10 @@ end
 ---
 ---Conditions for when options for invalid actions should be shown.
 ---@field showFailConditions starlit.Action.ShowFailConditions
+
+
+-- TODO: allow the user to provide a 'createTooltip' function that creates the tooltip when the action is valid
+-- API for a tooltip is probably never going to be flexible enough so just let them do it
 
 
 ---@type starlit.Action.TooltipConfiguration

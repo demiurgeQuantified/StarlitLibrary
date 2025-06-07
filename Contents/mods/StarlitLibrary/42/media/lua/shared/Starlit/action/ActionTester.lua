@@ -254,9 +254,12 @@ function ActionTester:_testItemRequirements(requiredItems, result, forcedItems)
             items = self.items
         end
 
+        local byUses = requirement.uses > 0
+        local matchesNeeded = byUses and requirement.uses or requirement.count
+
         ---@type starlit.ActionTester.ItemResult[]
         local itemResults = {}
-        for i = 1, requirement.count do
+        for i = 1, matchesNeeded do
             itemResults[i] = {
                 item = nil,
                 success = false,
@@ -311,18 +314,41 @@ function ActionTester:_testItemRequirements(requiredItems, result, forcedItems)
 
                 for j = 1, #requirement.predicates do
                     if not requirement.predicates[j]:evaluate(item) then
+                        itemResult.success = false
                         if shortCircuit then
                             break
                         end
                         itemResult.predicates[j] = false
-                        itemResult.success = false
                     else
                         itemResult.predicates[j] = true
                     end
                 end
 
+                local uses
+                if byUses then
+                    uses = item:getCurrentUses()
+                    if uses == 0 then
+                        itemResult.success = false
+                        if shortCircuit then
+                            break
+                        end
+                    end
+                end
+
                 if itemResult.success then
-                    matchesFound = matchesFound + 1
+                    if byUses then
+                        local remainingUsesNeeded = requirement.uses - matchesFound
+                        if uses > remainingUsesNeeded then
+                            uses = remainingUsesNeeded
+                        end
+                        matchesFound = matchesFound + 1
+                        for _ = 2, uses do
+                            copyTable(itemResults[matchesFound + 1], itemResult)
+                            matchesFound = matchesFound + 1
+                        end
+                    else
+                        matchesFound = matchesFound + 1
+                    end
                     -- if we found a match, we want to do a full test on the next one
                     --  so that we have full data for each item slot
                     shortCircuit = false
@@ -331,7 +357,7 @@ function ActionTester:_testItemRequirements(requiredItems, result, forcedItems)
                 end
             until true
 
-            if matchesFound == requirement.count then
+            if matchesFound == matchesNeeded then
                 break
             end
         end
@@ -341,7 +367,7 @@ function ActionTester:_testItemRequirements(requiredItems, result, forcedItems)
             claimedItems[itemResults[i].item] = true
         end
 
-        if matchesFound ~= requirement.count then
+        if matchesFound ~= matchesNeeded then
             result.success = false
         end
     end
