@@ -8,8 +8,10 @@
 ---The character performing the action.
 ---@field character IsoGameCharacter
 ---
----The items used in the action. Keys correspond to requiredItems.
----Values will be a table if the count of the requiredItem is more than 1. Otherwise they are InventoryItems.
+---The items used in the action. Keys correspond to the 'name' of a requiredItem.
+---If the requiredItem's count is more than 1, the value is a table of each item used.
+---If the requiredItem uses item uses instead of item count, the value is a table of each *use*. This means the same item can be repeated several times if multiple of its uses are being used.
+---Otherwise, it is an InventoryItem.
 ---@field items table<any, InventoryItem | InventoryItem[]>
 ---
 ---The objects used in the action. Keys correspond to the action's requiredObjects.
