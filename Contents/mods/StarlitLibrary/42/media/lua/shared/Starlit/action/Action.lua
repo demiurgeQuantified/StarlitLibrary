@@ -195,6 +195,7 @@ local Action = {
         complete = pass,
         update = pass,
         stop = pass,
+        abort = pass
     },
     ---@type starlit.Action.RequiredItem
     ---@diagnostic disable-next-line: assign-type-mismatch
