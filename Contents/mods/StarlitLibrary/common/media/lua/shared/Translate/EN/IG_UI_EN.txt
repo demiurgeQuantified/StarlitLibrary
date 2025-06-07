@@ -7,5 +7,6 @@ IGUI_EN = {
     IGUI_StarlitLibrary_Action_Items = "%1 items: (%2/%1)",
     IGUI_StarlitLibrary_Action_ItemUses = "%1 uses: (%2/%1)",
     IGUI_StarlitLibrary_Action_ItemTypeList = "One of:",
-    IGUI_StarlitLibrary_Action_RequiredUses = "At least %1 uses remaining"
+    IGUI_StarlitLibrary_Action_RequiredUses = "At least %1 uses remaining",
+    IGUI_StarlitLibrary_Action_ItemConsumed = "(Consumed)",
 }
