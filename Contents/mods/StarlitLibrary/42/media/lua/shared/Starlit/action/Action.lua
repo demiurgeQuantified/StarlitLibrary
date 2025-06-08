@@ -77,11 +77,11 @@ local pass = function() end
 ---@class starlit.ActionDef
 ---
 ---Translated name of the action. Displayed in context menus and tooltips.
----@field name string
+---@field name string | nil
 ---
 ---The time it should take to perform the action.
 ---48 time units are equivalent to 1 real second.
----@field time integer
+---@field time integer | nil
 ---
 ---The animation the character should play during the action.
 ---@field animation string | nil
@@ -152,6 +152,13 @@ local pass = function() end
 ---@class starlit.Action : starlit.ActionDef
 ---@overload fun(def:starlit.ActionDef):self
 ---
+---Translated name of the action. Displayed in context menus and tooltips.
+---@field name string
+---
+---The time it should take to perform the action.
+---48 time units are equivalent to 1 real second.
+---@field time integer
+---
 ---Whether to stop the action if the character begins aiming during it.
 ---@field stopOnAim boolean
 ---
@@ -196,6 +203,8 @@ local Action = {
     ---@type starlit.Action
     ---@diagnostic disable-next-line: assign-type-mismatch
     Action = SelfMergeTable{
+        name = "Unnamed Action",
+        time = 192,
         stopOnAim = true,
         stopOnWalk = false,
         stopOnRun = true,
