@@ -1,6 +1,6 @@
 ZombieIds
 =========
-.. versionadded:: v42-1.5.0
+.. versionadded:: v1.5.0
 
 ::
 
