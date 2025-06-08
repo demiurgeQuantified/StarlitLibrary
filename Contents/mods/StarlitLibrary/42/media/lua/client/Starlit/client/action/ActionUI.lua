@@ -310,15 +310,21 @@ local itemActions = {}
 
 
 ---@param action starlit.Action
----@param tooltipConditions starlit.Action.TooltipConfiguration
+---@param tooltipConditions starlit.Action.TooltipConfiguration | nil
 ActionUI.addObjectAction = function(action, tooltipConditions)
+    if not tooltipConditions then
+        tooltipConditions = ActionUI.TooltipConfiguration{}
+    end
     table.insert(objectActions, {action = action, config = tooltipConditions})
 end
 
 
 ---@param action starlit.Action
----@param tooltipConditions starlit.Action.ItemTooltipConditions
+---@param tooltipConditions starlit.Action.ItemTooltipConditions | nil
 ActionUI.addItemAction = function(action, tooltipConditions)
+    if not tooltipConditions then
+        tooltipConditions = ActionUI.TooltipConfiguration{}
+    end
     table.insert(itemActions, {action = action, conditions = tooltipConditions})
 end
 
