@@ -8,6 +8,7 @@ The most notable modules in the library are listed below:
 
 * :doc:`modules/InventoryUI`
 * :doc:`modules/Reflection`
+* :doc:`guides/ActionFramework`
 
 .. toctree::
    :maxdepth: 1
@@ -24,3 +25,4 @@ The most notable modules in the library are listed below:
    modules/Version
    modules/Reflection
    modules/TimedActionUtils
+   guides/ActionFramework
