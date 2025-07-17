@@ -67,7 +67,7 @@ Functions
    :param Starlit.Colour | nil labelColour: Label colour.
    :return LayoutItem element: The created tooltip element.
 
-.. lua:function:: removeTooltipElement(layout: Layout, label: string) -> item: LayoutItem | nil
+.. lua:function:: getTooltipElementByLabel(layout: Layout, label: string) -> item: LayoutItem | nil
 
    Finds and returns a layout element from its label. Useful to find elements added by Vanilla or other mods.
 
@@ -78,6 +78,30 @@ Functions
    .. note::
       It is best practice to use ``getText()`` for the label to ensure your code works in all game languages.
       Most Vanilla tooltip labels add ":" to the end of the translated string; you will need to replicate this to catch them.
+
+.. lua:function:: getTooltipElementIndex(layout, element) -> integer
+
+   Returns the index of the element in the tooltip layout.
+
+   :param Layout layout: The tooltip layout.
+   :param LayoutItem element: The tooltip element to get the index of.
+   :return integer index: The index of the element, or -1 if the element does not belong to this layout.
+
+.. lua:function:: removeTooltipElement(layout: Layout, element: LayoutItem | integer) -> LayoutItem | nil
+
+   Removes an existing tooltip element from a tooltip.
+
+   :param Layout layout: The tooltip layout.
+   :param LayoutItem | integer element: The tooltip element to remove, or the index (from the top) of the element to remove. Negative indices count from the bottom.
+   :return LayoutItem | nil element: The element that was removed.
+
+.. lua:function:: moveTooltipElement(layout: Layout, element: LayoutItem, index: integer)
+
+   Moves a layout element to a specific index, shifting elements down to make room.
+
+   :param Layout layout: The tooltip layout.
+   :param LayoutItem element: The tooltip element.
+   :param integer index: The index to move the layout element to, counting from the top of the tooltip. Negative indices insert from the bottom up.
 
 Examples
 --------
