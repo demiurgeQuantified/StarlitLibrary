@@ -133,7 +133,7 @@ A basic example of using the ``OnFillItemTooltip`` event to populate a specific 
       InventoryUI.addTooltipInteger(layout, "Bites taken:", 1, false)
 
       --Removes the Vanilla encumbrance tooltip.
-      InventoryUI.removeTooltipElement(layout, getText("Tooltip_item_Weight") + ":")
+      InventoryUI.removeTooltipElement(layout, getText("Tooltip_item_Weight") .. ":")
    end
 
    --Add the event listener to the event, so that it will be called when the event is triggered.
