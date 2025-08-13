@@ -108,36 +108,39 @@ Examples
 A basic example of using the ``OnFillItemTooltip`` event to populate a specific item's tooltip:
 ::
     
-   --Require the InventoryUI module so we can use it.
+   -- Require the InventoryUI module so we can use it.
    local InventoryUI = require("Starlit/client/ui/InventoryUI")
 
-   --Create the event listener.
-   --If your IDE supports LuaCATS annotations, the following line tells it the function is an event listener.
+
+   -- Create the event listener.
+   -- If your IDE supports LuaCATS annotations, the following line tells it the function is an event listener.
    ---@type Starlit.InventoryUI.Callback_OnFillItemTooltip
    local function addAppleTooltip(tooltip, layout, item)
-       --Only run our code if the item is an apple
+       -- Only run our code if the item is an apple
        if item:getFullType() ~= "Base.Apple" then
           return
        end
 
-       --Adds the text 'Apple.' to every apple's tooltip.
+       -- Adds the text 'Apple.' to every apple's tooltip.
        InventoryUI.addTooltipLabel(layout, "Apple.")
 
-       --Adds the key-value pair "Grown at: Sweet Apple Acres" to every apple's tooltip.
+       -- Adds the key-value pair "Grown at: Sweet Apple Acres" to every apple's tooltip.
        InventoryUI.addTooltipKeyValue(layout, "Grown at:", "Sweet Apple Acres")
 
-       --Adds a half-full progress bar for sweetness to every apple's tooltip.
+       -- Adds a half-full progress bar for sweetness to every apple's tooltip.
        InventoryUI.addTooltipBar(layout, "Sweetness:", 0.5)
 
-       --Adds a bites taken counter to every apple's tooltip, with the value 1.
+       -- Adds a bites taken counter to every apple's tooltip, with the value 1.
        InventoryUI.addTooltipInteger(layout, "Bites taken:", 1, false)
 
-       --Removes the Vanilla encumbrance tooltip.
-       InventoryUI.removeTooltipElement(
-           layout,
-           InventoryUI.getTooltipElementByLabel(getText("Tooltip_item_Weight") .. ":")
-       )
+       -- Finds and returns the Vanilla tooltip element showing the item's encumbrance.
+       local encumbrance = InventoryUI.getTooltipElementByLabel(layout, getText("Tooltip_item_Weight") .. ":")
+       -- If encumbrance is nil, then it's already been removed by another mod.
+       if encumbrance then
+           -- Removes the encumbrance element.
+           InventoryUI.removeTooltipElement(layout, encumbrance)
+       end
    end
 
-   --Add the event listener to the event, so that it will be called when the event is triggered.
+   -- Adds the event listener to the event, so that it will be called when the event is triggered.
    InventoryUI.onFillItemTooltip:addListener(addAppleTooltip)
