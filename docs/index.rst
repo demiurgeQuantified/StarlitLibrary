@@ -25,4 +25,5 @@ The most notable modules in the library are listed below:
    modules/Version
    modules/Reflection
    modules/TimedActionUtils
+   modules/Time
    guides/ActionFramework
