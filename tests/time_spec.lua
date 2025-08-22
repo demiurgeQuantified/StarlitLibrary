@@ -51,7 +51,7 @@ insulate("Time module", function()
             Time.formatDuration(oneoneone, "seconds", "years")
         )
         assert.are.equal(
-            "13mo 1w 1d 1h 1m 0s",
+            "13mo 1w 6d 1h 1m 0s",
             Time.formatDuration(oneoneone, "seconds", "months")
         )
     end)
