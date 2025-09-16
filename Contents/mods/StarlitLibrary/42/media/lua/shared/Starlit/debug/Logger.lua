@@ -45,6 +45,35 @@ function Logger:__call(message, level, ...)
     end
 end
 
+
+---@param message string
+---@param ... any
+function Logger:error(message, ...)
+    self(message, "error", ...)
+end
+
+
+---@param message string
+---@param ... any
+function Logger:warn(message, ...)
+    self(message, "warn", ...)
+end
+
+
+---@param message string
+---@param ... any
+function Logger:info(message, ...)
+    self(message, "info", ...)
+end
+
+
+---@param message string
+---@param ... any
+function Logger:debug(message, ...)
+    self(message, "debug", ...)
+end
+
+
 ---@package
 ---@param mod string
 ---@param minLevel? "error"|"warn"|"info"|"debug"
