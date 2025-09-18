@@ -1,4 +1,4 @@
-local Events = require("Starlit/LuaEvent")
+local LuaEvent = require("Starlit/LuaEvent")
 local Colour = require("Starlit/utils/Colour")
 
 
@@ -11,14 +11,38 @@ local COLOUR_VALUE = table.newarray(1, 1, 1, 1)
 local InventoryUI = {}
 
 
-InventoryUI.onFillItemTooltip = Events.new()
+InventoryUI.onFillItemTooltip = LuaEvent.new()
 ---@alias Starlit.InventoryUI.Callback_OnFillItemTooltip fun(tooltip:ObjectTooltip, layout:Layout, item:InventoryItem)
+
+
+---Triggered before items are rendered in the inventory panel.
+InventoryUI.preRenderItems = LuaEvent.new()
+---@alias starlit.InventoryUI.Callback_preDisplayItems fun(items:InventoryItem[], player:IsoPlayer)
+
+
+local old_refreshContainer = ISInventoryPane.refreshContainer
+
+function ISInventoryPane:refreshContainer()
+    local player = getSpecificPlayer(self.player)
+    ---@type InventoryItem[]
+    local items = table.newarray()
+
+    local javaItems = self.inventory:getItems()
+    -- TODO: this doesn't allow you to elegantly add suffixes to the name
+    --  a callback inside of InventoryItem.getName during old_refreshContainer could do this better
+    for i = 0, javaItems:size() - 1 do
+        items[i + 1] = javaItems:get(i)
+    end
+
+    InventoryUI.preRenderItems:trigger(items, player)
+    old_refreshContainer(self)
+end
 
 
 local old_render = ISToolTipInv.render
 ---@diagnostic disable-next-line: duplicate-set-field
 ISToolTipInv.render = function(self)
-    local item = self.item --[[@as InventoryItem|FluidContainer]]
+    local item = self.item ---@as InventoryItem | FluidContainer
 
     if instanceof(item, "FluidContainer") then
         ---@cast item FluidContainer

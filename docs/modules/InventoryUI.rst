@@ -19,6 +19,15 @@ Events
    :param Layout layout: The tooltip layout being filled.
    :param InventoryItem item: The item the tooltip is being filled for.
 
+.. lua:data:: preRenderItems LuaEvent
+
+   .. versionadded:: v1.5.0
+
+   Triggered before items are rendered in the inventory panel.
+
+   :param InventoryItem[] items: Items to render.
+   :param IsoPlayer player: Player whose inventory panel is being rendered.
+
 Functions
 ---------
 
@@ -144,3 +153,32 @@ A basic example of using the ``OnFillItemTooltip`` event to populate a specific 
 
    -- Adds the event listener to the event, so that it will be called when the event is triggered.
    InventoryUI.onFillItemTooltip:addListener(addAppleTooltip)
+
+Using the ``preRenderItems`` event to dynamically change the name of an item:
+::
+    local InventoryUI = require("Starlit/client/ui/InventoryUI")
+
+    ---@type Starlit.InventoryUI.Callback_preDisplayItems
+    local function setAppleName(items, player)
+        -- we only change the name of apples if the player has the trait
+        if not player:hasTrait("AppleKnowledge") then
+            return
+        end
+
+        -- Loop over every item to be rendered
+        for i = 1, #items do
+            local item = items[i]
+            if item:getFullType() == "Base.Apple" then
+                local flavour = item:getModData().flavour
+                if flavour == "sweet" then
+                    item:setName("Sweet Apple")
+                elseif flavour == "sour" then
+                    item:setName("Sour Apple")
+                else
+                    item:setName("Mysterious Apple")
+                end
+            end
+        end
+    end
+
+    InventoryUI.preDisplayItems:addListener(setAppleName)
