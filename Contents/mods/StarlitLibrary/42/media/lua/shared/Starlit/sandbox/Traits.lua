@@ -1,4 +1,4 @@
----@class Starlit.TraitInfo Container for information about a trait used by the library primarily to apply sandbox options.
+---@class starlit.TraitInfo Container for information about a trait used by the library primarily to apply sandbox options.
 ---@field costOption string Name of the sandbox option that sets the cost of the trait. An empty string signifies no option.
 ---@field toggleOption string Name of the sandbox option that toggles the availability of the trait. An empty string signifies no option.
 ---@field lastCost integer For internal library use - do not modify.
@@ -6,12 +6,12 @@
 ---Module for tying properties of traits to sandbox options
 local Traits = {}
 
----@type {[Trait] : Starlit.TraitInfo}
+---@type {[Trait] : starlit.TraitInfo}
 Traits.traitInfos = {}
 
 ---Gets or creates TraitInfo for a trait.
 ---@param trait Trait The trait
----@return Starlit.TraitInfo info The TraitInfo
+---@return starlit.TraitInfo info The TraitInfo
 Traits.getOrCreateInfo = function(trait)
     local traitInfo = Traits.traitInfos[trait]
     if traitInfo then

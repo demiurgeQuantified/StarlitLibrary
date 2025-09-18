@@ -80,7 +80,7 @@ end
 ---@return IsoObject? object An object with the flag, if any.
 ---@nodiscard
 IsoObjectUtils.getFirst = function(square, flag)
-    local objects = square:getLuaTileObjectList() --[=[@as IsoObject[]]=]
+    local objects = square:getLuaTileObjectList() --[=[@as IsoObject[] ]=]
     for i = 1, #objects do
         local object = objects[i]
         if object:getProperties():Is(flag) then
@@ -93,7 +93,7 @@ end
 ---@param square IsoGridSquare The square to remove objects from.
 ---@param flag IsoFlagType The flag to remove objects with.
 IsoObjectUtils.removeAll = function(square, flag)
-    local objects = square:getLuaTileObjectList() --[=[@as IsoObject[]]=]
+    local objects = square:getLuaTileObjectList() --[=[@as IsoObject[] ]=]
     for i = #objects, 1, -1 do
         local object = objects[i]
         if object:getProperties():Is(flag) then

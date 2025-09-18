@@ -6,7 +6,7 @@ Events.OnPostMapLoad.Add(function(cell, x, y)
 end)
 
 ---Base class for square cursors.
----@class Starlit.BaseSquareCursor
+---@class starlit.BaseSquareCursor
 ---@field player IsoPlayer The player the cursor belongs to.
 ---@field _isStarlitCursor true
 ---@field package _selectedThisTick boolean
@@ -190,7 +190,7 @@ end
 
 ---Creates a new BaseSquareCursor. After creation the cursor can be made active using IsoCell.setDrag().
 ---@param player IsoPlayer The player to create the cursor for.
----@return Starlit.BaseSquareCursor cursor The cursor.
+---@return starlit.BaseSquareCursor cursor The cursor.
 ---@nodiscard
 BaseSquareCursor.new = function(player)
     local o = {
@@ -201,7 +201,7 @@ BaseSquareCursor.new = function(player)
         yJoypad = -1,
         zJoypad = -1
     }
-    setmetatable(o, BaseSquareCursor) ---@cast o Starlit.BaseSquareCursor
+    setmetatable(o, BaseSquareCursor) ---@cast o starlit.BaseSquareCursor
 
     return o
 end
@@ -225,7 +225,7 @@ Events.OnInitGlobalModData.Add(function()
     local old_DoTileBuilding = DoTileBuilding
     DoTileBuilding = function(draggingItem, isRender, x, y, z, square)
         if draggingItem._isStarlitCursor then
-            ---@cast draggingItem Starlit.BaseSquareCursor
+            ---@cast draggingItem starlit.BaseSquareCursor
             if isRender then
                 draggingItem:render(x, y, z, square)
             end
@@ -241,7 +241,7 @@ Events.OnInitGlobalModData.Add(function()
     Events.OnDoTileBuilding2.Add(DoTileBuilding);
 end)
 
----@type Starlit.BaseSquareCursor[]
+---@type starlit.BaseSquareCursor[]
 local currentCursors = table.newarray()
 
 Events.SetDragItem.Add(function(drag, playerNum)

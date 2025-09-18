@@ -1,4 +1,4 @@
-local config = {
+local Config = {
     keys = {
         openDebugMenu = nil
     }
@@ -18,10 +18,10 @@ if getDebug() then
     )
 
     modOptions.apply = function()
-        config.keys.openDebugMenu = openDebugMenu.key
+        Config.keys.openDebugMenu = openDebugMenu.key
     end
 
     Events.OnGameStart.Add(modOptions.apply)
 end
 
-return config
+return Config

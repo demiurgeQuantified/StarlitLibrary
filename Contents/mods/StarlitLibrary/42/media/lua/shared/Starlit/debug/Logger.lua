@@ -5,7 +5,7 @@ local titlecase = function(str)
 end
 
 
----@class Starlit.Logger
+---@class starlit.Logger
 ---@field protected _mod string
 ---@field minLevel "error"|"warn"|"info"|"debug"
 ---@overload fun(message:string, level?:"error"|"warn"|"info"|"debug", ...)
@@ -13,7 +13,7 @@ local Logger = {}
 Logger.__index = Logger
 
 
----@type Starlit.Logger
+---@type starlit.Logger
 local StarlitLogger
 local logLevelMap = {
     -- Critical problems that stop the mod from functioning
@@ -77,10 +77,10 @@ end
 ---@package
 ---@param mod string
 ---@param minLevel? "error"|"warn"|"info"|"debug"
----@return Starlit.Logger
+---@return starlit.Logger
 ---@nodiscard
 Logger.new = function(mod, minLevel)
-    ---@type Starlit.Logger
+    ---@type starlit.Logger
     local o = {
         _mod = mod,
         minLevel = minLevel or Logger.minLevel
@@ -91,7 +91,7 @@ Logger.new = function(mod, minLevel)
 end
 
 
----@class Starlit.FileLogger : Starlit.Logger
+---@class starlit.FileLogger : starlit.Logger
 ---@field path string
 ---@overload fun(message:string, level?:"error"|"warn"|"info"|"debug", ...)
 local FileLogger = {}
@@ -101,7 +101,7 @@ FileLogger.__index = FileLogger
 setmetatable(FileLogger, Logger)
 
 
----@param self Starlit.FileLogger
+---@param self starlit.FileLogger
 ---@param message string
 ---@param level? "error"|"warn"|"info"|"debug"
 ---@param ... any
@@ -124,11 +124,11 @@ end
 ---@param mod string
 ---@param minLevel? "error"|"warn"|"info"|"debug"
 ---@param path string
----@return Starlit.FileLogger
+---@return starlit.FileLogger
 ---@nodiscard
 FileLogger.new = function(mod, minLevel, path)
     local o = Logger.new(mod, minLevel)
-    ---@cast o Starlit.FileLogger
+    ---@cast o starlit.FileLogger
     o.path = path
     setmetatable(o, FileLogger)
 
@@ -144,7 +144,7 @@ local LoggerAPI = {}
 
 ---@param mod string Name of the mod
 ---@param path? string Optional path of a file to write to, relative to Zomboid/Lua/logs/{mod}/ <br> If no extension is included, .txt will be added <br> If this argument is not passed the logger will write to the game's logs instead, and errors will cause stack traces
----@return Starlit.Logger logger
+---@return starlit.Logger logger
 ---@see Starlit.Logger.__call
 ---@nodiscard
 LoggerAPI.getLogger = function(mod, path)
