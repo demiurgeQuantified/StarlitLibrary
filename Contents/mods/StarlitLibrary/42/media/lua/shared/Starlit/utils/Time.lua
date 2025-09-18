@@ -123,12 +123,14 @@ function Time.formatDuration(time, minUnit, maxUnit)
             str = str .. " "
         end
 
-        local numUnit = math.floor(time / TIME_UNITS[i].timeFactor)
-        time = time - numUnit
+        if i ~= maxDetailIndex then
+            time = time % TIME_UNITS[i + 1].timeFactor
+        end
 
+        -- TODO: replace usage of math.floor, it's expensive
         str = str .. string.format(
             TIME_UNITS[i].shortFormatString,
-            numUnit
+            math.floor(time / TIME_UNITS[i].timeFactor)
         )
     end
 
