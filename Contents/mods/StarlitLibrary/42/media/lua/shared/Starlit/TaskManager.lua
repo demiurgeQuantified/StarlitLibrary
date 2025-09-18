@@ -1,20 +1,23 @@
----@class Starlit.TaskManager.Task
+---@class starlit.TaskManager.Task
 ---@field func function
 ---@field args table
 
----@class Starlit.TaskManager.RepeatTasks
+---@class starlit.TaskManager.RepeatTasks
 ---@field offset number
----@field [integer] Starlit.TaskManager.Task
+---@field [integer] starlit.TaskManager.Task
 
 local currentTick = 0
 
 local TaskManager = {}
 
----@type table<number, Starlit.TaskManager.Task[]>
+
+---@type table<number, starlit.TaskManager.Task[]>
 TaskManager.delayTasks = {}
 
----@type table<integer, Starlit.TaskManager.RepeatTasks>
+
+---@type table<integer, starlit.TaskManager.RepeatTasks>
 TaskManager.repeatTasks = {}
+
 
 ---Creates a task to repeat a function every N ticks.
 ---Note that it is not guaranteed that every invocation is exactly the given number of ticks apart.
@@ -31,6 +34,7 @@ TaskManager.repeatEveryTicks = function(func, ticks, ...)
     table.insert(repeatFunctions, {func = func, args = table.newarray(...)})
 end
 
+
 ---Creates a task to call a function after a delay of N ticks.
 ---@param func function The function to call.
 ---@param ticks integer The amount of ticks to delay the calling by.
@@ -44,6 +48,7 @@ TaskManager.delayTicks = function(func, ticks, ...)
 
     table.insert(tasks, {func = func, args = table.newarray(...)})
 end
+
 
 ---@type Callback_OnTick
 TaskManager.update = function(ticks)
@@ -88,5 +93,6 @@ TaskManager.update = function(ticks)
 end
 
 Events.OnTick.Add(TaskManager.update)
+
 
 return TaskManager

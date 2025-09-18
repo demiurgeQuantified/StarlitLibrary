@@ -1,13 +1,13 @@
 ---Object oriented reimplementation of events. Performs slightly faster and fixes some bugs as well as providing some utilities
----@class Starlit.LuaEvent
+---@class starlit.LuaEvent
 ---@field [integer] function
 local LuaEvent = {}
----@type Starlit.LuaEvent[]
+---@type starlit.LuaEvent[]
 LuaEvent._list = {}
 LuaEvent.__index = LuaEvent
 
 ---Creates a new event and registers it in the event list
----@return Starlit.LuaEvent
+---@return starlit.LuaEvent
 LuaEvent.new = function()
     local o = table.newarray() --[[@as table]]
 
