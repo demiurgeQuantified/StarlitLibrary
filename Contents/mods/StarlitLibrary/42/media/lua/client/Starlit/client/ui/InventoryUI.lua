@@ -1,3 +1,5 @@
+---@namespace starlit
+
 local LuaEvent = require("Starlit/LuaEvent")
 local Colour = require("Starlit/utils/Colour")
 
@@ -11,13 +13,12 @@ local COLOUR_VALUE = table.newarray(1, 1, 1, 1)
 local InventoryUI = {}
 
 
+---@type LuaEvent<ObjectTooltip, Layout, InventoryItem>
 InventoryUI.onFillItemTooltip = LuaEvent.new()
----@alias Starlit.InventoryUI.Callback_OnFillItemTooltip fun(tooltip:ObjectTooltip, layout:Layout, item:InventoryItem)
-
 
 ---Triggered before items are rendered in the inventory panel.
+---@type LuaEvent<InventoryItem[], IsoPlayer>
 InventoryUI.preRenderItems = LuaEvent.new()
----@alias starlit.InventoryUI.Callback_preDisplayItems fun(items:InventoryItem[], player:IsoPlayer)
 
 
 local old_refreshContainer = ISInventoryPane.refreshContainer
