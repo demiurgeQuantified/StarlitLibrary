@@ -75,21 +75,37 @@ local function exposeClassFields(classtable)
     setmetatable(classtable, metatable)
 end
 
+
 ---@param metatable metatable Metatable of the class
 ---@param name string Name of the class
 local function registerClassName(metatable, name)
     classNames[metatable] = name
 end
 
----@param t table
-local function addClassesRecurse(t)
-    for k,v in pairs(t) do
+
+---@param class table
+local function addInnerClassesRecurse(class)
+    for k, v in pairs(class) do
+        if type(v) == "table" and v.class then
+            local metatable = __classmetatables[v.class]
+            registerClassName(metatable, k)
+            exposeClassFields(metatable.__index)
+            addInnerClassesRecurse(v)
+        end
+    end
+end
+
+
+---@param package table
+local function addClassesRecurse(package)
+    for k, v in pairs(package) do
         if type(v) == "table" then
             local class = v.class
             if class then
                 local metatable = __classmetatables[class]
                 registerClassName(metatable, k)
                 exposeClassFields(metatable.__index)
+                addInnerClassesRecurse(v)
             else
                 addClassesRecurse(v)
             end
@@ -98,8 +114,9 @@ local function addClassesRecurse(t)
 end
 addClassesRecurse(zombie)
 
-local function addClassNamesRecurse(t)
-    for k,v in pairs(t) do
+
+local function addClassNamesRecurse(package)
+    for k, v in pairs(package) do
         if type(v) == "table" then
             local class = v.class
             if class then
