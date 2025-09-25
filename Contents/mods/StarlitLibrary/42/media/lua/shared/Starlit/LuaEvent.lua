@@ -1,14 +1,17 @@
+---@namespace starlit
+
 ---Object oriented reimplementation of events. Performs slightly faster and fixes some bugs as well as providing some utilities
----@class starlit.LuaEvent
+---@class LuaEvent<T...>
 ---@field [integer] function
 local LuaEvent = {}
----@type starlit.LuaEvent[]
+---@type LuaEvent[]
 LuaEvent._list = {}
 LuaEvent.__index = LuaEvent
 
 ---Creates a new event and registers it in the event list
----@return starlit.LuaEvent
-LuaEvent.new = function()
+---@return LuaEvent
+---@nodiscard
+function LuaEvent.new()
     local o = table.newarray() --[[@as table]]
 
     setmetatable(o, LuaEvent)
@@ -18,23 +21,27 @@ LuaEvent.new = function()
 end
 
 ---Adds a new listener to be executed last
----@param listener function The listener
-LuaEvent.addListener = function(self, listener)
-    if not listener then return end
+---@param listener fun(...:T...) The listener
+function LuaEvent:addListener(listener)
+    if not listener then
+        return
+    end
     table.insert(self, 1, listener)
 end
 
 ---Adds a new listener to be executed first
----@param listener function The listener
-LuaEvent.addListenerFront = function(self, listener)
+---@param listener fun(...:T...) The listener
+function LuaEvent:addListenerFront(listener)
     self[#self+1] = listener
 end
 
 ---Adds a new listener to be executed before the target. Does nothing if the target is not a registered listener
----@param target function
----@param listener function
-LuaEvent.addListenerBefore = function(self, target, listener)
-    if not listener then return end
+---@param target fun(...:T...)
+---@param listener fun(...:T...)
+function LuaEvent:addListenerBefore(target, listener)
+    if not listener then
+        return
+    end
     for i = 1, #self do
         if self[i] == target then
             table.insert(self, i+1, listener)
@@ -44,10 +51,12 @@ LuaEvent.addListenerBefore = function(self, target, listener)
 end
 
 ---Adds a new listener to be executed after the target. Does nothing if the target is not a registered listener
----@param target function
----@param listener function
-LuaEvent.addListenerAfter = function(self, target, listener)
-    if not listener then return end
+---@param target fun(...:T...)
+---@param listener fun(...:T...)
+function LuaEvent:addListenerAfter(target, listener)
+    if not listener then
+        return
+    end
     for i = 1, #self do
         if self[i] == target then
             table.insert(self, i, listener)
@@ -57,8 +66,8 @@ LuaEvent.addListenerAfter = function(self, target, listener)
 end
 
 ---Removes all instances of a listener from execution.
----@param target function
-LuaEvent.removeListener = function(self, target)
+---@param target fun(...:T...)
+function LuaEvent:removeListener(target)
     for i = #self, 1, -1 do
         if self[i] == target then
             table.remove(self, i)
@@ -67,14 +76,15 @@ LuaEvent.removeListener = function(self, target)
 end
 
 ---Removes all event listeners
-LuaEvent.removeAllListeners = function(self)
+function LuaEvent:removeAllListeners()
     for i = 1, #self do
         self[i] = nil
     end
 end
 
 ---Triggers all event listener functions with the arguments passed
-LuaEvent.trigger = function(self, ...)
+---@param ... T...
+function LuaEvent:trigger(...)
     for i = #self, 1, -1 do
         self[i](...)
     end

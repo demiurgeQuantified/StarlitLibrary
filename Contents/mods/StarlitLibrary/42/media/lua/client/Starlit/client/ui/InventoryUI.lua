@@ -1,20 +1,49 @@
-local Events = require("Starlit/LuaEvent")
+---@namespace starlit
+
+local LuaEvent = require("Starlit/LuaEvent")
 local Colour = require("Starlit/utils/Colour")
+
 
 ---@type Starlit.Colour
 local COLOUR_LABEL = table.newarray(1, 1, 0.8, 1)
 ---@type Starlit.Colour
 local COLOUR_VALUE = table.newarray(1, 1, 1, 1)
 
+
 local InventoryUI = {}
 
-InventoryUI.onFillItemTooltip = Events.new()
----@alias Starlit.InventoryUI.Callback_OnFillItemTooltip fun(tooltip:ObjectTooltip, layout:Layout, item:InventoryItem)
+
+---@type LuaEvent<ObjectTooltip, Layout, InventoryItem>
+InventoryUI.onFillItemTooltip = LuaEvent.new()
+
+---Triggered before items are rendered in the inventory panel.
+---@type LuaEvent<InventoryItem[], IsoPlayer>
+InventoryUI.preRenderItems = LuaEvent.new()
+
+
+local old_refreshContainer = ISInventoryPane.refreshContainer
+
+function ISInventoryPane:refreshContainer()
+    local player = getSpecificPlayer(self.player)
+    ---@type InventoryItem[]
+    local items = table.newarray()
+
+    local javaItems = self.inventory:getItems()
+    -- TODO: this doesn't allow you to elegantly add suffixes to the name
+    --  a callback inside of InventoryItem.getName during old_refreshContainer could do this better
+    for i = 0, javaItems:size() - 1 do
+        items[i + 1] = javaItems:get(i)
+    end
+
+    InventoryUI.preRenderItems:trigger(items, player)
+    old_refreshContainer(self)
+end
+
 
 local old_render = ISToolTipInv.render
 ---@diagnostic disable-next-line: duplicate-set-field
 ISToolTipInv.render = function(self)
-    local item = self.item --[[@as InventoryItem|FluidContainer]]
+    local item = self.item ---@as InventoryItem | FluidContainer
 
     if instanceof(item, "FluidContainer") then
         ---@cast item FluidContainer
@@ -54,7 +83,7 @@ ISToolTipInv.render = function(self)
             local items = item:getItemContainer():getItems()
             local maxX = width - tooltip.padRight
             if not items:isEmpty() then
-                ---@type {string : true}
+                ---@type {[string] : true}
                 local seenItems = {}
                 local xOffset = padLeft
                 height = height + 4
@@ -84,6 +113,7 @@ ISToolTipInv.render = function(self)
     itemMetatable.DoTooltip = old_DoTooltip
 end
 
+
 ---Adds a label to a tooltip layout.
 ---@param layout Layout The tooltip layout.
 ---@param label string The text to display as a label.
@@ -94,6 +124,7 @@ InventoryUI.addTooltipLabel = function(layout, label, colour)
     layoutItem:setLabel(label, Colour.getRGBA(colour or COLOUR_LABEL))
     return layoutItem
 end
+
 
 ---Adds a key/value pair to a tooltip layout.
 ---@param layout Layout The tooltip layout.
@@ -108,6 +139,7 @@ InventoryUI.addTooltipKeyValue = function(layout, key, value, keyColour, valueCo
     layoutItem:setValue(value, Colour.getRGBA(valueColour or COLOUR_VALUE))
     return layoutItem
 end
+
 
 ---Adds a progress bar to a tooltip layout.
 ---@param layout Layout The tooltip layout.
@@ -124,6 +156,7 @@ InventoryUI.addTooltipBar = function(layout, label, amount, labelColour, barColo
         Colour.getRGBA(barColour or Colour.lerpColour(Colour.badColour, Colour.goodColour, amount)))
     return layoutItem
 end
+
 
 ---Adds an integer key/value to a tooltip layout.
 ---Positive values will be rendered with a plus.
@@ -142,6 +175,7 @@ InventoryUI.addTooltipInteger = function(layout, label, value, highGood, labelCo
     return layoutItem
 end
 
+
 ---Find and returns a layout element from its label. Useful to find elements added by Vanilla or other mods.
 ---@param layout Layout The tooltip layout.
 ---@param label string 
@@ -156,6 +190,7 @@ InventoryUI.getTooltipElementByLabel = function(layout, label)
     end
 end
 
+
 ---Returns the index of the element in the tooltip layout.
 ---@param layout Layout The tooltip layout.
 ---@param element LayoutItem The tooltip element to get the index of.
@@ -163,6 +198,7 @@ end
 InventoryUI.getTooltipElementIndex = function(layout, element)
     return layout.items:indexOf(element)
 end
+
 
 ---Removes an existing tooltip element from a tooltip.
 ---@param layout Layout The tooltip layout.
@@ -196,6 +232,7 @@ InventoryUI.removeTooltipElement = function(layout, element)
     end
 end
 
+
 ---Moves a layout element to a specific index, shifting elements down to make room.
 ---@param layout Layout The tooltip layout.
 ---@param element LayoutItem The tooltip element.
@@ -208,5 +245,6 @@ InventoryUI.moveTooltipElement = function(layout, element, index)
     end
     items:add(index, element)
 end
+
 
 return InventoryUI
