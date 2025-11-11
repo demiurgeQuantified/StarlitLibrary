@@ -21,6 +21,9 @@
 ---There is no base type, so this is often nil.
 ---@field superclass Class?
 ---
+---Initialiser function for the class.
+---@field initialiser fun(obj: T, ...: ConstructorParameters<T>...)
+---
 ---Classes that directly inherit from this class.
 ---@field subclasses Class[]
 ---
@@ -53,8 +56,10 @@ function __Class:isInstance(object)
 end
 
 
+---FIXME: subclass initialisers are not type checked
 ---Creates a new class inheriting from this one.
 ---@generic T2: T
+---@[constructor("__init", "starlit.Object")]
 ---@param name `T2` Name of the new class.
 ---@param index table Class index table. Equivalent to the __index field of a metatable.
 ---@return Class<T2> class The created class.
@@ -70,34 +75,20 @@ function __Class:newSubclass(name, index)
 end
 
 
--- TODO: preferably initialisers would be a part of the Class class, but there doesn't seem to be a typesafe way to do this
---  the initialiser parameters could be generics in the class definition however this results in very lengthy specialisation names
---  other than that, storing the initialiser inside the class is not possible while ensuring type checking
+---@param ... ConstructorParameters<T>...
+---@return T
+function __Class:instantiate(...)
+    local o = setmetatable({}, self.metatable)
 
----Creates a constructor for a class.
----Initialisers are separated from constructors as it enables reuse.
----
----There is no requirement for initialisers to be accessible, 
----but it is conventional to store the initialiser in the __init field of the class's static table
----so that inheriting classes may reuse it.
----@generic T, T2...
----@param class Class<T> Class to create a constructor for.
----@param initialiser fun(object: T, ...: T2...): nil Initialiser function for the constructor.
----@return fun(...: T2...): T constructor Constructor using the initialiser passed.
----@nodiscard
-function Class.newConstructor(class, initialiser)
-    return function(...)
-        local object = setmetatable({}, class.metatable)
+    self.initialiser(o, ...)
 
-        initialiser(object, ...)
-
-        return object
-    end
+    return o
 end
 
 
 ---Creates a new class.
 ---@generic T: Object
+---@[constructor("__init", "starlit.Object")]
 ---@param name `T` Name of the class.
 ---@param index table Class index table. Equivalent to the __index field of a metatable.
 ---@return Class<T> class The created class.
@@ -108,7 +99,8 @@ function Class.newClass(name, index)
         subclasses = table.newarray(),
         metatable = {
             __index = index
-        }
+        },
+        initialiser = index.__init or function() end
     }, __Class)
 
     index.class = class
