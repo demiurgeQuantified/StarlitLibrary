@@ -1,40 +1,27 @@
 local Traits = require("Starlit/sandbox/Traits")
 local SandboxUtils = require("Starlit/sandbox/SandboxUtils")
 
-local log = require("Starlit/debug/StarlitLog")
 
-local traitMetatable
-if Trait.class then
-    ---@type Trait
-    traitMetatable = __classmetatables[Trait.class].__index
-else
-    log("Another mod has corrupted the global environment (replaced global Trait).", "warn")
-    if instanceof(Trait, "TraitFactory$Trait") then
-        log("The mod that adds the trait %s is probably to blame.", "info", Trait:getType())
-        traitMetatable = getmetatable(Trait).__index
-        log("Workaround succeeded.", "info")
-    end
-end
+---@type CharacterTraitDefinition
+local traitMetatable = __classmetatables[CharacterTraitDefinition.class].__index
 
-if not traitMetatable then
-    log("Unable to get trait metatable. Sandbox options affecting traits will not work. See previous messages for info.", "error")
-    return
-end
 
--- TODO: it shows in the wrong list if you change the price and then go back to a preset difficulty (who cares, low prio)
-local updateTraits = function()
+--FIXME: it shows in the wrong list if you change the price and then go back to a preset difficulty (who cares, low prio)
+local function updateTraits()
+    assert(MainScreen.instance ~= nil)
     local ccp = MainScreen.instance.charCreationProfession
 
     for trait, data in pairs(Traits.traitInfos) do
-        local label = trait:getLabel()
+        local traitDef = CharacterTraitDefinition.getCharacterTraitDefinition(trait)
+        local label = traitDef:getLabel()
 
-        if data.toggleOption and not SandboxUtils.getOptionValue(data.toggleOption) then
+        if data.toggleOption ~= "" and not SandboxUtils.getOptionValue(data.toggleOption) then
             ccp.listboxTrait:removeItem(label)
             ccp.listboxBadTrait:removeItem(label)
             ccp.listboxTraitSelected:removeItem(label)
             data.lastCost = nil
-        elseif data.costOption then
-            local newCost = trait:getCost()
+        elseif data.costOption ~= "" then
+            local newCost = traitDef:getCost()
 
             local costChange = newCost - data.lastCost
 
@@ -47,12 +34,12 @@ local updateTraits = function()
 
                 local item
                 if newCost > 0 then
-                    item = ccp.listboxTrait:addItem(label, trait)
+                    item = ccp.listboxTrait:addItem(label, traitDef)
                 else
-                    item = ccp.listboxBadTrait:addItem(label, trait)
+                    item = ccp.listboxBadTrait:addItem(label, traitDef)
                 end
 
-                item.tooltip = trait:getDescription()
+                item.tooltip = traitDef:getDescription()
             else
                 ccp.pointToSpend = ccp.pointToSpend + -costChange
             end
@@ -66,6 +53,7 @@ local updateTraits = function()
     CharacterCreationMain.sort(ccp.listboxTraitSelected.items)
 end
 
+
 local old_setSandboxVars = SandboxOptionsScreen.setSandboxVars
 ---@diagnostic disable-next-line: duplicate-set-field
 SandboxOptionsScreen.setSandboxVars = function(...)
@@ -73,9 +61,10 @@ SandboxOptionsScreen.setSandboxVars = function(...)
     updateTraits()
 end
 
+
 local old_getCost = traitMetatable.getCost
-traitMetatable.getCost = function(self)
-    local info = Traits.traitInfos[self]
+function traitMetatable:getCost()
+    local info = Traits.traitInfos[self:getType()]
     if not info or info.costOption == "" then
         return old_getCost(self)
     end
@@ -83,9 +72,8 @@ traitMetatable.getCost = function(self)
     return -SandboxUtils.getOptionValue(info.costOption)
 end
 
----@param self Trait
----@diagnostic disable-next-line: duplicate-set-field
-traitMetatable.getRightLabel = function(self)
+
+function traitMetatable:getRightLabel()
     local cost = self:getCost()
 
     local label
@@ -102,15 +90,15 @@ traitMetatable.getRightLabel = function(self)
     return label .. cost
 end
 
+
 local old_getTexture = traitMetatable.getTexture
----@param self Trait
----@diagnostic disable-next-line: duplicate-set-field
-traitMetatable.getTexture = function(self)
-    local info = Traits.traitInfos[self]
+function traitMetatable:getTexture()
+    local info = Traits.traitInfos[self:getType()]
     if not info or info.toggleOption == "" then
         return old_getTexture(self)
     end
     return SandboxUtils.getOptionValue(info.toggleOption) and old_getTexture(self) or nil
 end
+
 
 Events.OnConnected.Add(updateTraits)
