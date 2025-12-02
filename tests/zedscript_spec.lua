@@ -10,7 +10,7 @@ option TestMod.TestOption {
     type {
         1,
         2,
-        3
+        3,
     }
 }
 
