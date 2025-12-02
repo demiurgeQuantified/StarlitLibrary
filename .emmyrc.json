@@ -4,7 +4,8 @@
         "enableReindex": false,
         "encoding": "utf-8",
         "ignoreDir": [
-            "Contents/mods/StarlitLibrary/media"
+            "Contents/mods/StarlitLibrary/media",
+            "tests"
         ],
         "ignoreGlobs": [],
         "library": [
