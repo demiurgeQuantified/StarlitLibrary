@@ -60,7 +60,7 @@ TaskManager.update = function(ticks)
         local offset = tasks.offset
 
         local max = offset + amount
-        local overflowAmount = 0
+        local overflowAmount = 0.0
         if max > #tasks then
             overflowAmount = max - #tasks
             for i = 1, math.floor(overflowAmount) do

@@ -9,7 +9,7 @@ local Bitwise = {}
 Bitwise.get = function(int, pos)
     local bit = 2^(pos - 1)
 
-    int = int / bit
+    int = (int / bit) ---@as integer
     -- round towards 0
     int = int - int % 1
     if int < 0 then
@@ -26,7 +26,7 @@ end
 ---@return integer int The modified number.
 ---@nodiscard
 Bitwise.set = function(int, pos, value)
-    local bit = 2^(pos - 1)
+    local bit = (2^(pos - 1)) ---@as integer
     local hasBit = Bitwise.get(int, pos)
 
     if hasBit then

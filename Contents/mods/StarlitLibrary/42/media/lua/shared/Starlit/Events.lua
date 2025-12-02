@@ -1,5 +1,4 @@
 ---Deprecated. Use Starlit/LuaEvent instead.
----@deprecated
 return require("Starlit/LuaEvent")
 
 ----------------------------------------------------------------

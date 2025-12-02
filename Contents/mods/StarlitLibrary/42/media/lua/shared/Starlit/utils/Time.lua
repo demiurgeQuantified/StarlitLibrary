@@ -106,6 +106,7 @@ function Time.formatDuration(time, minUnit, maxUnit)
         if maxDetailIndex == #TIME_UNITS and time * TIME_UNITS[#TIME_UNITS].timeFactor > 10 then
             minDetailIndex = maxDetailIndex
         elseif maxDetailIndex > 1 then
+            ---@cast maxDetailIndex -?
             if time % TIME_UNITS[maxDetailIndex].timeFactor / TIME_UNITS[maxDetailIndex - 1].timeFactor >= 1 then
                 minDetailIndex = maxDetailIndex - 1
             else

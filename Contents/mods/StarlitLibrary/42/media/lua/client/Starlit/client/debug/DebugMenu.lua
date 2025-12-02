@@ -7,14 +7,17 @@ local items = {
     ["IGUI_StarlitLibrary_ZombieDataDebugger"] = ZombieDataDebugger
 }
 
+
 -- global instance of the ui, to make sure we don't open it twice
 ---@type UI.Node | nil
 local instance = nil
+
 
 local DebugMenu = UI.Window{
     x = 100, y = 100,
     width = 256, height = 512,
     children = {
+        ---@diagnostic disable-next-line: need-check-nil
         body = UI.Window.children.body{
             children = {
                 container = UI.Node{
@@ -65,7 +68,8 @@ local DebugMenu = UI.Window{
     }
 }
 
----@type Callback_OnKeyPressed
+
+---@param key integer
 local function openDebugMenu(key)
     if not isIngameState() then
         return
@@ -79,5 +83,6 @@ local function openDebugMenu(key)
         instance:instantiate()
     end
 end
+
 
 Events.OnKeyPressed.Add(openDebugMenu)

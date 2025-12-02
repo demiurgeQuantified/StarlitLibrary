@@ -1,8 +1,9 @@
 local TableUtils = {}
 
 ---Takes a list table and returns a lookup table containing all of its elements
----@param t any[]
----@return table<any, true>
+---@generic T
+---@param t T[]
+---@return table<T, true>
 TableUtils.toLookup = function(t)
     local t2 = {}
 
@@ -13,8 +14,9 @@ TableUtils.toLookup = function(t)
     return t2
 end
 
----@param ... any
----@return { any : true }
+---@generic T...
+---@param ... T...
+---@return table<T..., true>
 TableUtils.newLookup = function(...)
     local args = table.newarray(...)
     local result = {}

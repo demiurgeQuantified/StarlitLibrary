@@ -51,6 +51,7 @@ local zombieDataContainer = UI.Node{
                     self.children.keys[k] = gridItem{
                         y = 60 + numChildren * 69,
                         children = {
+                            ---@diagnostic disable-next-line: need-check-nil
                             label = gridItem.children.label{
                                 text = k
                             }
@@ -61,6 +62,7 @@ local zombieDataContainer = UI.Node{
                     self.children.values[k] = gridItem{
                         y = 60 + numChildren * 69,
                         children = {
+                            ---@diagnostic disable-next-line: need-check-nil
                             label = gridItem.children.label{
                                 text = v
                             }
@@ -91,6 +93,7 @@ local zombieIDButton = UI.TextButton{
     height = 40,
     anchorLeft = 0, anchorRight = 0,
     children = {
+        ---@diagnostic disable-next-line: need-check-nil
         label = UI.TextButton.children.label{}
     },
     init = function(self)
@@ -114,6 +117,7 @@ local ZombieDataDebugger = UI.Window{
     x = 100, y = 100,
     width = 1200, height = 600,
     children = {
+        ---@diagnostic disable-next-line: need-check-nil
         body = UI.Window.children.body{
             children = {
                 zombieIdList = UI.Node{

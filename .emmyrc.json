@@ -4,7 +4,8 @@
         "enableReindex": false,
         "encoding": "utf-8",
         "ignoreDir": [
-            "Contents/mods/StarlitLibrary/media"
+            "Contents/mods/StarlitLibrary/media",
+            "tests"
         ],
         "ignoreGlobs": [],
         "library": [
@@ -29,5 +30,16 @@
         ],
         "special": {},
         "version": "Lua5.1"
+    },
+    "diagnostics": {
+        "diagnosticInterval": 500,
+        "disable": [
+            "unnecessary-if"
+        ],
+        "enable": true,
+        "enables": [],
+        "globals": [],
+        "globalsRegex": [],
+        "severity": {}
     }
 }

@@ -21,6 +21,7 @@ local classFields = {}
 ---@return string
 ---@nodiscard
 local getFieldName = function(field)
+    ---@diagnostic disable-next-line: return-type-mismatch
     return match(tostring(field), "([^%.]+)$")
 end
 
@@ -210,7 +211,7 @@ Reflection.getClassName = function(o)
 
     local objType = type(o)
     if objType == "userdata" then
-        return string.match(tostring(o), "^(.*)@")
+        return assert(match(tostring(o), "^(.*)@"))
     end
 
     return (objType == "table" and o.Type) or objType
@@ -290,7 +291,7 @@ end
 --     Reflection.patchFunction(__classmetatables[_G[className].class].__index, methodName, patch, patchType)
 -- end
 
----@type {string : {string : Field}}
+---@type {[string] : {[string] : Field}}
 local unexposedObjectFields = {}
 
 ---Returns the value of an object's field by name.
@@ -302,6 +303,7 @@ local unexposedObjectFields = {}
 ---@nodiscard
 Reflection.getField = function(object, name)
     local className = Reflection.getClassName(object)
+
     if not unexposedObjectFields[className] then
         local fieldMap = {}
         for i = 0, getNumClassFields(object)-1 do
@@ -310,6 +312,9 @@ Reflection.getField = function(object, name)
         end
         unexposedObjectFields[className] = fieldMap
     end
+
+    -- don't want to assert here because this function is fairly performance critical
+    ---@diagnostic disable-next-line: param-type-mismatch
     return getClassFieldVal(object, unexposedObjectFields[className][name])
 end
 
