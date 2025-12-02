@@ -25,3 +25,4 @@ The most notable modules in the library are listed below:
    modules/Reflection
    modules/TimedActionUtils
    modules/Time
+   modules/ZedScript
