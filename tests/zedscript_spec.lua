@@ -17,6 +17,12 @@ option TestMod.TestOption {
 ]]
 
 insulate("ZedScript module", function()
+    -- http://lua-users.org/lists/lua-l/2009-12/msg00904.html
+    function string.trim(s)
+        local from = s:find("%S")
+        return from and s:match(".*%S", from) or ""
+    end
+
     local ZedScript = require("Starlit/ZedScript")
 
     it("can load zedscript chunks", function()
