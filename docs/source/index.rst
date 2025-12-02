@@ -26,3 +26,4 @@ The most notable modules in the library are listed below:
    modules/TimedActionUtils
    modules/Time
    modules/ZedScript
+   modules/EntityHandle
