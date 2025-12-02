@@ -5,7 +5,7 @@
 ---@class EntityHandle<T: GameEntity>
 ---
 ---The contained entity.
----It is recommended to use ``get()`` to access the entity instead.
+---It is recommended to use :lua:meth:`get()` to access the entity instead.
 ---@field entity T | nil
 ---
 ---Cache of entity id to verify that the entity has not changed.

@@ -9,6 +9,24 @@ The most notable modules in the library are listed below:
 * :doc:`modules/InventoryUI`
 * :doc:`modules/Reflection`
 
+Upcoming in v1.5.0
+------------------
+v1.5.0 is not yet released. If you really need something in these modules, bug me to release it:
+to avoid annoying server hosts, I usually only release updates to fix bugs or when a mod needs them.
+New modules
+###########
+* :doc:`modules/ZedScript`
+* :doc:`modules/ZombieData`
+* :doc:`modules/ZombieIds`
+* :doc:`modules/Time`
+* :doc:`modules/EntityHandle`
+* :doc:`modules/Bitwise`
+
+Substantial additions
+#####################
+* :doc:`modules/TaskManager`
+
+
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
@@ -17,13 +35,14 @@ The most notable modules in the library are listed below:
    global
    modules/BaseSquareCursor
    modules/Bitwise
-   modules/InventoryUI
-   modules/TaskManager
-   modules/ZombieIds
-   modules/ZombieData
-   modules/Version
-   modules/Reflection
-   modules/TimedActionUtils
-   modules/Time
-   modules/ZedScript
    modules/EntityHandle
+   modules/InventoryUI
+   modules/Reflection
+   modules/TaskManager
+   modules/Time
+   modules/TimedActionUtils
+   modules/Version
+   modules/ZedScript
+   modules/ZombieData
+   modules/ZombieIds
+
