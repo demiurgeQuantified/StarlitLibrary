@@ -1,12 +1,15 @@
 local IsoObjectUtils = {}
 
+
 ---@type IsoCell
 local CELL
 Events.OnPostMapLoad.Add(function (_cell, x, y)
     CELL = _cell
 end)
 
+
 local MIN_HEIGHT = -32
+
 
 ---Adds and connects a square at the given coordinates.
 ---@param x integer X world coordinate
@@ -26,6 +29,7 @@ IsoObjectUtils.addSquare = function(x, y, z)
     return CELL:createNewGridSquare(x, y, z, true)
 end
 
+
 ---Gets or creates a square at the given coordinates.
 ---@param x integer X world coordinate
 ---@param y integer Y world coordinate
@@ -35,21 +39,29 @@ IsoObjectUtils.getOrCreateSquare = function(x, y, z)
     return getSquare(x, y, z) or IsoObjectUtils.addSquare(x, y, z)
 end
 
+
 ---Removes a single wall from a square.
 ---If the wall is a combined north and west wall sprite, the other direction will be split so it remains.
 ---@param square IsoGridSquare The square to remove a wall from.
 ---@param side "north"|"west" Which direction wall to remove.
 ---@param removeAttached boolean? Whether to remove objects attached to the wall. Defaults to true.
 IsoObjectUtils.removeWall = function(square, side, removeAttached)
-    removeAttached = removeAttached or true
+    if removeAttached == nil then
+        removeAttached = true
+    end
+
     local wall = square:getWall(side == "north")
+    ---@diagnostic disable-next-line: unnecessary-if
     if wall then
-        local properties = wall:getProperties()
         local wantedWall = side == "north" and "CornerWestWall" or "CornerNorthWall"
-        if properties:Is(wantedWall) then
+        if wall:hasProperty(wantedWall) then
             -- FIXME: this deletes all the dirt on the wall
             local newWall = IsoObject.getNew(
-                square, properties:Val(wantedWall), "", false)
+                square,
+                wall:getProperty(wantedWall),
+                "",
+                false
+            )
             square:transmitAddObjectToSquare(newWall, -1)
         end
         square:transmitRemoveItemFromSquare(wall)
@@ -63,16 +75,24 @@ IsoObjectUtils.removeWall = function(square, side, removeAttached)
     end
 end
 
+
 ---Removes the floor from a square.
 ---@param square IsoGridSquare The square to remove the floor from.
 ---@param removeAttached boolean? Whether to remove objects attached to the floor. Defaults to true.
 IsoObjectUtils.removeFloor = function(square, removeAttached)
-    removeAttached = removeAttached or true
+    if removeAttached == nil then
+        removeAttached = true
+    end
+
     square:transmitRemoveItemFromSquare(square:getFloor())
 
-    if not removeAttached then return end
+    if not removeAttached then
+        return
+    end
+
     IsoObjectUtils.removeAll(square, IsoFlagType.attachedFloor)
 end
+
 
 ---Returns the first object on a square with a given flag.
 ---@param square IsoGridSquare The square to search.
@@ -83,11 +103,12 @@ IsoObjectUtils.getFirst = function(square, flag)
     local objects = square:getLuaTileObjectList() --[=[@as IsoObject[] ]=]
     for i = 1, #objects do
         local object = objects[i]
-        if object:getProperties():Is(flag) then
+        if object:hasProperty(flag) then
             return object
         end
     end
 end
+
 
 ---Removes all objects on a square with a given flag.
 ---@param square IsoGridSquare The square to remove objects from.
@@ -96,11 +117,12 @@ IsoObjectUtils.removeAll = function(square, flag)
     local objects = square:getLuaTileObjectList() --[=[@as IsoObject[] ]=]
     for i = #objects, 1, -1 do
         local object = objects[i]
-        if object:getProperties():Is(flag) then
+        if object:hasProperty(flag) then
             square:transmitRemoveItemFromSquare(object)
         end
     end
 end
+
 
 ---Returns true if a square is in the playable area. The playable area is any space the player can occupy.
 ---Does not check if the square is actually reachable or blocked by objects.
