@@ -12,22 +12,37 @@ local TEXT_MANAGER = getTextManager()
 
 local Version = {}
 
+---Mod version as a string.
+---@doctype const
+---@type string
+---@readonly
 Version.VERSION_STRING = modInfo:getModVersion()
 
 do
     local build, major, minor, patch = string.match(Version.VERSION_STRING, "(%d+)%-(%d+)%.(%d+)%.(%d+)")
 
     ---The major game build the current version of Starlit is designed for.
+    ---@doctype const
     ---@type integer
+    ---@readonly
     Version.BUILD = tonumber(build) --[[@as integer]]
+
     ---The major version of Starlit. Major versions are incremented when non-trivial breaking changes are made to the API.
+    ---@doctype const
     ---@type integer
+    ---@readonly
     Version.MAJOR = tonumber(major) --[[@as integer]]
+
     ---The minor version of Starlit. Minor versions are incremented when new features are added, and old features may be deprecated.
+    ---@doctype const
     ---@type integer
+    ---@readonly
     Version.MINOR = tonumber(minor) --[[@as integer]]
+
     ---The patch version of Starlit. Patch versions are incremented by bug fixes that don't change (intended) functionality.
+    ---@doctype const
     ---@type integer
+    ---@readonly
     Version.PATCH = tonumber(patch) --[[@as integer]]
 end
 
