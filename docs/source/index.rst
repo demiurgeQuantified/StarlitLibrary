@@ -13,6 +13,7 @@ Upcoming in v1.5.0
 ------------------
 v1.5.0 is not yet released. If you really need something in these modules, bug me to release it:
 to avoid annoying server hosts, I usually only release updates to fix bugs or when a mod needs them.
+
 New modules
 ###########
 * :doc:`modules/ZedScript`
