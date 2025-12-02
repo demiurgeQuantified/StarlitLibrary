@@ -28,12 +28,12 @@ jobs:
       - name: Build website with Sphinx
         run: |
           cd StarlitLibrary/docs
-          sphinx-build -M html . _build
+          make html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3.0.1
         with:
-          path: StarlitLibrary/docs/_build/html
+          path: StarlitLibrary/docs/build/html
 
   deploy:
     needs: build

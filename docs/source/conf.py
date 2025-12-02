@@ -24,7 +24,7 @@ highlight_language = "lua"
 
 # lua_ls config
 
-lua_ls_project_root = "../"
+lua_ls_project_root = "../../"
 lua_ls_backend = "emmylua"
 lua_ls_default_options = {
 	"require-separator": "/",
