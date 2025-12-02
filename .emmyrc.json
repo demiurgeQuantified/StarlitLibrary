@@ -41,5 +41,10 @@
         "globals": [],
         "globalsRegex": [],
         "severity": {}
+    },
+    "doc": {
+        "knownTags": [],
+        "privateName": [],
+        "syntax": "myst"
     }
 }
