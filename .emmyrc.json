@@ -1,0 +1,33 @@
+{
+    "$schema": "https://raw.githubusercontent.com/EmmyLuaLs/emmylua-analyzer-rust/refs/heads/main/crates/emmylua_code_analysis/resources/schema.json",
+    "workspace": {
+        "enableReindex": false,
+        "encoding": "utf-8",
+        "ignoreDir": [
+            "Contents/mods/StarlitLibrary/media"
+        ],
+        "ignoreGlobs": [],
+        "library": [
+            "$PZ_UMBRELLA"
+        ],
+        "moduleMap": [],
+        "preloadFileSize": 0,
+        "reindexDuration": 5000,
+        "workspaceRoots": [
+            "Contents/mods/StarlitLibrary/42/media/lua"
+        ]
+    },
+    "runtime": {
+        "extensions": [],
+        "frameworkVersions": [],
+        "nonstandardSymbol": [],
+        "requireLikeFunction": [],
+        "requirePattern": [
+            "Contents/mods/StarlitLibrary/42/media/lua/shared/?.lua",
+            "Contents/mods/StarlitLibrary/42/media/lua/client/?.lua",
+            "Contents/mods/StarlitLibrary/42/media/lua/server/?.lua"
+        ],
+        "special": {},
+        "version": "Lua5.1"
+    }
+}

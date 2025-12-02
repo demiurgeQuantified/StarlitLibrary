@@ -1,7 +1,9 @@
 local ZombieIds = require("Starlit/ZombieIds")
 
+
 ---@type {version: integer, [integer]: table}
 local modData
+
 
 local function initModData()
     modData = ModData.getOrCreate("starlit.ZombieData")
@@ -13,7 +15,8 @@ end
 
 Events.OnInitGlobalModData.Add(initModData)
 
----@type Callback_OnZombieDead
+
+---@param zombie IsoZombie
 local function removeZombieDataIfNeeded(zombie)
     local id = ZombieIds.get(zombie)
     if modData[id] then
@@ -23,9 +26,13 @@ end
 
 Events.OnZombieDead.Add(removeZombieDataIfNeeded)
 
----Allows persistent storage of POD for zombies.
----Zombie data is a plain lua table associated with a specific zombie.
+---.. versionadded:: v1.5.0
+---
+---Provides persistent storage associated with a specific zombie, similar to mod data.
+---Zombie mod data, unlike mod data belonging to other objects, is not suitable for this usage as it is not persistent.
+---Like mod data, zombie data cannot store objects or functions, only POD.
 local ZombieData = {}
+
 
 ---Returns the zombie data for a zombie.
 ---@param zombie IsoZombie The zombie.
@@ -39,5 +46,6 @@ function ZombieData.get(zombie)
 
     return modData[id]
 end
+
 
 return ZombieData

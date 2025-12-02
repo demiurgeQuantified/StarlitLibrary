@@ -69,6 +69,8 @@ for k, v in pairs(TIME_UNITS) do
     TIME_UNIT_INDEX_BY_NAME[v.name] = k
 end
 
+---.. versionadded:: v1.5.0
+---
 ---Contains utilities for working with real and game time values. For scheduling functions, see TaskManager.
 local Time = {}
 

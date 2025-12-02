@@ -162,28 +162,24 @@ end
 
 ---Returns the prompt for the joypad B button.
 ---@return string | nil prompt Text to display as a prompt for the B button, or nil to display nothing.
-
 BaseSquareCursor.getBPrompt = function(self)
     return getText("UI_Cancel")
 end
 
 ---Returns the prompt for the joypad Y button.
 ---@return string | nil prompt Text to display as a prompt for the Y button, or nil to display nothing.
-
 BaseSquareCursor.getYPrompt = function(self)
     return getText("IGUI_SetCursorToPlayerLocation")
 end
 
 ---Returns the prompt for the joypad left bumper.
 ---@return string | nil prompt Text to display as a prompt for the left bumper, or nil to display nothing.
-
 BaseSquareCursor.getLBPrompt = function(self)
     return nil
 end
 
 ---Returns the prompt for the joypad right bumper.
 ---@return string | nil prompt Text to display as a prompt for the right bumper, or nil to display nothing.
-
 BaseSquareCursor.getRBPrompt = function(self)
     return nil
 end
