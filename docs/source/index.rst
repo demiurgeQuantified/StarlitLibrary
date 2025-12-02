@@ -17,13 +17,14 @@ The most notable modules in the library are listed below:
    global
    modules/BaseSquareCursor
    modules/Bitwise
-   modules/InventoryUI
-   modules/TaskManager
-   modules/ZombieIds
-   modules/ZombieData
-   modules/Version
-   modules/Reflection
-   modules/TimedActionUtils
-   modules/Time
-   modules/ZedScript
    modules/EntityHandle
+   modules/InventoryUI
+   modules/Reflection
+   modules/TaskManager
+   modules/Time
+   modules/TimedActionUtils
+   modules/Version
+   modules/ZedScript
+   modules/ZombieData
+   modules/ZombieIds
+
