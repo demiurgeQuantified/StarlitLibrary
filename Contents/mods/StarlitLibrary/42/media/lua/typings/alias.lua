@@ -9,4 +9,4 @@
 ---@alias Starlit.TraitInfo starlit.TraitInfo
 
 -- we stopped using callback types because they don't work in emmylua + emmylua can actually type check callbacks
----@alias Starlit.InventoryUI.Callback_OnFillItemTooltip fun(tooltip:ObjectTooltip, layout:Layout, item:InventoryItem)
+---@alias Starlit.InventoryUI.Callback_OnFillItemTooltip fun(tooltip:ObjectTooltip, layout:ObjectTooltip.Layout, item:InventoryItem)

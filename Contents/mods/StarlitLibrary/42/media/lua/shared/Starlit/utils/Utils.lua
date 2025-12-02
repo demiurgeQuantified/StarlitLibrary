@@ -7,11 +7,16 @@ local Utils = {}
 ---@nodiscard
 Utils.findVar = function(name, start)
     local location = luautils.split(name, "%.")
+
+    ---@type any
     local result = start or _G
     for j = 1, #location do
         result = result[location[j]]
-        if result == nil then return end
+        if result == nil then
+            return
+        end
     end
+
     return result
 end
 

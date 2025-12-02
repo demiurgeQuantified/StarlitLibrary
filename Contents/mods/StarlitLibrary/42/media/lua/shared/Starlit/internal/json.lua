@@ -1,3 +1,6 @@
+-- not our code lol
+---@diagnostic disable
+
 --
 -- json.lua
 --

@@ -30,5 +30,16 @@
         ],
         "special": {},
         "version": "Lua5.1"
+    },
+    "diagnostics": {
+        "diagnosticInterval": 500,
+        "disable": [
+            "unnecessary-if"
+        ],
+        "enable": true,
+        "enables": [],
+        "globals": [],
+        "globalsRegex": [],
+        "severity": {}
     }
 }

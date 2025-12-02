@@ -10,6 +10,7 @@ local Colour = {}
 ---@return Starlit.Colour colour
 ---@nodiscard
 Colour.fromColorInfo = function(colorInfo)
+    ---@diagnostic disable-next-line: return-type-mismatch
     return table.newarray(colorInfo:getR(), colorInfo:getG(), colorInfo:getB(), 1)
 end
 
@@ -18,6 +19,7 @@ end
 ---@return Starlit.Colour colour
 ---@nodiscard
 Colour.fromColor = function(color)
+    ---@diagnostic disable-next-line: return-type-mismatch
     return table.newarray(color:getR(), color:getG(), color:getB(), 1)
 end
 
@@ -31,6 +33,7 @@ Colour.lerpColour = function(a, b, amount)
     local result = table.newarray() --[[@as Starlit.Colour]]
 
     for i = 1, 4 do
+        ---@diagnostic disable-next-line: need-check-nil
         result[i] = a[i] + (b[i] - a[i]) * amount
     end
 

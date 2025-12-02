@@ -3,19 +3,20 @@ local Reflection = require("Starlit/utils/Reflection")
 local eventMap = HashMap.new()
 LuaEventManager.getEvents(ArrayList.new(), eventMap)
 
----@type {string: Event}
+---@type {[string]: Event}
 local events = transformIntoKahluaTable(eventMap)
 
 ---@param func function
 ---@return string
 ---@nodiscard
 local getShortFilename = function(func)
+    ---@diagnostic disable-next-line: return-type-mismatch
     return string.match(getFilenameOfClosure(func), "media/lua/(.+).lua")
 end
 
 local PZEvents = {}
 
----@type {string : function[]}
+---@type {[string] : function[]}
 PZEvents.callbacks = {}
 
 for name, event in pairs(events) do
@@ -68,6 +69,7 @@ PZEvents.removeCallback = function(event, filename, index)
             if foundCallbacks == index then
                 -- it would be a little cheaper to call the original Remove function and table.remove from callbacks
                 -- since Remove has to loop through callbacks to find the right index to remove, but we already have it here
+                ---@diagnostic disable-next-line: need-check-nil
                 Events[event].Remove(callback)
                 return callback
             end

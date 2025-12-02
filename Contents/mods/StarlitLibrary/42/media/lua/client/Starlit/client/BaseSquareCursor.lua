@@ -59,6 +59,8 @@ BaseSquareCursor.render = function(self, x, y, z, square)
     if not self:isValid(square) then
         hc = CORE:getBadHighlitedColor()
     end
+    ---this won't be uninitialised at game time
+    ---@diagnostic disable-next-line: need-check-nil
     ISBuildingObject:getFloorCursorSprite():RenderGhostTileColor(x, y, z, hc:getR(), hc:getG(), hc:getB(), 0.8)
 end
 
@@ -215,11 +217,12 @@ end
 
 -- must delay to OnInitGlobalModData so that server code has already loaded
 Events.OnInitGlobalModData.Add(function()
+    ---@diagnostic disable-next-line: param-type-mismatch
     -- hack to avoid all the building code
     Events.OnDoTileBuilding2.Remove(DoTileBuilding);
 
     local old_DoTileBuilding = DoTileBuilding
-    DoTileBuilding = function(draggingItem, isRender, x, y, z, square)
+    function DoTileBuilding(draggingItem, isRender, x, y, z, square)
         if draggingItem._isStarlitCursor then
             ---@cast draggingItem starlit.BaseSquareCursor
             if isRender then

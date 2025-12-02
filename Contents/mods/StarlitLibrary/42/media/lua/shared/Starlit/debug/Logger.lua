@@ -80,14 +80,10 @@ end
 ---@return starlit.Logger
 ---@nodiscard
 Logger.new = function(mod, minLevel)
-    ---@type starlit.Logger
-    local o = {
+    return setmetatable({
         _mod = mod,
         minLevel = minLevel or Logger.minLevel
-    }
-    setmetatable(o, Logger)
-
-    return o
+    }, Logger)
 end
 
 
@@ -101,7 +97,6 @@ FileLogger.__index = FileLogger
 setmetatable(FileLogger, Logger)
 
 
----@param self starlit.FileLogger
 ---@param message string
 ---@param level? "error"|"warn"|"info"|"debug"
 ---@param ... any

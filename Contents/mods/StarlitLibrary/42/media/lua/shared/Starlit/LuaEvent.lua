@@ -2,7 +2,7 @@
 
 ---Object oriented reimplementation of events. Performs slightly faster and fixes some bugs as well as providing some utilities
 ---@class LuaEvent<T...>
----@field [integer] function
+---@field [integer] fun(...:T...)
 local LuaEvent = {}
 ---@type LuaEvent[]
 LuaEvent._list = {}
@@ -12,9 +12,7 @@ LuaEvent.__index = LuaEvent
 ---@return LuaEvent
 ---@nodiscard
 function LuaEvent.new()
-    local o = table.newarray() --[[@as table]]
-
-    setmetatable(o, LuaEvent)
+    local o = setmetatable(table.newarray(), LuaEvent)
     table.insert(LuaEvent._list, o)
 
     return o
@@ -86,6 +84,7 @@ end
 ---@param ... T...
 function LuaEvent:trigger(...)
     for i = #self, 1, -1 do
+        ---@diagnostic disable-next-line: redundant-parameter
         self[i](...)
     end
 end
