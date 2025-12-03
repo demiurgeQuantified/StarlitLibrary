@@ -42,6 +42,13 @@
         "globalsRegex": [],
         "severity": {}
     },
+    "strict": {
+        "arrayIndex": false,
+        "docBaseConstMatchBaseType": true,
+        "metaOverrideFileDefine": true,
+        "requirePath": false,
+        "typeCall": false
+    },
     "doc": {
         "knownTags": [],
         "privateName": [],

@@ -34,6 +34,7 @@ Substantial additions
 
    usage
    global
+   modtranslations
    modules/BaseSquareCursor
    modules/Bitwise
    modules/EntityHandle
