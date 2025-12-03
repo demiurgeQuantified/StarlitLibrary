@@ -23,6 +23,10 @@ New modules
 * :doc:`modules/EntityHandle`
 * :doc:`modules/Bitwise`
 
+New features
+############
+* :doc:`modtranslations`
+
 Substantial additions
 #####################
 * :doc:`modules/TaskManager`
