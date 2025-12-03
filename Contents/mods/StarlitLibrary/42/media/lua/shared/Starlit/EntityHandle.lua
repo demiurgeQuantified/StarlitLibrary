@@ -1,3 +1,12 @@
+local TaskManager = require("Starlit/TaskManager")
+
+local TASK_CHAIN = "starlit.entityhandle"
+
+-- maximum number of entities to check for aliveness each tick
+-- this isn't that expensive so it can be fairly high, but if it's too high it may not actually save performance
+local MAX_ENTITY_CHECKS_TICK = 256
+
+
 ---@namespace starlit
 
 
@@ -49,19 +58,35 @@ end
 local handleCache = {}
 
 
+---@async
 local function releaseEmptyHandles()
-    -- TODO: limit number of iterations per tick
-    for k, handle in pairs(handleCache) do
-        ---@cast k GameEntity
-        ---@cast handle EntityHandle
-        if handle:isEmpty() then
-            handle.entity = nil
-            handleCache[k] = nil
+    local iterations = 0
+    while true do
+        for k, handle in pairs(handleCache) do
+            ---@cast k GameEntity
+            ---@cast handle EntityHandle
+            if handle:isEmpty() then
+                handle.entity = nil
+                handleCache[k] = nil
+            end
+
+            iterations = iterations + 1
+            if iterations > MAX_ENTITY_CHECKS_TICK then
+                coroutine.yield(TaskManager.TaskResult.CONTINUE)
+                iterations = 0
+            end
         end
+
+        coroutine.yield(TaskManager.TaskResult.CONTINUE)
+        iterations = 0
     end
 end
 
-Events.OnTick.Add(releaseEmptyHandles)
+TaskManager.addTask(
+    TASK_CHAIN,
+    coroutine.wrap(releaseEmptyHandles)
+)
+
 
 ---.. versionadded:: v1.5.0
 local EntityHandle = {}
@@ -70,7 +95,7 @@ local EntityHandle = {}
 ---Gets a handle for the passed entity.
 ---@generic T: GameEntity
 ---@param entity T Entity to get a handle for.
----@return EntityHandle<T> # Handle for the entity.
+---@return EntityHandle<T> handle Handle for the entity.
 ---@nodiscard
 function EntityHandle.get(entity)
     local handle = handleCache[entity]
