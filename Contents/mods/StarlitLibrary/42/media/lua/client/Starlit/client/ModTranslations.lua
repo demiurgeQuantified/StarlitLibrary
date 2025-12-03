@@ -76,24 +76,26 @@ for i = 1, #modDirectories do
         while file:ready() do
             totalString = totalString .. file:readLine() .. "\n"
         end
+        file:close()
 
         local table = json.decode(totalString)
 
         local posters = getList(table, "posters", "string")
         if posters then
             for j = 1, #posters do
-                if getModFileReader(modId, posters[j], false) then
-                    posters[j] = mod:getCommonDir() .. FILE_SEPARATOR .. posters[j]
-                else
-                    posters[j] = mod:getVersionDir() .. FILE_SEPARATOR .. posters[j]
+                local posterPath = mod:getVersionDir() .. FILE_SEPARATOR .. posters[j]
+                if not getTexture(posterPath) then
+                    posterPath = mod:getCommonDir() .. FILE_SEPARATOR .. posters[j]
                 end
+                posters[j] = posterPath
             end
         end
 
         modTranslations[modId] = {
             name = getString(table, "name"),
             description = getString(table, "description"),
-            posters = posters
+            -- ignore empty poster lists
+            posters = #posters > 0 and posters or nil
         }
     end
 end
@@ -141,8 +143,21 @@ local oldGetPoster = modMetatable.getPoster
 function modMetatable:getPoster(index)
     local translation = modTranslations[self:getId()]
     if translation and translation.posters then
+        log:debug("getPoster invoked with %d, returning %s", index, translation.posters[index + 1])
+        log:debug("vanilla return would have been %s", oldGetPoster(self, index))
         return translation.posters[index + 1]
     end
 
     return oldGetPoster(self, index)
+end
+
+local oldGetTexture = modMetatable.getTexture
+---@return Texture
+function modMetatable:getTexture()
+    local translation = modTranslations[self:getId()]
+    if translation and translation.posters then
+        return getTexture(translation.posters[1]) or Texture.getWhite()
+    end
+
+    return oldGetTexture(self)
 end
