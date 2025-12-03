@@ -1,6 +1,10 @@
 local TaskManager = require("Starlit/TaskManager")
 
+
 local TASK_CHAIN = "starlit.entityhandle"
+
+TaskManager.addTaskChain(TASK_CHAIN)
+
 
 -- maximum number of entities to check for aliveness each tick
 -- this isn't that expensive so it can be fairly high, but if it's too high it may not actually save performance
