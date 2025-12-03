@@ -15,7 +15,8 @@ Enum
 
 Examples
 --------
-A simple task that counts to 5 in the console:
+Tasks are functions that, once added, will be called every tick until finished.
+An example of a simple task that counts to 5, incrementing by one each tick, printing each number to the console:
 ::
 
     local TaskManager = require("Starlit/Taskmanager")
@@ -49,9 +50,11 @@ A simple task that counts to 5 in the console:
 An issue with this basic example is that `count` escapes the function, so we can't run more than one of the same task at the same time,
 they would share the same counter.
 To avoid this, we could create an object to store the state of the function, however this adds a lot of complexity to a very simple program.
+
 An alternative solution would be to make our function async, keeping all of the state within the function.
 An async function is essentially a function that can be paused, refered to as 'yielding'.
 To call an async function, we have to create a coroutine with that function.
+Async functions are very suitable for tasks.
 ::
 
     local TaskManager = require("Starlit/Taskmanager")
@@ -61,10 +64,10 @@ To call an async function, we have to create a coroutine with that function.
     local TASK_CHAIN = "mymod.mymodule"
     TaskManager.addTaskChain(TASK_CHAIN)
 
-    -- When using EmmyLua, the @async annotation tells the language server that this an async function:
+    -- When using EmmyLua, the @async annotation tells the language server that this is an async function:
     -- an async function is a function that is meant to be used in a coroutine.
-    -- this will generate a warning when you try to call it outside of another async function:
-    -- this is important because coroutine.yield will throw an error if you aren't in a coroutine!
+    -- This will generate a warning when you try to call it outside of another async function:
+    -- This is important because coroutine.yield will throw an error if you aren't in a coroutine!
 
     ---@async
     local function task()
