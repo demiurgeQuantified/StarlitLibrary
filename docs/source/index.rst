@@ -1,6 +1,6 @@
 Starlit Library documentation
 =============================
-Welcome to the Starlit Library docs! Starlit Library is a kitchen sink library for Project Zomboid mods. New users should start with the :doc:`usage` page.
+Welcome to the Starlit Library docs! Starlit Library is a multipurpose library for Project Zomboid mods. New users should start with the :doc:`usage` page.
 
 Notable Modules
 ---------------
@@ -33,23 +33,10 @@ Substantial additions
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+   :maxdepth: 2
+   :caption: Contents
+   :includehidden:
+   :titlesonly:
 
-   usage
-   global
-   modtranslations
-   classes/BaseSquareCursor
-   modules/Bitwise
-   modules/EntityHandle
-   modules/InventoryUI
-   classes/LuaEvent
-   modules/Reflection
-   modules/TaskManager
-   modules/Time
-   modules/TimedActionUtils
-   modules/Version
-   modules/ZedScript
-   modules/ZombieData
-   modules/ZombieIds
-
+   guides
+   modules
