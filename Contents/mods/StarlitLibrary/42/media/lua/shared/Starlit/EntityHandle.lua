@@ -29,7 +29,7 @@ __GameEntityHandle.__index = __GameEntityHandle
 
 ---Returns the contained entity.
 ---Throws an exception if the handle is empty.
----@return GameEntity
+---@return T entity
 ---@nodiscard
 function __GameEntityHandle:get()
     assert(not self:isEmpty(), "tried to access empty GameEntityHandle")
@@ -40,7 +40,7 @@ end
 
 ---Whether the contained entity still exists.
 ---An empty handle will never be non-empty again.
----@return boolean
+---@return boolean empty
 ---@nodiscard
 function __GameEntityHandle:isEmpty()
     if not self.entity then
@@ -93,6 +93,8 @@ TaskManager.addTask(
 
 
 ---.. versionadded:: v1.5.0
+---
+---Module managing entity handles.
 local EntityHandle = {}
 
 
