@@ -36,7 +36,6 @@ Substantial additions
    :maxdepth: 2
    :caption: Contents
    :includehidden:
-   :titlesonly:
 
    guides
    modules
