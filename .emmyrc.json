@@ -51,7 +51,9 @@
     },
     "doc": {
         "knownTags": [],
-        "privateName": [],
+        "privateName": [
+            "_*"
+        ],
         "syntax": "myst"
     }
 }
