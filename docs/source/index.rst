@@ -43,6 +43,7 @@ Substantial additions
    modules/Bitwise
    modules/EntityHandle
    modules/InventoryUI
+   classes/LuaEvent
    modules/Reflection
    modules/TaskManager
    modules/Time
