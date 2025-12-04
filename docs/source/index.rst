@@ -39,7 +39,7 @@ Substantial additions
    usage
    global
    modtranslations
-   modules/BaseSquareCursor
+   classes/BaseSquareCursor
    modules/Bitwise
    modules/EntityHandle
    modules/InventoryUI
