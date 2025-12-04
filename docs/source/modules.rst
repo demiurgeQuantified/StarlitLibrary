@@ -3,7 +3,6 @@ Modules
 
 .. toctree::
     :caption: Modules
-    :titlesonly:
 
     classes/BaseSquareCursor
     modules/Bitwise
