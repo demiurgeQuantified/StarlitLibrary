@@ -18,7 +18,7 @@ a handle is a safer choice than a raw reference in these instances.
 
 Usage
 -----
-After obtaining a reference to an entity, use the module to get its entity handle.
+After obtaining a reference to an entity, use the module to get a handle to it.
 ::
 
     local handle = EntityHandle.get(entity)
@@ -35,7 +35,7 @@ To safely access the entity afterwards, use :lua:meth:`~starlit.EntityHandle.get
         else
             -- if get() returns nil, the entity has unloaded
             print("Entity unloaded")
-            -- a handle that has returned nil is considered 'dead' and will never have an object again,
+            -- a handle that has returned nil is considered 'dead' and will never contain an entity again,
             --  so you should cancel whatever you're doing with it and drop the reference
             handle = nil
             Events.OnTick.Remove(doSomethingWithEntityEveryTick)
