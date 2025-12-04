@@ -13,6 +13,12 @@ Enum
 .. lua:autoenum:: starlit.taskmanager.TaskResult
     :members:
 
+Class
+-----
+.. lua:autoclass:: starlit.taskmanager.TaskChain
+    :members:
+    :recursive:
+
 Examples
 --------
 Tasks are functions that, once added, will be called every tick until finished.
@@ -24,9 +30,7 @@ An example of a simple task that counts to 5, incrementing by one each tick, pri
     -- cache this so we don't have to type out the whole thing every time
     local TaskResult = TaskManager.TaskResult
 
-    -- it is recommended to keep your task chain identifier in a variable to prevent typos
-    local TASK_CHAIN = "mymod.mymodule"
-    TaskManager.addTaskChain(TASK_CHAIN)
+    local taskChain = TaskManager.addTaskChain("mymod.mymodule")
 
 
     local count = 0
@@ -45,9 +49,9 @@ An example of a simple task that counts to 5, incrementing by one each tick, pri
     end
 
     -- start running the task next tick
-    TaskManager.addTask(TASK_CHAIN, task)
+    taskChain:addTask(task)
 
-An issue with this basic example is that `count` escapes the function, so we can't run more than one of the same task at the same time,
+An issue with this basic example is that ``count`` escapes the function, so we can't run more than one of the same task at the same time,
 they would share the same counter.
 To avoid this, we could create an object to store the state of the function, however this adds a lot of complexity to a very simple program.
 
@@ -61,8 +65,7 @@ Async functions are very suitable for tasks.
 
     local TaskResult = TaskManager.TaskResult
 
-    local TASK_CHAIN = "mymod.mymodule"
-    TaskManager.addTaskChain(TASK_CHAIN)
+    local taskChain = TaskManager.addTaskChain("mymod.mymodule")
 
     -- When using EmmyLua, the @async annotation tells the language server that this is an async function:
     -- an async function is a function that is meant to be used in a coroutine.
@@ -82,13 +85,11 @@ Async functions are very suitable for tasks.
     end
 
     -- we can now add as many of the task as we want without issue:
-    TaskManager.addTask(
-        TASK_CHAIN,
+    taskChain:addTask(
         -- we cannot pass an async function directly, we must create a new coroutine for that function with coroutine.wrap
         coroutine.wrap(task)
     )
-    TaskManager.addTask(
-        TASK_CHAIN,
+    taskChain:addTask(
         coroutine.wrap(task)
     )
 
