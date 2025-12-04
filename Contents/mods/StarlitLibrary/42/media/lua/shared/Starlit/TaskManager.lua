@@ -16,26 +16,77 @@ local log = require("Starlit/debug/Logger").getLogger("StarlitLibrary] [TaskMana
 
 
 ---@class taskmanager.Task<T...>
----@field func fun(...:T...):taskmanager.TaskResult
----@field args [T...]
----@field name string
----@field removed boolean Whether the task should be considered removed. Set when it is not safe to remove the task immediately.
-
-
----@class taskmanager.TaskChain
----@field name string
----@field tasks taskmanager.Task[]
----@field taskMap table<string, taskmanager.Task>
+---@field package func fun(...:T...):taskmanager.TaskResult
+---@field package args [T...]
+---@field package removed boolean Whether the task should be considered removed.
 
 
 local currentTick = 0
 
----@type table<string, taskmanager.TaskChain>
-local chains = {}
+---@type taskmanager.TaskChain[]
+local chains = table.newarray()
 
 
----@type string?
+---@type taskmanager.TaskChain?
 local executingChain = nil
+
+
+---@class taskmanager.TaskChain
+---@field package name string
+---@field package tasks taskmanager.Task[]
+local __TaskChain = {}
+__TaskChain.__index = __TaskChain
+
+
+---Adds a task to the chain.
+---The task's function will be called every tick until it returns :lua:data:`starlit.taskmanager.TaskResult.DONE`.
+---@generic T...
+---@param func fun(...:T...):taskmanager.TaskResult Function to call when running the task.
+---@param ... T... Arguments to call func with.
+---@return taskmanager.Task task Handle to the task. This can be used to query the task later.
+function __TaskChain:addTask(func, ...)
+    ---@type taskmanager.Task
+    local task = {
+        func = func,
+        args = {...},
+        removed = false
+    }
+
+    self.tasks[#self.tasks + 1] = task
+    return task
+end
+
+
+---Removes a task.
+---
+---A task from another chain has an undefined result: only pass tasks created by this chain.
+---@param task taskmanager.Task Task to remove.
+function __TaskChain:removeTask(task)
+    task.removed = true
+
+    if self == executingChain then
+        return
+    end
+
+    for i = 1, #self.tasks do
+        if self.tasks[i] == task then
+            table.remove(self.tasks, i)
+            break
+        end
+    end
+end
+
+
+---Returns whether this chain has a task.
+---
+---A task from another chain has an undefined result: only pass tasks created by this chain.
+---@param task taskmanager.Task? Task to check. Nil will always result in ``false``.
+---@return boolean hasTask Whether the task is still running. If not, then the task has ended or been removed.
+---@return_cast task -nil
+---@nodiscard
+function __TaskChain:hasTask(task)
+    return task and not task.removed or false
+end
 
 
 local TaskManager = {}
@@ -44,7 +95,7 @@ local TaskManager = {}
 ---.. versionadded:: v1.5.0
 ---
 ---Result values for a task. Determines what the task manager will do with the task after it completes.
----A task that does not return one of these values will error!
+---If a task doesn't return one of these values an error will be raised!
 ---@enum taskmanager.TaskResult
 TaskManager.TaskResult = {
     ---Remove the task from the task manager.
@@ -56,110 +107,37 @@ TaskManager.TaskResult = {
 
 ---.. versionadded:: v1.5.0
 ---
----Creates a task chain. It is necessary to call this function to create a task chain before adding tasks to it.
----There cannot be more than one task chain with the same name. An error will be raised if a duplicate is created.
+---Creates a task chain.
+---
+---It is recommended to create a task chain for each file/module that needs one rather than sharing one across your mod.
+---Unrelated modules rarely have a good reason to interact with each other's tasks directly,
+---and chains are very lightweight.
+---
+---Task chains should not be disposed of:
+---the task manager holds a reference to all created chains that will not be removed until Lua reloads,
+---therefore doing so results in a memory leak.
 ---@param name string Name of the task chain. The format 'modname.modulename' is recommended to avoid overlap.
-function TaskManager.addTaskChain(name)
-    assert(
-        chains[name] == nil,
-        "task chain " .. name .. " already exists"
-    )
-
-    chains[name] = {
-        name = name,
-        tasks = table.newarray(),
-        taskMap = {}
-    }
-end
-
----.. versionadded:: v1.5.0
----
----Adds a task.
----The task's function will be called every tick until it returns :lua:data:`starlit.taskmanager.TaskResult.DONE`.
----@generic T...
----@param chain string Name of the task chain to add the task to. If no chain by that name exists an error will be raised.
----@param func fun(...:T...):taskmanager.TaskResult Function to call when running the task.
----@param ... T... Arguments to call func with.
----@return string name Name of the task. This can be used to query the task later.
-function TaskManager.addTask(chain, func, ...)
-    local chainObj = chains[chain]
-    assert(
-        chainObj ~= nil,
-        "task chain " .. chain .. " does not exist"
-    )
-
-    ---@type taskmanager.Task
-    local task = {
-        func = func,
-        args = {...},
-        name = getRandomUUID(),
-        removed = false
-    }
-
-    chainObj.tasks[#chainObj.tasks + 1] = task
-    chainObj.taskMap[task.name] = task
-    return task.name
-end
-
-
----.. versionadded:: v1.5.0
----
----Removes a task by name.
----@param chain string Name of the task chain to remove the task from. If no chain by that name exists an error will be raised.
----@param name string Name of the task to remove. If no task by that name exists an error will be raised.
-function TaskManager.removeTask(chain, name)
-    local chainObj = chains[chain]
-    assert(
-        chainObj ~= nil,
-        "task chain " .. chain .. " does not exist"
-    )
-
-    local task = chainObj.taskMap[name]
-    assert(
-        task ~= nil,
-        "task chain has no such task " .. name
-    )
-
-    if chain == executingChain then
-        task.removed = true
-        return
-    end
-
-    for i = 1, #chainObj.tasks do
-        if chainObj.tasks[i] == task then
-            table.remove(chainObj.tasks, i)
-            break
-        end
-    end
-end
-
-
----.. versionadded:: v1.5.0
----
----Returns whether the chain has a task with that name. If not then the task is no longer running.
----@param chain string
----@param name string
----@return boolean
+---@return taskmanager.TaskChain chain
 ---@nodiscard
-function TaskManager.hasTask(chain, name)
-    local chainObj = chains[chain]
-    assert(
-        chainObj ~= nil,
-        "task chain " .. chain .. " does not exist"
-    )
+function TaskManager.addTaskChain(name)
+    local chain = setmetatable({
+        name = name,
+        tasks = table.newarray()
+    }, __TaskChain)
 
-    local task = chainObj.taskMap[name]
+    chains[#chains + 1] = chain    
 
-    return task ~= nil and not task.removed
+    return chain
 end
 
 
-local function updateTasks()
-    for _, chain in pairs(chains) do
-        executingChain = chain.name
+local function doTasks()
+    for i = 1, #chains do
+        local chain = chains[i]
+        executingChain = chain
 
-        for i = #chain.tasks, 1, -1 do
-            local task = chain.tasks[i]
+        for j = #chain.tasks, 1, -1 do
+            local task = chain.tasks[j]
             local success, result = pcall(
                 task.func,
                 unpack(task.args)
@@ -168,9 +146,8 @@ local function updateTasks()
             if not success then
                 ---@cast result string
                 log:warn(
-                    "error occured in chain %s task %s: %s",
+                    "error occured in chain '%s': %s",
                     chain.name,
-                    task.name,
                     result
                 )
                 task.removed = true
@@ -182,19 +159,18 @@ local function updateTasks()
                 pcall(
                     log.error,
                     log,
-                    "chain %s task %s did not return a valid result",
-                    chain.name,
-                    task.name
+                    "chain '%s' task did not return a valid result",
+                    chain.name
                 )
                 task.removed = true
             end
         end
 
-        -- remove tasks that were queued for removal during execution
-        for i = #chain.tasks, 1, -1 do
-            local task = chain.tasks[i]
+        -- remove tasks that were set as removed during execution
+        for j = #chain.tasks, 1, -1 do
+            local task = chain.tasks[j]
             if task.removed then
-                table.remove(chain.tasks, i)
+                table.remove(chain.tasks, j)
             end
         end
     end
@@ -286,7 +262,7 @@ function TaskManager.update(ticks)
         TaskManager.delayTasks[currentTick] = nil
     end
 
-    updateTasks()
+    doTasks()
 end
 
 Events.OnTick.Add(TaskManager.update)
