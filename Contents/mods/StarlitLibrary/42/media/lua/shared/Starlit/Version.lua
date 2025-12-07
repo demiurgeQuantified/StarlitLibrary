@@ -19,13 +19,13 @@ local Version = {}
 Version.VERSION_STRING = modInfo:getModVersion()
 
 do
-    local build, major, minor, patch = string.match(Version.VERSION_STRING, "(%d+)%-(%d+)%.(%d+)%.(%d+)")
+    local major, minor, patch = string.match(Version.VERSION_STRING, "(%d+)%.(%d+)%.(%d+)")
 
     ---The major game build the current version of Starlit is designed for.
     ---@doctype const
     ---@type integer
     ---@readonly
-    Version.BUILD = tonumber(build) --[[@as integer]]
+    Version.BUILD = GAME_BUILD --[[@as integer]]
 
     ---The major version of Starlit. Major versions are incremented when non-trivial breaking changes are made to the API.
     ---@doctype const
