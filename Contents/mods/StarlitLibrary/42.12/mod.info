@@ -1,0 +1,8 @@
+name=Starlit Library
+id=StarlitLibrary
+description=Library for other mods to use. Makes no gameplay changes on its own.
+poster=poster.png
+author=albion
+modversion=42-1.4.4
+versionMin=42.12.0
+url=https://github.com/demiurgeQuantified/StarlitLibrary
