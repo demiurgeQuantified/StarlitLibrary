@@ -5,7 +5,9 @@
         "encoding": "utf-8",
         "ignoreDir": [
             "Contents/mods/StarlitLibrary/media",
-            "tests"
+            "tests",
+            "Contents/mods/StarlitLibrary/42",
+            "Contents/mods/StarlitLibrary/42.12"
         ],
         "ignoreGlobs": [],
         "library": [
@@ -15,7 +17,7 @@
         "preloadFileSize": 0,
         "reindexDuration": 5000,
         "workspaceRoots": [
-            "Contents/mods/StarlitLibrary/42/media/lua"
+            "Contents/mods/StarlitLibrary/42.13/media/lua"
         ]
     },
     "runtime": {
@@ -24,9 +26,9 @@
         "nonstandardSymbol": [],
         "requireLikeFunction": [],
         "requirePattern": [
-            "Contents/mods/StarlitLibrary/42/media/lua/shared/?.lua",
-            "Contents/mods/StarlitLibrary/42/media/lua/client/?.lua",
-            "Contents/mods/StarlitLibrary/42/media/lua/server/?.lua"
+            "Contents/mods/StarlitLibrary/42.13/media/lua/shared/?.lua",
+            "Contents/mods/StarlitLibrary/42.13/media/lua/client/?.lua",
+            "Contents/mods/StarlitLibrary/42.13/media/lua/server/?.lua"
         ],
         "special": {},
         "version": "Lua5.1"

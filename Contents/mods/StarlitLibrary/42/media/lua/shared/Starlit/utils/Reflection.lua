@@ -21,7 +21,6 @@ local classFields = {}
 ---@return string
 ---@nodiscard
 local getFieldName = function(field)
-    ---@diagnostic disable-next-line: return-type-mismatch
     return match(tostring(field), "([^%.]+)$")
 end
 
@@ -76,37 +75,21 @@ local function exposeClassFields(classtable)
     setmetatable(classtable, metatable)
 end
 
-
 ---@param metatable metatable Metatable of the class
 ---@param name string Name of the class
 local function registerClassName(metatable, name)
     classNames[metatable] = name
 end
 
-
----@param class table
-local function addInnerClassesRecurse(class)
-    for k, v in pairs(class) do
-        if type(v) == "table" and v.class then
-            local metatable = __classmetatables[v.class]
-            registerClassName(metatable, k)
-            exposeClassFields(metatable.__index)
-            addInnerClassesRecurse(v)
-        end
-    end
-end
-
-
----@param package table
-local function addClassesRecurse(package)
-    for k, v in pairs(package) do
+---@param t table
+local function addClassesRecurse(t)
+    for k,v in pairs(t) do
         if type(v) == "table" then
             local class = v.class
             if class then
                 local metatable = __classmetatables[class]
                 registerClassName(metatable, k)
                 exposeClassFields(metatable.__index)
-                addInnerClassesRecurse(v)
             else
                 addClassesRecurse(v)
             end
@@ -115,9 +98,8 @@ local function addClassesRecurse(package)
 end
 addClassesRecurse(zombie)
 
-
-local function addClassNamesRecurse(package)
-    for k, v in pairs(package) do
+local function addClassNamesRecurse(t)
+    for k,v in pairs(t) do
         if type(v) == "table" then
             local class = v.class
             if class then
@@ -211,7 +193,7 @@ Reflection.getClassName = function(o)
 
     local objType = type(o)
     if objType == "userdata" then
-        return assert(match(tostring(o), "^(.*)@"))
+        return string.match(tostring(o), "^(.*)@")
     end
 
     return (objType == "table" and o.Type) or objType
@@ -291,7 +273,7 @@ end
 --     Reflection.patchFunction(__classmetatables[_G[className].class].__index, methodName, patch, patchType)
 -- end
 
----@type {[string] : {[string] : Field}}
+---@type {string : {string : Field}}
 local unexposedObjectFields = {}
 
 ---Returns the value of an object's field by name.
@@ -303,7 +285,6 @@ local unexposedObjectFields = {}
 ---@nodiscard
 Reflection.getField = function(object, name)
     local className = Reflection.getClassName(object)
-
     if not unexposedObjectFields[className] then
         local fieldMap = {}
         for i = 0, getNumClassFields(object)-1 do
@@ -312,14 +293,11 @@ Reflection.getField = function(object, name)
         end
         unexposedObjectFields[className] = fieldMap
     end
-
-    -- don't want to assert here because this function is fairly performance critical
-    ---@diagnostic disable-next-line: param-type-mismatch
     return getClassFieldVal(object, unexposedObjectFields[className][name])
 end
 
 ---Returns whether the specified callframe has a local variable by that name.
----@param callframeOffset integer How many callframes downwards to search for the local.
+---@param callframeOffset number How many callframes downwards to search for the local.
 ---@param name string The name of the local variable.
 ---@return boolean hasLocalVariable Whether the callframe had a local variable by that name.
 ---@nodiscard
@@ -338,7 +316,7 @@ Reflection.hasLocal = function(callframeOffset, name)
 end
 
 ---Returns the value of a local variable by its name.
----@param callframeOffset integer How many callframes downwards to search for the local.
+---@param callframeOffset number How many callframes downwards to search for the local.
 ---@param name string The name of the local variable.
 ---@return any value The value of the local variable, or nil if there was no such local. A non-existent local is indistinguishable from a local containing the value nil.
 ---@nodiscard
@@ -364,7 +342,7 @@ Reflection.getLocalValue = function(callframeOffset, name)
 end
 
 ---Returns the name of a local variable by its value.
----@param callframeOffset integer How many callframes downwards to search for the local.
+---@param callframeOffset number How many callframes downwards to search for the local.
 ---@param value any The value of the local to search for.
 ---@return string? name The name of the first local variable containing the value, or nil if no local variable containing the value could be found.
 ---@nodiscard
@@ -383,7 +361,7 @@ Reflection.getLocalName = function(callframeOffset, value)
 end
 
 ---Returns a table containing all of the local variabless in a callframe.
----@param callframeOffset integer How many callframes downwards to get locals from.
+---@param callframeOffset number How many callframes downwards to get locals from.
 ---@return table<string, any> locals The local variables in the callframe.
 ---@nodiscard
 Reflection.getLocals = function(callframeOffset)

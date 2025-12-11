@@ -1,19 +1,11 @@
----@param str string
----@return string
-local titlecase = function(str)
-    return string.upper(string.sub(str, 1, 1)) .. string.sub(str, 2, -1)
-end
-
-
----@class starlit.Logger
+---@class Starlit.Logger
 ---@field protected _mod string
 ---@field minLevel "error"|"warn"|"info"|"debug"
 ---@overload fun(message:string, level?:"error"|"warn"|"info"|"debug", ...)
 local Logger = {}
 Logger.__index = Logger
 
-
----@type starlit.Logger
+---@type Starlit.Logger
 local StarlitLogger
 local logLevelMap = {
     -- Critical problems that stop the mod from functioning
@@ -26,14 +18,18 @@ local logLevelMap = {
     debug = 4,
 }
 
-
 Logger.minLevel = getDebug() and "debug" or "info"
 
+---@param str string
+---@return string
+local titlecase = function(str)
+    return string.upper(string.sub(str, 1, 1)) .. string.sub(str, 2, -1)
+end
 
 ---@param message string
 ---@param level? "error"|"warn"|"info"|"debug"
 ---@param ... any
-function Logger:__call(message, level, ...)
+Logger.__call = function(self, message, level, ...)
     level = level or "info"
     if logLevelMap[level] <= logLevelMap[self.minLevel] then
         local formattedMessage = string.format("[%s] [%s] %s", self._mod, titlecase(level), string.format(message, ...))
@@ -45,123 +41,91 @@ function Logger:__call(message, level, ...)
     end
 end
 
-
----@param message string
----@param ... any
-function Logger:error(message, ...)
-    self(message, "error", ...)
-end
-
-
----@param message string
----@param ... any
-function Logger:warn(message, ...)
-    self(message, "warn", ...)
-end
-
-
----@param message string
----@param ... any
-function Logger:info(message, ...)
-    self(message, "info", ...)
-end
-
-
----@param message string
----@param ... any
-function Logger:debug(message, ...)
-    self(message, "debug", ...)
-end
-
-
 ---@package
 ---@param mod string
 ---@param minLevel? "error"|"warn"|"info"|"debug"
----@return starlit.Logger
+---@return Starlit.Logger
 ---@nodiscard
 Logger.new = function(mod, minLevel)
-    return setmetatable({
+    ---@type Starlit.Logger
+    local o = {
         _mod = mod,
         minLevel = minLevel or Logger.minLevel
-    }, Logger)
+    }
+    ---@diagnostic disable-next-line: param-type-mismatch
+    setmetatable(o, Logger)
+
+    return o
 end
 
+---Cleans up resources used by the logger when it is no longer needed
+Logger.destroy = function() end
 
----@class starlit.FileLogger : starlit.Logger
----@field path string
+---@class Starlit.FileLogger : Starlit.Logger
+---@field protected _writer LuaFileWriter
 ---@overload fun(message:string, level?:"error"|"warn"|"info"|"debug", ...)
 local FileLogger = {}
 
-FileLogger.__index = FileLogger
-
+---@diagnostic disable-next-line: param-type-mismatch
 setmetatable(FileLogger, Logger)
-
 
 ---@param message string
 ---@param level? "error"|"warn"|"info"|"debug"
 ---@param ... any
 ---@see Starlit.Logger.__call
-function FileLogger:__call(message, level, ...)
+FileLogger.__call = function(self, message, level, ...)
     level = level or "info"
     if logLevelMap[level] <= logLevelMap[self.minLevel] then
         local formattedMessage = string.format("[%s] [%s] %s", self._mod, titlecase(level), string.format(message, ...))
-
-        -- opening and closing the writer every message sucks, but closing the writer is the only way to flush the buffer
-        --  any mechanism to flush after every X messages/ticks/etc is prone to log nothing when the game freezes or crashes
-        local writer = getFileWriter(self.path, true, true)
-        writer:writeln(formattedMessage)
-        writer:close()
+        self._writer:writeln(formattedMessage)
     end
 end
-
 
 ---@package
 ---@param mod string
 ---@param minLevel? "error"|"warn"|"info"|"debug"
----@param path string
----@return starlit.FileLogger
+---@param writer LuaFileWriter
+---@return Starlit.FileLogger
 ---@nodiscard
-FileLogger.new = function(mod, minLevel, path)
+FileLogger.new = function(mod, minLevel, writer)
     local o = Logger.new(mod, minLevel)
-    ---@cast o starlit.FileLogger
-    o.path = path
+    ---@cast o Starlit.FileLogger
+    o._writer = writer
+    ---@diagnostic disable-next-line: param-type-mismatch
     setmetatable(o, FileLogger)
 
     return o
 end
 
+FileLogger.destroy = function(self)
+    self._writer:close()
+end
 
 StarlitLogger = Logger.new("Starlit Library")
 
-
 local LoggerAPI = {}
 
-
 ---@param mod string Name of the mod
----@param path? string Optional path of a file to write to, relative to Zomboid/Lua/logs/{mod}/ <br> If no extension is included, .txt will be added <br> If this argument is not passed the logger will write to the game's logs instead, and errors will cause stack traces
----@return starlit.Logger logger
+---@param file? string Optional path of a file to write to, relative to Zomboid/Lua/logs/{mod}/ <br> If no extension is included, .txt will be added <br> If this argument is not passed the logger will write to the game's logs instead, and errors will cause stack traces
+---@return Starlit.Logger logger
 ---@see Starlit.Logger.__call
 ---@nodiscard
-LoggerAPI.getLogger = function(mod, path)
-    if path then
-        if not string.match(path, "%.") then
-            path = path .. ".txt"
+LoggerAPI.getLogger = function(mod, file)
+    if file then
+        if not string.match(file, "%.") then
+            file = file .. ".txt"
         end
-        path = "logs/" .. mod .. "/" .. path
+        file = "logs/" .. mod .. "/" .. file
 
-        -- this just empties the file
-        local writer = getFileWriter(path, true, false)
-        writer:close()
-
+        local writer = getFileWriter(file, true, false)
         if not writer then
-            StarlitLogger("Could not open file %s for logging", "error", path)
+            StarlitLogger(logLevelMap.ERROR, "Could not open file %s for logging", file)
         end
 
-        return FileLogger.new(mod, nil, path)
+        return FileLogger.new(mod, nil, writer)
     else
         return Logger.new(mod)
     end
 end
-
 
 return LoggerAPI
