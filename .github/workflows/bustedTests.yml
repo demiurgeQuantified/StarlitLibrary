@@ -17,4 +17,4 @@ jobs:
       - name: Run Busted
         uses: lunarmodules/busted@v2.2.0
         with:
-          args: './tests -m="./Contents/mods/StarlitLibrary/42/media/lua/shared/?.lua;./Contents/mods/StarlitLibrary/42/media/lua/client/?.lua;./Contents/mods/StarlitLibrary/42/media/lua/server/?.lua"'
+          args: './tests -m="./Contents/mods/StarlitLibrary/42.13/media/lua/shared/?.lua;./Contents/mods/StarlitLibrary/42.13/media/lua/client/?.lua;./Contents/mods/StarlitLibrary/42.13/media/lua/server/?.lua"'
