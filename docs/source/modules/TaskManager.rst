@@ -96,6 +96,6 @@ Async functions are very suitable for tasks.
 While the concepts of async functions and coroutines may be more difficult to grasp at first,
 you can clearly see how they allow us to write tasks with much more natural and simple code.
 
-For a real world example of a task, see `WaterGoesBad`_, which uses a task to stagger object updates over several ticks (particularly the `update` and `startUpdate` functions).
+For a real world example of a task, see WaterGoesBad_, which uses a task to stagger object updates over several ticks (particularly the `update` and `startUpdate` functions).
 
 .. _WaterGoesBad: https://github.com/demiurgeQuantified/WaterGoesBad/blob/develop/Contents/mods/WaterGoesBad/42.13/media/lua/server/WaterGoesBad/WaterObjectManager.lua
