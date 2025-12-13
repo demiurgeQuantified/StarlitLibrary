@@ -13,7 +13,7 @@ if getDebug() then
     local openDebugMenu = modOptions:addKeyBind(
         "DebugMenuKey",
         getText("UI_StarlitLibrary_Options_DebugMenuKey"),
-        nil,
+        Keyboard.KEY_NONE,
         getText("UI_StarlitLibrary_Options_DebugMenuKey_tooltip")
     )
 
