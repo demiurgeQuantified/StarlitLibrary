@@ -7,7 +7,7 @@ local SandboxUtils = {}
 ---@return any value Current value of the option
 ---@nodiscard
 SandboxUtils.getOptionValue = function(name)
-    return Utils.findVar(name, SandboxOptions)
+    return Utils.findVar(name, SandboxVars)
 end
 
 return SandboxUtils

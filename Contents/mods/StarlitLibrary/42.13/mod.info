@@ -3,6 +3,6 @@ id=StarlitLibrary
 description=Library for other mods to use. Makes no gameplay changes on its own.
 poster=poster.png
 author=albion
-modversion=1.5.1
+modversion=1.5.2
 versionMin=42.13.0
 url=https://github.com/demiurgeQuantified/StarlitLibrary
