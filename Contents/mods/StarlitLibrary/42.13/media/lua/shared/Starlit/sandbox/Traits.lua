@@ -6,11 +6,11 @@
 ---Module for tying properties of traits to sandbox options
 local Traits = {}
 
----@type {[Trait] : starlit.TraitInfo}
+---@type table<CharacterTrait, starlit.TraitInfo>
 Traits.traitInfos = {}
 
 ---Gets or creates TraitInfo for a trait.
----@param trait Trait The trait
+---@param trait CharacterTrait The trait
 ---@return starlit.TraitInfo info The TraitInfo
 Traits.getOrCreateInfo = function(trait)
     local traitInfo = Traits.traitInfos[trait]
