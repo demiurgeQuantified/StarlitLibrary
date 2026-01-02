@@ -17,3 +17,4 @@ Modules
     modules/ZedScript
     modules/ZombieData
     modules/ZombieIds
+    modules/modules
