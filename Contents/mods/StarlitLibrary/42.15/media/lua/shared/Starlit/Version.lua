@@ -1,4 +1,4 @@
-local modInfo = getModInfoByID("\\StarlitLibrary")
+local modInfo = getModInfoByID("StarlitLibrary")
 
 local POPUP_HEIGHT = 100
 local STEAM_ENABLED = getSteamModeActive()
