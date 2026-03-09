@@ -14,6 +14,7 @@ local InventoryUI = {}
 
 
 ---@type LuaEvent<ObjectTooltip, ObjectTooltip.Layout, InventoryItem>
+---@[deprecated("No longer triggered due to TIS removal of reflection.")]
 InventoryUI.onFillItemTooltip = LuaEvent.new() ---@as LuaEvent<ObjectTooltip, ObjectTooltip.Layout, InventoryItem>
 
 ---Triggered before items are rendered in the inventory panel.
@@ -37,84 +38,6 @@ function ISInventoryPane:refreshContainer()
 
     InventoryUI.preRenderItems:trigger(items, player)
     old_refreshContainer(self)
-end
-
-
-local old_render = ISToolTipInv.render
----@diagnostic disable-next-line: duplicate-set-field
-ISToolTipInv.render = function(self)
-    local item = self.item ---@as InventoryItem | FluidContainer
-
-    if instanceof(item, "FluidContainer") then
-        ---@cast item FluidContainer
-        old_render(self)
-        return
-    end
-    ---@cast item -FluidContainer
-
-    local itemMetatable = getmetatable(item).__index
-    local old_DoTooltip = itemMetatable.DoTooltip
-    ---@param tooltip ObjectTooltip
-    itemMetatable.DoTooltip = function(self, tooltip)
-        local layout = tooltip:beginLayout()
-        item:DoTooltipEmbedded(tooltip, layout, 0)
-
-        -- because we no longer call the original function, this may affect mod compatibility
-        -- there isn't really any way to avoid that though
-
-        InventoryUI.onFillItemTooltip:trigger(tooltip, layout, item)
-
-        ---@diagnostic disable-next-line: undefined-field
-        local padLeft = tooltip.padLeft ---@as integer
-        ---@diagnostic disable-next-line: undefined-field
-        local padBottom = tooltip.padBottom ---@as integer
-
-        ---@diagnostic disable-next-line: undefined-field
-        local height = layout:render(padLeft, layout.offsetY --[[@as integer]], tooltip)
-        tooltip:endLayout(layout)
-
-        local width = tooltip:getWidth()
-        if width < 150 then
-            width = 150
-        end
-
-        if instanceof(item, "InventoryContainer") then
-            if width < 160 then
-                width = 160
-            end
-            ---@cast item InventoryContainer
-            local items = item:getItemContainer():getItems()
-            ---@diagnostic disable-next-line: undefined-field
-            local maxX = width - tooltip.padRight ---@as integer
-            if not items:isEmpty() then
-                ---@type {[string] : true}
-                local seenItems = {}
-                local xOffset = padLeft
-                height = height + 4
-                for i = items:size() - 1, 0, -1 do
-                    local item = items:get(i) --[[@as InventoryItem]]
-                    local name = item:getName()
-                    if not seenItems[name] then
-                        seenItems[name] = true
-                        tooltip:DrawTextureScaledAspect(item:getTex(), xOffset, height, 16, 16, 1, 1, 1, 1)
-                        xOffset = xOffset + 17
-                        if xOffset + 16 > maxX then
-                            break
-                        end
-                    end
-                end
-
-                height = height + 16
-            end
-        end
-
-        tooltip:setHeight(height + padBottom)
-        tooltip:setWidth(width)
-    end
-
-    old_render(self)
-
-    itemMetatable.DoTooltip = old_DoTooltip
 end
 
 
@@ -184,16 +107,9 @@ end
 ---@param layout ObjectTooltip.Layout The tooltip layout.
 ---@param label string 
 ---@return ObjectTooltip.LayoutItem?
+---@deprecated
 InventoryUI.getTooltipElementByLabel = function(layout, label)
-    ---@diagnostic disable-next-line: undefined-field
-    local items = layout.items --[[@as ArrayList<ObjectTooltip.LayoutItem>]]
-    for i = 0, items:size() - 1 do
-        local item = items:get(i)
-        ---@diagnostic disable-next-line: undefined-field
-        if item.label --[[@as string]] == label then
-            return item
-        end
-    end
+    error("TIS removed reflection API, this function no longer works.")
 end
 
 
@@ -201,9 +117,9 @@ end
 ---@param layout ObjectTooltip.Layout The tooltip layout.
 ---@param element ObjectTooltip.LayoutItem The tooltip element to get the index of.
 ---@return integer index The index of the element, or -1 if the element does not belong to this layout.
+---@deprecated
 InventoryUI.getTooltipElementIndex = function(layout, element)
-    ---@diagnostic disable-next-line: undefined-field
-    return layout.items--[[@as ArrayList<ObjectTooltip.LayoutItem>]]:indexOf(element)
+    error("TIS removed reflection API, this function no longer works.")
 end
 
 
@@ -211,33 +127,9 @@ end
 ---@param layout ObjectTooltip.Layout The tooltip layout.
 ---@param element ObjectTooltip.LayoutItem | integer The tooltip element to remove, or the index (from the top) of the element to remove. Negative indices count from the bottom.
 ---@return ObjectTooltip.LayoutItem? element The element that was removed.
+---@deprecated
 InventoryUI.removeTooltipElement = function(layout, element)
-    ---@diagnostic disable-next-line: undefined-field
-    local items = layout.items --[[@as ArrayList<ObjectTooltip.LayoutItem>]]
-
-    local argType = type(element)
-    if argType == "string" then
-        -- TODO: this is deprecated. It is not documented in the type annotations and should be removed in the future.
-        ---@cast element string
-
-        for i = 0, items:size() - 1 do
-            local item = items:get(i)
-            ---@diagnostic disable-next-line: undefined-field
-            if item.label --[[@as string]] == element then
-                items:remove(item)
-                return item
-            end
-        end
-    elseif argType == "number" then
-        if element < 0 then
-            element = items:size() + element
-        end
-        ---@diagnostic disable-next-line: return-type-mismatch
-        return items:remove(element)
-    else
-        items:remove(element)
-        return element
-    end
+    error("TIS removed reflection API, this function no longer works.")
 end
 
 
@@ -245,16 +137,9 @@ end
 ---@param layout ObjectTooltip.Layout The tooltip layout.
 ---@param element ObjectTooltip.LayoutItem The tooltip element.
 ---@param index integer The index to move the layout element to, counting from the top of the tooltip. Negative indices insert from the bottom up.
+---@deprecated
 InventoryUI.moveTooltipElement = function(layout, element, index)
-    ---@diagnostic disable-next-line: undefined-field
-    local items = layout.items --[[@as ArrayList<ObjectTooltip.LayoutItem>]]
-    items:remove(element)
-    if index < 0 then
-        index = items:size() + index
-    end
-    ---no idea why emmylua thinks this is wrong
-    ---@diagnostic disable-next-line: redundant-parameter, param-type-mismatch
-    items:add(index, element)
+    error("TIS removed reflection API, this function no longer works.")
 end
 
 
