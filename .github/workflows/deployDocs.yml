@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout self
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v6.0.2
         with:
           path:
             StarlitLibrary
       
       - name: Setup Python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: '3.13'
           cache: 'pip'
@@ -31,7 +31,7 @@ jobs:
           make html
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3.0.1
+        uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: StarlitLibrary/docs/build/html
 
@@ -45,4 +45,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to pages
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v4.0.5
