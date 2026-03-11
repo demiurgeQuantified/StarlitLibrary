@@ -9,7 +9,7 @@
 project = 'Starlit Library'
 copyright = '2025, albion'
 author = 'albion'
-release = '1.5.0'
+release = '2.0.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

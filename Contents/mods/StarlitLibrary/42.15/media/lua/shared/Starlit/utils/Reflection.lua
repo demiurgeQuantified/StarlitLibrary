@@ -8,27 +8,39 @@ local Reflection = {}
 -- Reflection.PatchType = patchType
 
 ---Returns the name of the java class or lua type that o is an instance of
+---
+---.. deprecated:: 2.0.0
+---
+--- Field reflection related functions no longer work: TIS removed reflection API
 ---@param o any The object
 ---@return string name Name of the object's class
 ---@nodiscard
----@deprecated
+---@[deprecated("Field reflection related functions no longer work: TIS removed reflection API")]
 Reflection.getClassName = function(o)
     error("TIS removed reflection API, this module no longer works.")
 end
 
 ---Registers a class's name for getClassName
+---
+---.. deprecated:: 2.0.0
+---
+--- Field reflection related functions no longer work: TIS removed reflection API
 ---@param metatable metatable Metatable of the class
 ---@param name string Name of the class
----@deprecated
+---@[deprecated("Field reflection related functions no longer work: TIS removed reflection API")]
 function Reflection.registerClassName(metatable, name)
     error("TIS removed reflection API, this module no longer works.")
 end
 
 ---Returns a table of the names of every field belonging to that class
+---
+---.. deprecated:: 2.0.0
+---
+--- Field reflection related functions no longer work: TIS removed reflection API
 ---@param class string Name of the class
 ---@return string[] fields Field names
 ---@nodiscard
----@deprecated
+---@[deprecated("Field reflection related functions no longer work: TIS removed reflection API")]
 Reflection.getClassFieldNames = function(class)
     error("TIS removed reflection API, this module no longer works.")
 end
@@ -36,11 +48,15 @@ end
 ---Returns the value of an object's field by name.
 ---This can retrieve field values even from objects of unexposed classes.
 ---It also works for exposed classes however it is less performant than the regular syntax.
+---
+---.. deprecated:: 2.0.0
+---
+--- Field reflection related functions no longer work: TIS removed reflection API
 ---@param object any The object
 ---@param name string The name of the field
 ---@return any value The value of the field.
 ---@nodiscard
----@deprecated
+---@[deprecated("Field reflection related functions no longer work: TIS removed reflection API")]
 Reflection.getField = function(object, name)
     error("TIS removed reflection API, this module no longer works.")
 end
