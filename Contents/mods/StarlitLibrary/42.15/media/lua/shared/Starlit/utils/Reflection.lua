@@ -11,7 +11,8 @@ local Reflection = {}
 ---@param o any The object
 ---@return string name Name of the object's class
 ---@nodiscard
----@deprecated
+---@[deprecated("Field reflection related functions no longer work: TIS removed reflection API")]
+---@doc deprecated
 Reflection.getClassName = function(o)
     error("TIS removed reflection API, this module no longer works.")
 end
@@ -19,7 +20,7 @@ end
 ---Registers a class's name for getClassName
 ---@param metatable metatable Metatable of the class
 ---@param name string Name of the class
----@deprecated
+---@[deprecated("Field reflection related functions no longer work: TIS removed reflection API")]
 function Reflection.registerClassName(metatable, name)
     error("TIS removed reflection API, this module no longer works.")
 end
@@ -28,7 +29,7 @@ end
 ---@param class string Name of the class
 ---@return string[] fields Field names
 ---@nodiscard
----@deprecated
+---@[deprecated("Field reflection related functions no longer work: TIS removed reflection API")]
 Reflection.getClassFieldNames = function(class)
     error("TIS removed reflection API, this module no longer works.")
 end
@@ -40,7 +41,7 @@ end
 ---@param name string The name of the field
 ---@return any value The value of the field.
 ---@nodiscard
----@deprecated
+---@[deprecated("Field reflection related functions no longer work: TIS removed reflection API")]
 Reflection.getField = function(object, name)
     error("TIS removed reflection API, this module no longer works.")
 end
