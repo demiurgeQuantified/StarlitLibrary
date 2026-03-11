@@ -13,6 +13,9 @@ local COLOUR_VALUE = table.newarray(1, 1, 1, 1)
 local InventoryUI = {}
 
 
+---.. deprecated:: 2.0.0
+---
+--- No longer triggered: the implementation required field reflection, which no longer works: TIS removed reflection API
 ---@type LuaEvent<ObjectTooltip, ObjectTooltip.Layout, InventoryItem>
 ---@[deprecated("No longer triggered due to TIS removal of reflection.")]
 InventoryUI.onFillItemTooltip = LuaEvent.new() ---@as LuaEvent<ObjectTooltip, ObjectTooltip.Layout, InventoryItem>
@@ -104,40 +107,56 @@ end
 
 
 ---Find and returns a layout element from its label. Useful to find elements added by Vanilla or other mods.
+---
+---.. deprecated:: 2.0.0
+---
+--- This function used field reflection, which no longer works: TIS removed reflection API
 ---@param layout ObjectTooltip.Layout The tooltip layout.
 ---@param label string 
 ---@return ObjectTooltip.LayoutItem?
----@deprecated
+---@[deprecated("This function used field reflection, which no longer works: TIS removed reflection API")]
 InventoryUI.getTooltipElementByLabel = function(layout, label)
     error("TIS removed reflection API, this function no longer works.")
 end
 
 
 ---Returns the index of the element in the tooltip layout.
+---
+---.. deprecated:: 2.0.0
+---
+--- This function used field reflection, which no longer works: TIS removed reflection API
 ---@param layout ObjectTooltip.Layout The tooltip layout.
 ---@param element ObjectTooltip.LayoutItem The tooltip element to get the index of.
 ---@return integer index The index of the element, or -1 if the element does not belong to this layout.
----@deprecated
+---@[deprecated("This function used field reflection, which no longer works: TIS removed reflection API")]
 InventoryUI.getTooltipElementIndex = function(layout, element)
     error("TIS removed reflection API, this function no longer works.")
 end
 
 
 ---Removes an existing tooltip element from a tooltip.
+---
+---.. deprecated:: 2.0.0
+---
+--- This function used field reflection, which no longer works: TIS removed reflection API
 ---@param layout ObjectTooltip.Layout The tooltip layout.
 ---@param element ObjectTooltip.LayoutItem | integer The tooltip element to remove, or the index (from the top) of the element to remove. Negative indices count from the bottom.
 ---@return ObjectTooltip.LayoutItem? element The element that was removed.
----@deprecated
+---@[deprecated("This function used field reflection, which no longer works: TIS removed reflection API")]
 InventoryUI.removeTooltipElement = function(layout, element)
     error("TIS removed reflection API, this function no longer works.")
 end
 
 
 ---Moves a layout element to a specific index, shifting elements down to make room.
+---
+---.. deprecated:: 2.0.0
+---
+--- This function used field reflection, which no longer works: TIS removed reflection API
 ---@param layout ObjectTooltip.Layout The tooltip layout.
 ---@param element ObjectTooltip.LayoutItem The tooltip element.
 ---@param index integer The index to move the layout element to, counting from the top of the tooltip. Negative indices insert from the bottom up.
----@deprecated
+---@[deprecated("This function used field reflection, which no longer works: TIS removed reflection API")]
 InventoryUI.moveTooltipElement = function(layout, element, index)
     error("TIS removed reflection API, this function no longer works.")
 end
