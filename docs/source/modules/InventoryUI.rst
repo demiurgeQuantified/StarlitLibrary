@@ -20,8 +20,9 @@ A basic example of using the ``OnFillItemTooltip`` event to populate a specific 
 
 
    -- Create the event listener.
-   -- If your IDE supports LuaCATS annotations, the following line tells it the function is an event listener.
-   ---@type Starlit.InventoryUI.Callback_OnFillItemTooltip
+   ---@param tooltip ObjectTooltip
+   ---@param layout ObjectTooltip.Layout
+   ---@param item InventoryItem
    local function addAppleTooltip(tooltip, layout, item)
        -- Only run our code if the item is an apple
        if item:getFullType() ~= "Base.Apple" then
@@ -40,13 +41,15 @@ A basic example of using the ``OnFillItemTooltip`` event to populate a specific 
        -- Adds a bites taken counter to every apple's tooltip, with the value 1.
        InventoryUI.addTooltipInteger(layout, "Bites taken:", 1, false)
 
-       -- Finds and returns the Vanilla tooltip element showing the item's encumbrance.
-       local encumbrance = InventoryUI.getTooltipElementByLabel(layout, getText("Tooltip_item_Weight") .. ":")
-       -- If encumbrance is nil, then it's already been removed by another mod.
-       if encumbrance then
-           -- Removes the encumbrance element.
-           InventoryUI.removeTooltipElement(layout, encumbrance)
-       end
+       -- You can't do this anymore, TIS broke it:
+       --
+       -- -- Finds and returns the Vanilla tooltip element showing the item's encumbrance.
+       -- local encumbrance = InventoryUI.getTooltipElementByLabel(layout, getText("Tooltip_item_Weight") .. ":")
+       -- -- If encumbrance is nil, then it's already been removed by another mod.
+       -- if encumbrance then
+       --     -- Removes the encumbrance element.
+       --     InventoryUI.removeTooltipElement(layout, encumbrance)
+       -- end
    end
 
    -- Adds the event listener to the event, so that it will be called when the event is triggered.

@@ -10,19 +10,155 @@ local COLOUR_LABEL = table.newarray(1, 1, 0.8, 1)
 local COLOUR_VALUE = table.newarray(1, 1, 1, 1)
 
 
+---@type integer
+local PAD_LEFT = -1
+
+---@type integer
+local PAD_RIGHT = -1
+
+---@type integer
+local PAD_TOP = -1
+
+---@type integer
+local PAD_BOTTOM = -1
+
+
+---@return UIFont
+---@nodiscard
+local function getTooltipFont()
+    local fontName = getCore():getOptionTooltipFont()
+    if fontName == "Large" then
+        return UIFont.Large
+    elseif fontName == "Medium" then
+        return UIFont.Medium
+    end
+
+    return UIFont.Small
+end
+
+
+local function calculateTooltipPadding()
+    local font = getTooltipFont()
+    local charWidth = getTextManager():MeasureStringX(font, "0")
+    PAD_LEFT = charWidth
+    PAD_RIGHT = charWidth
+    PAD_TOP = math.floor(charWidth / 2)
+    PAD_BOTTOM = math.floor(charWidth / 2)
+end
+
+---@type Core
+local CORE_METATABLE = __classmetatables[Core.class].__index
+
+-- hook to update our padding when the option value changes
+local old_setOptionTooltipFont = CORE_METATABLE.setOptionTooltipFont
+function CORE_METATABLE:setOptionTooltipFont(font)
+    old_setOptionTooltipFont(self, font)
+    calculateTooltipPadding()
+end
+
+calculateTooltipPadding()
+
+---@param item InventoryItem
+---@param tooltip ObjectTooltip
+---@return integer
+local function calculateYOffset(item, tooltip)
+    local LINE_SPACING = tooltip:getLineSpacing() + 5
+
+    local offset = LINE_SPACING
+
+    local extraItems = item:getExtraItems()
+    if extraItems ~= nil then
+        offset = offset + LINE_SPACING * extraItems:size()
+    end
+
+    if instanceof(item, "Food") and item--[[@as Food]]:getSpices() ~= nil then
+        offset = offset + LINE_SPACING
+    end
+
+    return offset
+end
+
+
 local InventoryUI = {}
 
 
----.. deprecated:: 2.0.0
----
---- No longer triggered: the implementation required field reflection, which no longer works: TIS removed reflection API
 ---@type LuaEvent<ObjectTooltip, ObjectTooltip.Layout, InventoryItem>
----@[deprecated("No longer triggered due to TIS removal of reflection.")]
 InventoryUI.onFillItemTooltip = LuaEvent.new() ---@as LuaEvent<ObjectTooltip, ObjectTooltip.Layout, InventoryItem>
 
 ---Triggered before items are rendered in the inventory panel.
 ---@type LuaEvent<InventoryItem[], IsoPlayer>
 InventoryUI.preRenderItems = LuaEvent.new() ---@as LuaEvent<InventoryItem[], IsoPlayer>
+
+
+local old_render = ISToolTipInv.render
+---@diagnostic disable-next-line: duplicate-set-field
+function ISToolTipInv:render()
+    local item = self.item ---@as InventoryItem | FluidContainer
+
+    if instanceof(item, "FluidContainer") then
+        ---@cast item FluidContainer
+        old_render(self)
+        return
+    end
+    ---@cast item -FluidContainer
+
+    local itemMetatable = getmetatable(item).__index
+    local old_DoTooltip = itemMetatable.DoTooltip
+    ---@param tooltip ObjectTooltip
+    function itemMetatable:DoTooltip(tooltip)
+        local layout = tooltip:beginLayout()
+        item:DoTooltipEmbedded(tooltip, layout, 0)
+
+        -- because we no longer call the original function, this may affect mod compatibility
+        -- there isn't really any way to avoid that though
+
+        InventoryUI.onFillItemTooltip:trigger(tooltip, layout, item)
+
+        local height = layout:render(PAD_LEFT, calculateYOffset(item, tooltip), tooltip)
+        tooltip:endLayout(layout)
+
+        local width = tooltip:getWidth()
+        if width < 150 then
+            width = 150
+        end
+
+        if instanceof(item, "InventoryContainer") then
+            if width < 160 then
+                width = 160
+            end
+            ---@cast item InventoryContainer
+            local items = item:getItemContainer():getItems()
+            local maxX = width - PAD_RIGHT
+            if not items:isEmpty() then
+                ---@type {[string] : true}
+                local seenItems = {}
+                local xOffset = PAD_LEFT
+                height = height + 4
+                for i = items:size() - 1, 0, -1 do
+                    local item = items:get(i)
+                    local name = item:getName()
+                    if not seenItems[name] then
+                        seenItems[name] = true
+                        tooltip:DrawTextureScaledAspect(item:getTex(), xOffset, height, 16, 16, 1, 1, 1, 1)
+                        xOffset = xOffset + 17
+                        if xOffset + 16 > maxX then
+                            break
+                        end
+                    end
+                end
+
+                height = height + 16
+            end
+        end
+
+        tooltip:setHeight(height + PAD_BOTTOM)
+        tooltip:setWidth(width)
+    end
+
+    old_render(self)
+
+    itemMetatable.DoTooltip = old_DoTooltip
+end
 
 
 local old_refreshContainer = ISInventoryPane.refreshContainer
