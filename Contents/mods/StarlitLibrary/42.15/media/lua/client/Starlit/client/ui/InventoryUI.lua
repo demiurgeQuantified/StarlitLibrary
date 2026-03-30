@@ -132,6 +132,9 @@ function ISToolTipInv:render()
             if not items:isEmpty() then
                 ---@type {[string] : true}
                 local seenItems = {}
+
+                local ICON_SIZE = math.max(16, getTextManager():getFontHeight(tooltip:getFont()))
+
                 local xOffset = PAD_LEFT
                 height = height + 4
                 for i = items:size() - 1, 0, -1 do
@@ -139,15 +142,15 @@ function ISToolTipInv:render()
                     local name = item:getName()
                     if not seenItems[name] then
                         seenItems[name] = true
-                        tooltip:DrawTextureScaledAspect(item:getTex(), xOffset, height, 16, 16, 1, 1, 1, 1)
-                        xOffset = xOffset + 17
-                        if xOffset + 16 > maxX then
+                        tooltip:DrawTextureScaledAspect(item:getTex(), xOffset, height, ICON_SIZE, ICON_SIZE, 1, 1, 1, 1)
+                        xOffset = xOffset + ICON_SIZE + 1
+                        if xOffset + ICON_SIZE > maxX then
                             break
                         end
                     end
                 end
 
-                height = height + 16
+                height = height + ICON_SIZE
             end
         end
 
