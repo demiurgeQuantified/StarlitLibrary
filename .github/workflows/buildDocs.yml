@@ -1,0 +1,56 @@
+name: Build Docs
+
+on:
+  push:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout self
+        uses: actions/checkout@v6
+        with:
+          path: StarlitLibrary
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: "StarlitLibrary/docs/requirements.txt"
+
+      - name: Install dependencies
+        run: pip install -r StarlitLibrary/docs/requirements.txt
+
+      - name: Get Umbrella remote SHA
+        id: get-umbrella-remote-sha
+        run: |
+          SHA=$(git ls-remote https://github.com/PZ-Umbrella/Umbrella.git HEAD | cut -f1)
+          echo "UMBRELLA_HEAD_SHA=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Setup Umbrella (using cache)
+        id: cache-umbrella-repo
+        uses: actions/cache@v5
+        with:
+          path: ./vendor/Umbrella
+          key: vendor-umbrella-${{ steps.get-umbrella-remote-sha.outputs.UMBRELLA_HEAD_SHA }}
+
+      - name: Setup Umbrella
+        if: steps.cache-umbrella-repo.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth=1 --no-tags https://github.com/PZ-Umbrella/Umbrella.git vendor/Umbrella
+          cd vendor/Umbrella/library
+          echo "PZ_UMBRELLA=$(pwd)" >> $GITHUB_ENV
+          cd ../../../
+
+      - name: Build website with Sphinx
+        run: |
+          cd StarlitLibrary/docs
+          make html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: StarlitLibrary/docs/build/html
