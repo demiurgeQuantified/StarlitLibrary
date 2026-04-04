@@ -45,6 +45,7 @@ jobs:
           cd vendor/Umbrella/library
           echo "PZ_UMBRELLA=$(pwd)" >> $GITHUB_ENV
           cd ../../../
+          echo "PZ_UMBRELLA set to: $PZ_UMBRELLA"
 
       - name: Build website with Sphinx
         run: |
