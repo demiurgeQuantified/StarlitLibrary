@@ -64,39 +64,41 @@ local modDirectories = getModDirectoryTable()
 for i = 1, #modDirectories do
     local modDirectory = modDirectories[i]
     local mod = getModInfo(modDirectory)
-    local modId = mod:getId()
+    if mod then
+        local modId = mod:getId()
 
-    local file = getModFileReader(
-        modId,
-        "modTranslations/" .. LANGUAGE .. ".json",
-        false
-    )
-    if file then
-        local totalString = ""
-        while file:ready() do
-            totalString = totalString .. file:readLine() .. "\n"
-        end
-        file:close()
-
-        local table = json.decode(totalString)
-
-        local posters = getList(table, "posters", "string")
-        if posters then
-            for j = 1, #posters do
-                local posterPath = mod:getVersionDir() .. FILE_SEPARATOR .. posters[j]
-                if not getTexture(posterPath) then
-                    posterPath = mod:getCommonDir() .. FILE_SEPARATOR .. posters[j]
-                end
-                posters[j] = posterPath
+        local file = getModFileReader(
+            modId,
+            "modTranslations/" .. LANGUAGE .. ".json",
+            false
+        )
+        if file then
+            local totalString = ""
+            while file:ready() do
+                totalString = totalString .. file:readLine() .. "\n"
             end
-        end
+            file:close()
 
-        modTranslations[modId] = {
-            name = getString(table, "name"),
-            description = getString(table, "description"),
-            -- ignore empty poster lists
-            posters = #posters > 0 and posters or nil
-        }
+            local table = json.decode(totalString)
+
+            local posters = getList(table, "posters", "string")
+            if posters then
+                for j = 1, #posters do
+                    local posterPath = mod:getVersionDir() .. FILE_SEPARATOR .. posters[j]
+                    if not getTexture(posterPath) then
+                        posterPath = mod:getCommonDir() .. FILE_SEPARATOR .. posters[j]
+                    end
+                    posters[j] = posterPath
+                end
+            end
+
+            modTranslations[modId] = {
+                name = getString(table, "name"),
+                description = getString(table, "description"),
+                -- ignore empty poster lists
+                posters = #posters > 0 and posters or nil
+            }
+        end
     end
 end
 
