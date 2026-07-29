@@ -7,7 +7,7 @@ end)
 
 ---Base class for square cursors.
 ---@class starlit.BaseSquareCursor
----@field player IsoPlayer The player the cursor belongs to.
+---@field playerObj IsoPlayer The player the cursor belongs to.
 ---@field _isStarlitCursor true
 ---@field package _selectedThisTick boolean
 ---@field package _isValidCache boolean | nil
@@ -26,7 +26,7 @@ BaseSquareCursor.select = function(self, square, hide)
     self._selectedThisTick = true
     if hide then
         ---@diagnostic disable-next-line: param-type-mismatch
-        CELL:setDrag(nil, self.player:getPlayerNum())
+        CELL:setDrag(nil, self:getPlayer():getPlayerNum())
     end
 end
 
@@ -139,7 +139,7 @@ end
 ---Called when the joypad Y button is pressed.
 ---@param joypadData JoypadData
 BaseSquareCursor.onJoypadPressY = function(self, joypadData)
-    local playerSquare = self.player:getSquare()
+    local playerSquare = self:getPlayer():getSquare()
     self.xJoypad = playerSquare:getX()
     self.yJoypad = playerSquare:getY()
 end
@@ -186,21 +186,43 @@ BaseSquareCursor.getRBPrompt = function(self)
     return nil
 end
 
+
+---@const
+local PLAYER_FIELD_RENAMED = getCore():getGameVersion():isGreaterThanOrEqualTo(GameVersion.new(42, 20, ".0")) or Core.getGitRevisionString() == "03251d666a"
+
+---Returns the player who owns the cursor.
+---This is the same as reading the playerObj field directly but accounts for
+---the field being forcibly renamed in 42.20 due to game API changes.
+---If your mod doesn't support a version before 42.20, read the playerObj field instead as it is faster to do so.
+function BaseSquareCursor:getPlayer()
+	if PLAYER_FIELD_RENAMED then
+		return self.playerObj
+	else
+		return self.player
+	end
+end
+
 ---Creates a new BaseSquareCursor. After creation the cursor can be made active using IsoCell.setDrag().
 ---@param player IsoPlayer The player to create the cursor for.
 ---@return starlit.BaseSquareCursor cursor The cursor.
 ---@nodiscard
 BaseSquareCursor.new = function(player)
     local o = {
-        player = player,
         _isStarlitCursor = true,
         _selectedThisTick = false,
         xJoypad = -1,
         yJoypad = -1,
         zJoypad = -1
     }
+	
+	if PLAYER_FIELD_RENAMED then
+		o.playerObj = player
+	else
+		o.player = player
+	end
+	
     setmetatable(o, BaseSquareCursor) ---@cast o starlit.BaseSquareCursor
-
+	
     return o
 end
 
@@ -228,7 +250,7 @@ Events.OnInitGlobalModData.Add(function()
             if isRender then
                 draggingItem:render(x, y, z, square)
             end
-            if (draggingItem.player:getPlayerNum() ~= 0 or (GameKeyboard.isKeyPressed("Attack/Click") and not isMouseOverUI()))
+            if (draggingItem:getPlayer():getPlayerNum() ~= 0 or (GameKeyboard.isKeyPressed("Attack/Click") and not isMouseOverUI()))
                     and draggingItem:isValid(square) then
                 draggingItem:select(square)
             end

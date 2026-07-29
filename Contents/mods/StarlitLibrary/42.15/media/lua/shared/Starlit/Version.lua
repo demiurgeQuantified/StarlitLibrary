@@ -22,9 +22,11 @@ do
     local major, minor, patch = string.match(Version.VERSION_STRING, "(%d+)%.(%d+)%.(%d+)")
 
     ---The major game build the current version of Starlit is designed for.
+	---No longer used: this will just return the current game build.
     ---@doctype const
     ---@type integer
     ---@readonly
+	---@deprecated
     Version.BUILD = GAME_BUILD --[[@as integer]]
 
     ---The major version of Starlit. Major versions are incremented when non-trivial breaking changes are made to the API.
@@ -88,7 +90,7 @@ Version.ensureVersion = function(major, minor, patch)
 
     -- if compareResult ~= "compatible" then
     if compareResult == "toolow" then -- the too high message is probably just going to annoy people
-        local desiredVersionString = string.format("%d-%d.%d.%d", GAME_BUILD, major, minor, patch)
+        local desiredVersionString = string.format("%d.%d.%d", major, minor, patch)
         local text = getText(
             compareResult == "toolow" and "IGUI_StarlitLibrary_VersionTooOld" or "IGUI_StarlitLibrary_VersionTooNew",
             Version.VERSION_STRING, desiredVersionString)
