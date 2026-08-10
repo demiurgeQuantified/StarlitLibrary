@@ -35,10 +35,10 @@ end
 ---@nodiscard
 local function getList(table, key, componentType)
     local list = table[key]
-    if type(list == "table") then
+    if type(list) == "table" then
         if componentType then
             for i = 1, #list do
-                if not type(list[i]) == componentType then
+                if type(list[i]) ~= componentType then
                     return nil
                 end
             end
@@ -96,7 +96,7 @@ for i = 1, #modDirectories do
                 name = getString(table, "name"),
                 description = getString(table, "description"),
                 -- ignore empty poster lists
-                posters = #posters > 0 and posters or nil
+                posters = posters and #posters > 0 and posters or nil
             }
         end
     end
