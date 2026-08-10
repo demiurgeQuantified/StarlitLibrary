@@ -107,6 +107,8 @@ function ISToolTipInv:render()
     ---@param tooltip ObjectTooltip
     function itemMetatable:DoTooltip(tooltip)
         local layout = tooltip:beginLayout()
+        layout:setMinLabelWidth(80)
+        layout:setMinValueWidth(80)
         item:DoTooltipEmbedded(tooltip, layout, 0)
 
         -- because we no longer call the original function, this may affect mod compatibility
