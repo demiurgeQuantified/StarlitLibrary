@@ -1,5 +1,5 @@
 {
     "UI_StarlitLibrary": "Starlit Library",
-    "UI_StarlitLibrary_Options_DebugMenuKey": "Open Debug Menu",
-    "UI_StarlitLibrary_Options_DebugMenuKey_tooltip": "Key to open the Starlit Library debug menu."
+    "UI_StarlitLibrary_Options_DebugMenuKey": "Apri menu di debug",
+    "UI_StarlitLibrary_Options_DebugMenuKey_tooltip": "Tasto per aprire il menu di debug di Starlit Library."
 }
