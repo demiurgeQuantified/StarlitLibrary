@@ -1,0 +1,4 @@
+{
+    "IGUI_StarlitLibrary_VersionTooOld": "Una mod che hai installato richiede una versione di Starlit Library più recente di quella attualmente installata. Alcune funzionalità potrebbero non funzionare come previsto. <br> A volte Steam non riesce ad aggiornare le mod: annulla l'iscrizione e iscriviti nuovamente per assicurarti che la versione sia aggiornata. <br> Versione installata: %1 <br> Versione richiesta: %2+",
+    "IGUI_StarlitLibrary_ZombieDataDebugger": "Dati degli zombi"
+}
