@@ -169,18 +169,21 @@ end
 local old_refreshContainer = ISInventoryPane.refreshContainer
 
 function ISInventoryPane:refreshContainer()
-    local player = getSpecificPlayer(self.player)
-    ---@type InventoryItem[]
-    local items = table.newarray()
+    if #InventoryUI.preRenderItems > 0 then
+        local player = getSpecificPlayer(self.player)
+        ---@type InventoryItem[]
+        local items = table.newarray()
 
-    local javaItems = self.inventory:getItems()
-    -- TODO: this doesn't allow you to elegantly add suffixes to the name
-    --  a callback inside of InventoryItem.getName during old_refreshContainer could do this better
-    for i = 0, javaItems:size() - 1 do
-        items[i + 1] = javaItems:get(i)
+        local javaItems = self.inventory:getItems()
+        -- TODO: this doesn't allow you to elegantly add suffixes to the name
+        --  a callback inside of InventoryItem.getName during old_refreshContainer could do this better
+        for i = 0, javaItems:size() - 1 do
+            items[i + 1] = javaItems:get(i)
+        end
+
+        InventoryUI.preRenderItems:trigger(items, player)
     end
 
-    InventoryUI.preRenderItems:trigger(items, player)
     old_refreshContainer(self)
 end
 
